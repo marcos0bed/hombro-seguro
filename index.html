@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12151A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Hombro Seguro — Rutina</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#12151A; --surface:#1A2028; --surface2:#222A35; --line:#2B3442;
+  --text:#EDF0F4; --mut:#8E99A8; --acc:#F0A63C; --acc-dim:#7a5a25;
+  --ok:#46C08A; --warn:#E8963E; --bad:#E5484D;
+  --r:14px;
+  --disp:'Avenir Next Condensed','Arial Narrow','Roboto Condensed',system-ui,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding-bottom:76px}
+.app{max-width:560px;margin:0 auto;padding:0 14px}
+a{color:var(--acc)}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+
+/* header */
+header{padding:18px 2px 10px}
+.eyebrow{font-family:var(--disp);text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--acc);font-weight:600}
+h1.day{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:34px;line-height:1.05;letter-spacing:.01em;text-wrap:balance;margin-top:2px}
+.sub{color:var(--mut);font-size:14px;margin-top:4px}
+.phase{display:flex;align-items:center;gap:8px;margin-top:12px;padding:9px 12px;background:linear-gradient(90deg,rgba(240,166,60,.14),rgba(240,166,60,.04));border:1px solid var(--acc-dim);border-radius:10px;font-size:13px;color:#f4c47c}
+.phase b{font-family:var(--disp);text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--acc);white-space:nowrap}
+
+/* rules strip */
+.strip{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+.strip span{font-family:var(--disp);text-transform:uppercase;letter-spacing:.07em;font-size:12.5px;font-weight:600;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.strip span.hot{color:var(--acc);border-color:var(--acc-dim)}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:10px 0}
+.card h3{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-size:18px;letter-spacing:.02em}
+.exhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.dose{font-family:var(--mono);font-size:13px;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);background:var(--surface2);border-radius:6px;padding:2px 7px}
+.chip.g{color:#8fd8b6}
+.chip.a{color:#f4c47c}
+
+/* sets */
+.setrow{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pill{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface2);font-family:var(--mono);font-size:14px;color:var(--mut);transition:background .15s,border-color .15s}
+.pill.on{background:var(--acc);border-color:var(--acc);color:#12151A;font-weight:700}
+.w-wrap{margin-left:auto;display:flex;align-items:center;gap:5px;color:var(--mut);font-size:13px}
+.w-in{width:64px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;color:var(--text);font:14px var(--mono);padding:7px 8px;text-align:right}
+
+/* how + link */
+.exfoot{display:flex;gap:14px;margin-top:12px;font-size:13.5px}
+.howbtn{color:var(--mut);text-decoration:underline;text-underline-offset:3px}
+.how{display:none;margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;font-size:14px;color:#c6cdd6;border-left:3px solid var(--acc-dim)}
+.how.open{display:block}
+.ytl{text-decoration:none;font-weight:600}
+.ytl::after{content:" ▶";font-size:11px}
+
+/* note / run / rest cards */
+.note{color:#c6cdd6;font-size:14.5px}
+.big{font-family:var(--disp);font-size:44px;font-weight:700;text-transform:uppercase;line-height:1;color:var(--acc)}
+.runcard{text-align:left}
+.donebtn{margin-top:12px;width:100%;padding:12px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-family:var(--disp);text-transform:uppercase;letter-spacing:.08em;font-weight:600;font-size:15px}
+.donebtn.on{background:rgba(70,192,138,.15);border-color:var(--ok);color:var(--ok)}
+
+/* pain check */
+.pain{margin:16px 0}
+.painbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.painbtns button{padding:12px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface2);font-family:var(--disp);text-transform:uppercase;font-weight:600;font-size:14px;letter-spacing:.04em}
+.painbtns .p0.sel{border-color:var(--ok);color:var(--ok);background:rgba(70,192,138,.12)}
+.painbtns .p1.sel{border-color:var(--warn);color:var(--warn);background:rgba(232,150,62,.12)}
+.painbtns .p2.sel{border-color:var(--bad);color:var(--bad);background:rgba(229,72,77,.12)}
+.painmsg{margin-top:10px;font-size:14px;color:#c6cdd6;display:none;padding:10px 12px;border-radius:10px;background:var(--surface2)}
+.painmsg.show{display:block}
+
+/* week */
+.dayrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;margin:8px 0}
+.dayrow .dn{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-size:17px;width:46px;color:var(--mut)}
+.dayrow.today .dn{color:var(--acc)}
+.dayrow .dt{flex:1}
+.dayrow .dt b{display:block;font-size:15.5px;font-weight:600}
+.dayrow .dt small{color:var(--mut);font-size:13px}
+.tick{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:14px;color:var(--ok)}
+.tick.on{border-color:var(--ok);background:rgba(70,192,138,.12)}
+.dayrow.today{border-color:var(--acc-dim)}
+
+/* viaje toggle */
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin:12px 0;gap:4px}
+.seg button{padding:10px;border-radius:9px;font-family:var(--disp);text-transform:uppercase;font-weight:600;letter-spacing:.05em;font-size:14px;color:var(--mut)}
+.seg button.sel{background:var(--acc);color:#12151A}
+
+/* danger / list cards */
+.dcard{border-color:rgba(229,72,77,.4)}
+.dcard h3{color:var(--bad)}
+.dcard li,.lcard li{margin:7px 0 7px 18px;font-size:14.5px;color:#c6cdd6}
+.lcard h3{color:var(--acc)}
+h2.sect{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-size:15px;letter-spacing:.1em;color:var(--mut);margin:22px 0 4px}
+
+/* timer sheet */
+#sheet{position:fixed;left:0;right:0;bottom:64px;display:none;justify-content:center;z-index:40;pointer-events:none}
+#sheet.show{display:flex}
+.sheet-in{pointer-events:auto;display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--acc-dim);border-radius:16px;padding:12px 18px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.tnum{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums;min-width:74px;text-align:center}
+.tlab{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+.tbtn{border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--text);background:var(--surface)}
+
+/* iso timer */
+.iso{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-align:center;margin:10px 0}
+.iso .tnum{font-size:52px;display:block;min-width:0}
+.isodots{display:flex;gap:8px;justify-content:center;margin:10px 0}
+.isodots i{width:12px;height:12px;border-radius:50%;background:var(--surface2);border:1px solid var(--line)}
+.isodots i.on{background:var(--acc);border-color:var(--acc)}
+.isobtn{margin-top:6px;padding:12px 26px;border-radius:99px;background:var(--acc);color:#12151A;font-family:var(--disp);text-transform:uppercase;font-weight:700;letter-spacing:.06em;font-size:15px}
+.isobtn[disabled]{opacity:.5}
+.isophase{font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--mut);margin-bottom:4px}
+
+/* bottom nav */
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(18,21,26,.92);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:50}
+.nav-in{display:grid;grid-template-columns:repeat(5,1fr);width:100%;max-width:560px}
+nav button{padding:12px 2px 14px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.06em;font-size:12.5px;font-weight:600;color:var(--mut);border-top:2px solid transparent}
+nav button.sel{color:var(--acc);border-top-color:var(--acc)}
+
+.backlink{display:inline-block;margin:10px 0 0;color:var(--mut);font-size:14px;text-decoration:underline;text-underline-offset:3px}
+table.mini{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+table.mini td{padding:7px 6px;border-top:1px solid var(--line);color:#c6cdd6;vertical-align:top}
+table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-weight:600;color:var(--mut);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header id="hdr"></header>
+  <main id="view"></main>
+</div>
+
+<div id="sheet" role="timer"><div class="sheet-in">
+  <div><div class="tlab">Descanso</div><div class="tnum" id="tnum">1:30</div></div>
+  <button class="tbtn" data-act="rest-add">+30s</button>
+  <button class="tbtn" data-act="rest-skip">Saltar</button>
+</div></div>
+
+<nav><div class="nav-in">
+  <button data-tab="hoy">Hoy</button>
+  <button data-tab="semana">Semana</button>
+  <button data-tab="viaje">Viaje</button>
+  <button data-tab="manguito">Manguito</button>
+  <button data-tab="reglas">Reglas</button>
+</div></nav>
+
+<script>
+"use strict";
+/* ---------- PWA setup ---------- */
+(function(){
+  try{
+    var c=document.createElement("canvas");c.width=c.height=512;var x=c.getContext("2d");
+    x.fillStyle="#12151A";x.fillRect(0,0,512,512);
+    x.fillStyle="#F0A63C";x.beginPath();x.arc(256,256,190,0,7);x.fill();
+    x.fillStyle="#12151A";x.font="700 150px 'Avenir Next Condensed',sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("HS",256,268);
+    var ti=document.createElement("link");ti.rel="apple-touch-icon";ti.href=c.toDataURL("image/png");document.head.appendChild(ti);
+  }catch(e){}
+  if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});
+})();
+
+/* ---------- helpers ---------- */
+function S(k,d){try{var v=localStorage.getItem("hs:"+k);return v===null?d:JSON.parse(v)}catch(e){return d}}
+function W(k,v){try{localStorage.setItem("hs:"+k,JSON.stringify(v))}catch(e){}}
+function yt(q){return "https://www.youtube.com/results?search_query="+encodeURIComponent(q)}
+function pad(n){return (n<10?"0":"")+n}
+function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function monday(d){var x=new Date(d);var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function beep(){try{var A=window.AudioContext||window.webkitAudioContext;var ctx=beep.ctx||(beep.ctx=new A());
+  [0,0.22].forEach(function(t){var o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;o.connect(g);g.connect(ctx.destination);
+  g.gain.setValueAtTime(.25,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.18);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.2)});
+  if(navigator.vibrate)navigator.vibrate([120,80,120]);}catch(e){}}
+
+/* ---------- data ---------- */
+var WARMUP={n:"Calentamiento",sets:0,reps:"5-10 min",chips:["Obligatorio"],yt:"movilidad de hombro calentamiento escapular",
+  how:"Cardio suave 5-7 min. Pendulares de Codman 30-45 s. Círculos de hombro y retracción escapular. Termina con 1-2 series MUY ligeras de rotación externa con goma o polea baja: despierta el manguito antes de empujar."};
+
+var EX={
+upperA:{title:"Upper A",sub:"Empuje inclinado + tracción en polea",type:"gym",items:[
+  WARMUP,
+  {n:"Press inclinado mancuernas 30°",sets:3,reps:"8-12",chips:["Agarre neutro","Codos pegados"],yt:"incline dumbbell press neutral grip",
+   how:"Banco a 30°, palmas enfrentadas (mancuernas paralelas a tu cuerpo). Baja controlado con los codos a menos de 45° del tronco, hasta que lleguen a la altura del torso — sin buscar estiramiento profundo. Arriba, no juntes las mancuernas sobre la cara. Para colocarte: mancuernas en los muslos y súbelas con impulso de rodillas, nunca con los brazos estirados."},
+  {n:"Cruces en polea baja",sets:3,reps:"12-15",chips:["Rango controlado"],yt:"low to high cable chest fly",
+   how:"Poleas a la altura de la rodilla o menos, un pie adelantado. Codos ligeramente flexionados y fijos: lleva las manos adelante-arriba-adentro hasta cruzar a la altura del esternón, nunca más arriba. Vuelve controlado sin dejar que las manos pasen mucho por detrás del cuerpo. Si notas tirón delante del hombro, acorta la vuelta."},
+  {n:"Jalón al pecho, agarre neutro estrecho",sets:3,reps:"8-12",chips:["Agarre neutro","Tracción"],yt:"neutral grip lat pulldown",
+   how:"Maneral de asas paralelas, separación de hombros o menos. Tira hacia la parte alta del pecho llevando los codos abajo y atrás, pecho alto, sin balanceo. El brazo arriba está en tracción: descomprime el hombro (por eso esto sí y el press militar no). Si molesta en el estiramiento superior, acorta el rango arriba."},
+  {n:"Remo en polea sentado",sets:4,reps:"8-12",chips:["Codos pegados"],yt:"seated cable row neutral grip",
+   how:"Maneral triángulo, rodillas semiflexionadas. Tira hacia el abdomen con los codos pegados al cuerpo, junta las escápulas al final y vuelve controlado sin encorvarte. La tracción es el bloque más amable con tu hombro: por eso lleva una serie más."},
+  {n:"Tríceps en polea (cuerda)",sets:3,reps:"10-15",chips:["Codos fijos"],yt:"triceps rope pushdown technique",
+   how:"De pie, codos pegados a los costados: son la bisagra y no se mueven. Extiende hacia abajo separando la cuerda al final. Prohibido todo tríceps por encima de la cabeza y los fondos."},
+  {n:"Curl con barra",sets:3,reps:"8-12",chips:["Libre"],yt:"barbell curl technique",
+   how:"Curl clásico de pie, sin balanceo. Sin restricciones por el hombro."},
+  {n:"Bloque de manguito",sets:0,reps:"~12 min",chips:["No negociable"],yt:"",link:"manguito",
+   how:"Rotación externa 3×15 + rotación interna 3×12 + pull-aparts 3×20. Lo tienes en la pestaña Manguito con sus fichas y el cronómetro."}
+]},
+lowerA:{title:"Lower A + Core",sub:"Sentadilla SSB + bisagra de cadera",type:"gym",items:[
+  {n:"Calentamiento",sets:0,reps:"5-8 min",chips:[],yt:"movilidad cadera tobillo sentadilla",
+   how:"Cardio 5 min + movilidad de cadera y tobillo + 2 series de aproximación de sentadilla con poco peso."},
+  {n:"Sentadilla con safety squat bar",sets:4,reps:"6-10",chips:["SSB","Sin restricción de hombro"],yt:"safety bar squat technique",
+   how:"Tu barra de dos agarres frontales: manos por debajo del hombro, en neutro, sin rotación externa — el hombro no participa. La SSB tiende a empujarte hacia adelante: torso erguido y empuja los agarres ligeramente hacia ARRIBA, no tires de ellos hacia abajo. Aquí sí puedes progresar hacia el rango pesado (6 reps) con las reglas generales."},
+  {n:"Peso muerto rumano con barra",sets:3,reps:"8-10",chips:["Bisagra"],yt:"romanian deadlift technique",
+   how:"Bisagra de cadera con rodillas semiflexionadas, barra pegada a las piernas, espalda neutra. La carga cuelga del brazo en neutro: cero problema de hombro. Alterna con deadlift convencional semana sí / semana no si te apetece."},
+  {n:"Zancada búlgara con mancuernas",sets:3,reps:"8-10 /pierna",chips:["Agarre neutro natural"],yt:"bulgarian split squat dumbbell",
+   how:"Pie trasero en el banco, mancuernas colgando a los lados. Baja vertical, empuja con el talón delantero."},
+  {n:"Hip thrust con barra",sets:3,reps:"8-12",chips:["Pad en cadera"],yt:"barbell hip thrust technique",
+   how:"Espalda alta apoyada en el banco, pad en la cadera. Sube con glúteo hasta la extensión completa, sin arquear la lumbar. Barbilla ligeramente recogida."},
+  {n:"Elevación de talones",sets:3,reps:"12-15",chips:[],yt:"standing calf raise dumbbell",
+   how:"De pie con mancuernas o barra. Pausa de 1 segundo arriba, bajada lenta."},
+  {n:"Pallof press en polea",sets:3,reps:"10-12 /lado",chips:["Core","Altura pecho"],yt:"pallof press cable",
+   how:"Polea a la altura del pecho, perpendicular a ella. Empuja las manos al frente y resiste el giro del tronco. Anti-rotación con los brazos por debajo del hombro: totalmente seguro."},
+  {n:"Plancha frontal",sets:3,reps:"30-45 s",chips:["Core"],yt:"plank technique",
+   how:"Sobre antebrazos, cuerpo en línea. Si el apoyo molesta al hombro, eleva las manos en un banco."}
+]},
+upperB:{title:"Upper B",sub:"Floor press + remo con mancuerna + carries",type:"gym",items:[
+  WARMUP,
+  {n:"Floor press con mancuernas",sets:3,reps:"8-12",chips:["Agarre neutro","A prueba de errores"],yt:"dumbbell floor press neutral grip",
+   how:"Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas. Baja hasta que los tríceps tocan el suelo y ahí paras (pausa 1 s opcional): el suelo corta el rango justo donde empieza la zona de riesgo. Codos pegados. Entra y sal de la posición con el truco de las rodillas."},
+  {n:"Cruces con goma anclada baja (o polea)",sets:3,reps:"12-15",chips:["Rango controlado"],yt:"low resistance band chest fly",
+   how:"Goma anclada a la altura de la rodilla. Cruza hacia arriba-adentro sin pasar del pecho. Misma lógica que los cruces en polea del lunes."},
+  {n:"Pull-over en polea de pie",sets:3,reps:"10-12",chips:["Tracción","Brazos casi rectos"],yt:"straight arm cable pulldown",
+   how:"De pie frente a la polea alta, brazos casi rectos: lleva la barra desde la altura de los hombros hasta los muslos con los dorsales. El brazo nunca sube por encima del hombro bajo carga. Si el jalón del lunes fue perfecto, puedes repetir jalón aquí."},
+  {n:"Remo con mancuerna apoyado en banco",sets:4,reps:"8-12 /lado",chips:["Codos pegados"],yt:"one arm dumbbell row bench",
+   how:"Rodilla y mano del mismo lado en el banco, espalda paralela al suelo. Rema llevando el codo pegado al costado hacia la cadera, no hacia afuera en cruz. El apoyo estabiliza y protege."},
+  {n:"Tríceps en polea (barra recta o V)",sets:3,reps:"10-15",chips:["Codos fijos"],yt:"triceps pushdown bar",
+   how:"Igual que la cuerda del lunes, variante de agarre. Codos fijos al costado, nada overhead."},
+  {n:"Curl martillo",sets:3,reps:"8-12",chips:["Agarre neutro"],yt:"hammer curl technique",
+   how:"Curl con palmas enfrentadas. Sin restricciones."},
+  {n:"Farmer carry con mancuernas",sets:3,reps:"30-40 m",chips:["Joya para tu hombro"],yt:"farmer carry technique",
+   how:"Mancuernas pesadas colgando a los lados, camina erguido con las escápulas 'metidas en los bolsillos'. Trabajo isométrico de trapecio y manguito sin ningún gesto de riesgo: de lo mejor que puedes hacer por ese hombro ahora mismo. Si no hay espacio: 3×30-40 s de pie."},
+  {n:"Bloque de manguito",sets:0,reps:"~12 min",chips:["No negociable"],yt:"",link:"manguito",
+   how:"Rotación externa 3×15 + rotación interna 3×12 + pull-aparts 3×20. Pestaña Manguito."}
+]},
+activo:{title:"Descanso activo",sub:"Isométricos + movilidad · 15-20 min en casa",type:"gym",items:[
+  {n:"Isométrico rotación externa en pared",sets:5,reps:"30-45 s",chips:["50-60% esfuerzo"],yt:"isometric shoulder external rotation wall",link:"manguito",
+   how:"Codo a 90° pegado al costado, dorso de la muñeca contra la pared o el marco de la puerta. Empuja como para rotar el brazo hacia afuera: nada se mueve. Esfuerzo claramente submáximo. Usa el cronómetro guiado de la pestaña Manguito."},
+  {n:"Codman + movilidad torácica",sets:1,reps:"5 min",chips:[],yt:"movilidad toracica gato camello",
+   how:"Pendulares suaves, rotaciones torácicas sentado, gato-camello."},
+  {n:"Movilidad de cadera y tobillo",sets:1,reps:"5 min",chips:[],yt:"movilidad cadera tobillo runners",
+   how:"Para el running y el día de pierna: 90/90 de cadera, dorsiflexión de tobillo contra pared."}
+]},
+run1:{title:"Running",sub:"Rodaje corto",type:"run",km:"6-8 km",note:"Ritmo cómodo, conversacional. No es un test: es la base. El hombro no participa — si está reactivo, correr no lo empeora."},
+run2:{title:"Running",sub:"La salida larga de la semana",type:"run",km:"8-10 km",note:"Tu salida de referencia semanal. Ritmo sostenible, brazos relajados."},
+rest:{title:"Descanso",sub:"Sin sesión programada",type:"rest",note:"Descanso completo. El músculo y el tendón crecen hoy, no ayer. Si el cuerpo pide movimiento: caminar."},
+
+hotelA:{title:"Hotel · Full-body A",sub:"Con gimnasio de hotel",type:"gym",items:[
+  {n:"Goblet squat",sets:3,reps:"10",chips:["Agarre neutro"],yt:"goblet squat technique",how:"Mancuerna vertical al pecho. Torso erguido, cero implicación del hombro."},
+  {n:"Floor press con mancuernas",sets:3,reps:"10",chips:["Agarre neutro"],yt:"dumbbell floor press neutral grip",how:"Igual que en casa: el suelo corta el rango. Codos pegados."},
+  {n:"Remo con mancuerna",sets:3,reps:"10 /lado",chips:["Codos pegados"],yt:"one arm dumbbell row bench",how:"Apoyado en banco o en la propia máquina. Codo hacia la cadera."},
+  {n:"Farmer carry",sets:3,reps:"30 s",chips:[],yt:"farmer carry technique",how:"Las mancuernas más pesadas que encuentres, caminar erguido."},
+  {n:"Manguito con gomas",sets:0,reps:"12 min",chips:["No negociable"],yt:"",link:"manguito",how:"Rotaciones + pull-aparts. Pestaña Manguito."}
+]},
+hotelB:{title:"Hotel · Full-body B",sub:"Con gimnasio de hotel",type:"gym",items:[
+  {n:"Zancadas con mancuernas",sets:3,reps:"10 /pierna",chips:[],yt:"dumbbell lunges technique",how:"Alternas o caminando, mancuernas a los lados."},
+  {n:"Press inclinado (o floor press)",sets:3,reps:"10",chips:["Agarre neutro"],yt:"incline dumbbell press neutral grip",how:"Si hay banco inclinado, a 30°. Si no, al suelo."},
+  {n:"Jalón o remo con goma",sets:3,reps:"12",chips:["Tracción"],yt:"kneeling resistance band lat pulldown",how:"Con el anclaje de puerta si no hay poleas."},
+  {n:"Core: plancha + pallof con goma",sets:3,reps:"30-45 s",chips:[],yt:"pallof press band",how:"Plancha frontal + pallof con la goma anclada."},
+  {n:"Manguito con gomas",sets:0,reps:"12 min",chips:["No negociable"],yt:"",link:"manguito",how:"Pestaña Manguito."}
+]},
+gomasA:{title:"Gomas · Full-body A",sub:"Sin gimnasio — habitación + anclaje de puerta",type:"gym",items:[
+  {n:"Sentadilla con goma",sets:3,reps:"15-20",chips:["Asas al pecho"],yt:"resistance band squat",
+   how:"Pisa la goma con ambos pies, asas al pecho en posición goblet (agarre neutro, manos por debajo del hombro). Retorno de 2-3 s: en las gomas, la vuelta es donde está el trabajo."},
+  {n:"Press de pecho con goma (anclaje media altura)",sets:3,reps:"12-15",chips:["Codos pegados","Anclaje puerta"],yt:"resistance band chest press door anchor",
+   how:"De espaldas a la puerta, un paso adelante, goma a la altura del pecho. Empuja al frente con los codos a menos de 45° del tronco. La trayectoria nunca sube por encima del pecho. Más resistencia = un paso más lejos."},
+  {n:"Remo con goma (anclaje media/baja altura)",sets:3,reps:"15-20",chips:["Codos pegados"],yt:"resistance band row door anchor",
+   how:"De frente a la puerta. Tira hacia el abdomen, escápulas juntas al final, vuelta lenta."},
+  {n:"Zancada búlgara (pie en silla)",sets:3,reps:"10-12 /pierna",chips:[],yt:"bulgarian split squat bodyweight",
+   how:"Pie trasero en la silla o el borde de la cama. Si el peso corporal se queda corto, sujeta las asas de la goma pisada."},
+  {n:"Puente de glúteo con goma",sets:3,reps:"15-20",chips:[],yt:"glute bridge resistance band",
+   how:"En el suelo, goma sobre la cadera con los extremos pisados o sujetos. Sube con glúteo, pausa arriba."},
+  {n:"Flexiones inclinadas",sets:3,reps:"8-12",chips:["Codos pegados"],yt:"incline push ups technique",
+   how:"Manos en el escritorio o el borde de la cama. Codos pegados, sin bajar de la línea de la espalda, sin rebotes."},
+  {n:"Pallof press con goma",sets:3,reps:"10-12 /lado",chips:["Core"],yt:"pallof press band",
+   how:"Goma anclada a la altura del pecho, perpendicular. Empuja al frente y resiste el giro."},
+  {n:"Manguito con anclaje",sets:0,reps:"12 min",chips:["No negociable"],yt:"",link:"manguito",
+   how:"Con el anclaje a la altura del codo la resistencia es más constante que pisando la goma. Pestaña Manguito."}
+]},
+gomasB:{title:"Gomas · Full-body B",sub:"Sin gimnasio — habitación + anclaje de puerta",type:"gym",items:[
+  {n:"Peso muerto rumano con goma",sets:3,reps:"15-20",chips:["Bisagra"],yt:"resistance band romanian deadlift",
+   how:"Pisa la goma con ambos pies, bisagra de cadera, espalda neutra. Sube apretando glúteo."},
+  {n:"Floor press con goma",sets:3,reps:"12-15",chips:["Agarre neutro"],yt:"resistance band floor press",
+   how:"Tumbado con la goma pasada bajo la espalda alta. Press con codos pegados; el suelo corta el rango."},
+  {n:"Jalón con goma (anclaje alto)",sets:3,reps:"12-15",chips:["Tracción","Agarre neutro"],yt:"kneeling resistance band lat pulldown",
+   how:"De rodillas frente a la puerta, anclaje arriba. Tira hacia el pecho. Es tracción: descomprime. Si molesta arriba, aléjate para reducir el ángulo."},
+  {n:"Zancadas alternas",sets:3,reps:"10-12 /pierna",chips:[],yt:"walking lunges bodyweight",
+   how:"Variante distinta al día A. Torso erguido."},
+  {n:"Elevación de talones a una pierna",sets:3,reps:"12-15 /pierna",chips:[],yt:"single leg calf raise",
+   how:"En un escalón o borde. Pausa arriba, bajada lenta."},
+  {n:"Tríceps pushdown con goma (anclaje alto)",sets:3,reps:"12-15",chips:["Codos fijos"],yt:"resistance band triceps pushdown",
+   how:"Codos pegados al costado. Nada por encima de la cabeza."},
+  {n:"Curl con goma",sets:3,reps:"12-15",chips:[],yt:"resistance band bicep curl",
+   how:"Pisando la goma, agarre neutro o supino."},
+  {n:"Plancha frontal + lateral",sets:3,reps:"30-45 s",chips:["Core"],yt:"plank side plank technique",
+   how:"Frontal 3×30-45 s + lateral 2×20-30 s por lado, sobre antebrazo."}
+]},
+manguito:{title:"Manguito y escápula",sub:"3-5 días/semana · ~15 min",type:"gym",items:[
+  {n:"Rotación externa, codo pegado",sets:3,reps:"15",chips:["El más rentable"],yt:"shoulder external rotation band elbow at side",
+   how:"Codo a 90° PEGADO al costado (truco: toalla enrollada entre codo y costillas — si se cae, el codo se despegó). Goma anclada al lado contrario, o polea baja con peso mínimo. Gira el antebrazo hacia afuera como abriendo una puerta, solo rango cómodo, vuelta lenta. Fortalece los músculos que centran la cabeza del húmero y le quitan trabajo al supraespinoso."},
+  {n:"Rotación interna, codo pegado",sets:3,reps:"12",chips:[],yt:"shoulder internal rotation band",
+   how:"Mismo setup, goma anclada al mismo lado del brazo: gira el antebrazo hacia el abdomen. Resistencia a tolerancia, sin dolor."},
+  {n:"Band pull-aparts",sets:3,reps:"20",chips:["Escápula"],yt:"band pull apart technique",
+   how:"Goma frente a ti a la altura del PECHO (no de la cara), brazos estirados. Sepárala hasta el pecho juntando las escápulas. Una escápula estable es la base de todo lo demás."}
+]}
+};
+
+var WEEK=[
+ {d:"LUN",name:"Lunes",sid:"upperA"},
+ {d:"MAR",name:"Martes",sid:"run1"},
+ {d:"MIÉ",name:"Miércoles",sid:"lowerA"},
+ {d:"JUE",name:"Jueves",sid:"activo"},
+ {d:"VIE",name:"Viernes",sid:"upperB"},
+ {d:"SÁB",name:"Sábado",sid:"run2"},
+ {d:"DOM",name:"Domingo",sid:"rest"}
+];
+
+var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas")};
+var todayIdx=(new Date().getDay()+6)%7;
+var TODAY=iso(new Date());
+
+/* ---------- renders ---------- */
+function setsKey(sid){return "sets:"+TODAY+":"+sid}
+function isDone(sid){
+  var s=EX[sid];if(!s)return false;
+  if(s.type!=="gym")return !!S("done:"+TODAY+":"+sid,false);
+  var st=S(setsKey(sid),{});
+  var need=s.items.filter(function(it){return it.sets>0});
+  if(!need.length)return false;
+  return need.every(function(it,k){
+    var idx=s.items.indexOf(it);var arr=st[idx]||[];
+    var c=0;for(var j=0;j<it.sets;j++)if(arr[j])c++;
+    return c>=it.sets;
+  });
+}
+
+function exCard(sid,i,it){
+  var st=S(setsKey(sid),{});var arr=st[i]||[];
+  var pills="";
+  for(var j=0;j<it.sets;j++){
+    pills+='<button class="pill'+(arr[j]?" on":"")+'" data-act="pill" data-sid="'+sid+'" data-i="'+i+'" data-j="'+j+'" aria-label="Serie '+(j+1)+'">'+(j+1)+"</button>";
+  }
+  var w=S("w:"+sid+":"+i,"");
+  var chips=(it.chips||[]).map(function(c){
+    var cls=/neutro|SSB|Sin restricción|Joya|prueba/i.test(c)?" g":(/No negociable|Obligatorio/i.test(c)?" a":"");
+    return '<span class="chip'+cls+'">'+esc(c)+"</span>"}).join("");
+  var foot='<div class="exfoot"><button class="howbtn" data-act="how">Cómo hacerlo</button>';
+  if(it.link)foot+='<a class="ytl" href="#" data-act="goto" data-tab="'+it.link+'">Abrir pestaña</a>';
+  else if(it.yt)foot+='<a class="ytl" href="'+yt(it.yt)+'" target="_blank" rel="noopener">Ver técnica</a>';
+  foot+="</div>";
+  return '<div class="card"><div class="exhead"><h3>'+esc(it.n)+'</h3><span class="dose">'+(it.sets?it.sets+"×":"")+esc(it.reps)+"</span></div>"+
+    (chips?'<div class="chips">'+chips+"</div>":"")+
+    (it.sets?'<div class="setrow">'+pills+'<span class="w-wrap"><input class="w-in" data-key="w:'+sid+":"+i+'" inputmode="decimal" placeholder="—" value="'+esc(String(w))+'" aria-label="Peso">kg</span></div>':"")+
+    foot+'<div class="how">'+esc(it.how||"")+"</div></div>";
+}
+
+function painBlock(){
+  var p=S("pain:"+TODAY,null);
+  var msgs={
+    0:"Perfecto. Esta es la zona donde vives ahora. Si la próxima sesión también sale limpia, toca sumar 1-2 reps.",
+    1:"Atención: 2-3/10 ya es más de lo pactado. Mañana revisa cómo amanece el hombro. En la próxima sesión, baja carga o rango en el ejercicio que lo provocó.",
+    2:"Para. Dolor 4+ significa que algo del volumen o la técnica no está bien. Reduce carga claramente la próxima sesión y, si se repite o hay reacción al día siguiente, adelanta la consulta con tu equipo de rehabilitación."};
+  return '<div class="card pain"><h3>Semáforo del hombro</h3><p class="note" style="margin-top:4px">Al terminar la sesión: ¿cómo quedó?</p>'+
+    '<div class="painbtns">'+
+    '<button class="p0'+(p===0?" sel":"")+'" data-act="pain" data-v="0">0-1<br><small>Sin dolor</small></button>'+
+    '<button class="p1'+(p===1?" sel":"")+'" data-act="pain" data-v="1">2-3<br><small>Molestia</small></button>'+
+    '<button class="p2'+(p===2?" sel":"")+'" data-act="pain" data-v="2">4+<br><small>Dolor</small></button></div>'+
+    '<div class="painmsg'+(p!==null?" show":"")+'">'+(p!==null?msgs[p]:"")+"</div></div>";
+}
+
+function sessionView(sid,dayName){
+  var s=EX[sid];var h="";
+  if(s.type==="run"){
+    var done=S("done:"+TODAY+":"+sid,false);
+    h+='<div class="card runcard"><h3>'+s.title+"</h3><p class=\"big\">"+s.km+'</p><p class="note" style="margin-top:8px">'+esc(s.note)+"</p>"+
+       '<button class="donebtn'+(done?" on":"")+'" data-act="run-done" data-sid="'+sid+'">'+(done?"✓ Completado":"Marcar completado")+"</button></div>";
+  }else if(s.type==="rest"){
+    h+='<div class="card"><h3>'+s.title+'</h3><p class="note" style="margin-top:6px">'+esc(s.note)+"</p></div>";
+  }else{
+    s.items.forEach(function(it,i){h+=exCard(sid,i,it)});
+    if(sid!=="manguito"&&sid!=="activo")h+=painBlock();
+  }
+  return h;
+}
+
+function renderHdr(){
+  var idx=state.sid?WEEK.findIndex(function(w){return w.sid===state.sid}):todayIdx;
+  var w=WEEK[idx>=0?idx:todayIdx];
+  var s=EX[w.sid];
+  var titles={hoy:null,semana:"Semana",viaje:"Modo viaje",manguito:"Manguito",reglas:"Reglas del juego"};
+  var big,sub;
+  if(state.tab==="hoy"){big=w.name+" · "+s.title;sub=s.sub||""}
+  else{big=titles[state.tab];sub={semana:"Plan completo · fase de protección",viaje:"La maleta siempre lleva las gomas",manguito:"3-5 días/semana · el seguro de todo lo demás",reglas:"Lo que protege al supraespinoso"}[state.tab]}
+  document.getElementById("hdr").innerHTML=
+    '<div class="eyebrow">Hombro seguro</div><h1 class="day">'+big+"</h1>"+(sub?'<p class="sub">'+sub+"</p>":"")+
+    '<div class="phase"><b>Fase de protección</b><span>Hasta revisión médica → preguntar techo de carga para press</span></div>'+
+    '<div class="strip"><span class="hot">Dolor máx 0-1/10</span><span class="hot">RPE 6-7</span><span>Nada overhead</span><span>2 limpias → subir</span></div>';
+}
+
+function render(){
+  renderHdr();
+  var v=document.getElementById("view");var h="";
+  if(state.tab==="hoy"){
+    var idx=state.sid?WEEK.findIndex(function(w){return w.sid===state.sid}):todayIdx;
+    if(idx<0)idx=todayIdx;
+    if(state.sid&&idx!==todayIdx)h+='<button class="backlink" data-act="back">← Volver a hoy</button>';
+    h+=sessionView(WEEK[idx].sid,WEEK[idx].name);
+  }
+  else if(state.tab==="semana"){
+    WEEK.forEach(function(w,i){
+      var s=EX[w.sid];var done=isDone(w.sid);
+      h+='<button class="dayrow'+(i===todayIdx?" today":"")+'" data-act="day" data-sid="'+w.sid+'">'+
+        '<span class="dn">'+w.d+'</span><span class="dt"><b>'+s.title+"</b><small>"+(s.sub||s.km||"")+"</small></span>"+
+        '<span class="tick'+(done?" on":"")+'">'+(done?"✓":"")+"</span></button>";
+    });
+    h+='<p class="note" style="margin:14px 4px;color:var(--mut)">Regla real del orden: no juntar Upper A y Upper B en días seguidos, y que la salida larga no caiga tras un día de pierna cargado. Los ✓ se marcan solos al completar todas las series del día.</p>';
+  }
+  else if(state.tab==="viaje"){
+    h+='<div class="seg"><button data-act="vmode" data-m="gomas"'+(state.viaje==="gomas"?' class="sel"':"")+'>Sin gym · Gomas</button>'+
+       '<button data-act="vmode" data-m="hotel"'+(state.viaje==="hotel"?' class="sel"':"")+'>Hotel con gym</button></div>';
+    if(state.viaje==="gomas"){
+      h+='<div class="card dcard"><h3>Anclaje de puerta — 3 reglas</h3><ul>'+
+        "<li>Ancla en el lado <b>opuesto a las bisagras</b>, puerta cerrada con pestillo, tirando en la dirección que la aprieta contra el marco.</li>"+
+        "<li>Revisa la goma antes de cada sesión (cortes, zonas blanquecinas): una goma que revienta a media rotación externa es un tirón seco donde no quieres.</li>"+
+        "<li>Cartel de «no molestar»: una puerta abierta a mitad de serie tiene el mismo efecto.</li></ul></div>";
+      h+='<div class="card lcard"><h3>Cómo dosificar con gomas</h3><ul>'+
+        "<li>Rangos de <b>12-20 reps</b>, retorno lento de 2-3 s — la vuelta es donde la goma trabaja de verdad.</li>"+
+        "<li>Misma regla RPE 6-7: parar con 2-3 reps en reserva.</li>"+
+        "<li>Más resistencia: goma más dura, doblarla o alejarse del anclaje. Nunca sacrificar técnica.</li></ul></div>";
+      h+='<h2 class="sect">Estructura · 5 días</h2><div class="card"><table class="mini">'+
+        "<tr><td>Día 1</td><td>Full-body A (gomas) — abajo</td></tr><tr><td>Día 2</td><td>Running 6-8 km</td></tr>"+
+        "<tr><td>Día 3</td><td>Isométricos de pared + movilidad (15 min)</td></tr><tr><td>Día 4</td><td>Full-body B (gomas) — abajo</td></tr>"+
+        "<tr><td>Día 5</td><td>Running 6-10 km</td></tr><tr><td>Día 6-7</td><td>Descanso / caminar; viaje largo → repetir ciclo</td></tr></table></div>";
+      h+='<h2 class="sect">Full-body A</h2>'+sessionView("gomasA");
+      h+='<h2 class="sect">Full-body B</h2>'+sessionView("gomasB");
+    }else{
+      h+='<h2 class="sect">Estructura · 5 días</h2><div class="card"><table class="mini">'+
+        "<tr><td>Día 1</td><td>Full-body A — abajo</td></tr><tr><td>Día 2</td><td>Running 6-8 km (ruta segura alrededor del hotel)</td></tr>"+
+        "<tr><td>Día 3</td><td>Isométricos de pared + movilidad</td></tr><tr><td>Día 4</td><td>Full-body B — abajo</td></tr>"+
+        "<tr><td>Día 5</td><td>Running 6-10 km</td></tr></table></div>";
+      h+='<h2 class="sect">Full-body A</h2>'+sessionView("hotelA");
+      h+='<h2 class="sect">Full-body B</h2>'+sessionView("hotelB");
+    }
+    h+='<p class="note" style="margin:14px 4px;color:var(--mut)">Las gomas van en la maleta siempre: manguito e isométricos no se negocian en ninguna variante. El running es el ancla que no depende de equipamiento.</p>';
+  }
+  else if(state.tab==="manguito"){
+    h+=sessionView("manguito");
+    h+='<h2 class="sect">Isométrico de pared · cronómetro guiado</h2>';
+    h+='<div class="iso"><div class="isophase" id="isophase">5 × 30-45 s · al 50-60% de esfuerzo</div>'+
+       '<span class="tnum" id="isonum">0:45</span><div class="isodots" id="isodots">'+"<i></i>".repeat(5)+"</div>"+
+       '<button class="isobtn" id="isobtn" data-act="iso">Empezar serie</button>'+
+       '<p class="note" style="margin-top:12px">Codo a 90° pegado al costado, dorso de la muñeca contra la pared. Empuja hacia afuera: nada se mueve. Pitido al acabar cada serie; descansa ~1 min entre series. Efecto analgésico documentado sobre el dolor tendinoso — perfecto para hotel, solo necesitas una pared.</p></div>';
+  }
+  else if(state.tab==="reglas"){
+    h+='<div class="card lcard"><h3>Glosario de agarres</h3><ul>'+
+      "<li><b>Neutro</b>: palmas enfrentadas, como si fueras a aplaudir (mancuernas paralelas a tu cuerpo). El más seguro: mantiene el húmero en ligera rotación externa y abre el espacio subacromial, alejando el supraespinoso del roce.</li>"+
+      "<li><b>Supino</b>: palmas hacia ti. Segunda mejor opción.</li>"+
+      "<li><b>Prono</b>: palmas al frente/abajo (banca clásica). Cuanto más ancho, más se cierra el espacio subacromial. A limitar.</li>"+
+      "<li>Jerarquía: <b>neutro &gt; supino &gt; prono estrecho &gt; prono ancho (evitar)</b>.</li></ul></div>";
+    h+='<div class="card lcard"><h3>Las 4 reglas</h3><ul>'+
+      "<li><b>Dolor 0-1/10</b> durante y después. Reacción al día siguiente = bajar carga o rango en la próxima sesión. Sin excepciones.</li>"+
+      "<li><b>RPE 6-7</b>: terminar cada serie con 2-3 reps en reserva. La última rep forzada es donde el supraespinoso sale a «rescatar» el gesto.</li>"+
+      "<li><b>Progresión</b>: 2 sesiones limpias → +1-2 reps → al tope del rango en todas las series → +2,5-5% de peso y vuelta al mínimo.</li>"+
+      "<li><b>Post-tratamiento</b>: el hombro puede sentirse mejor de lo que está. Que no duela no autoriza a cargar más ni a probar máximos.</li></ul></div>";
+    h+='<div class="card dcard"><h3>Prohibidos esta fase</h3><ul>'+
+      "<li>Press militar y todo press overhead.</li><li>Banca plana con barra.</li><li>Aperturas/flys con mancuernas.</li>"+
+      "<li>Fondos / dips.</li><li>Elevaciones laterales con carga (es el gesto exacto del conflicto subacromial).</li>"+
+      "<li>Upright row / remo al mentón (el peor gesto posible para este cuadro).</li><li>Extensiones de tríceps overhead.</li>"+
+      "<li>Dead hang, incluso con pies apoyados (la barra queda como anclaje de gomas).</li>"+
+      "<li>Sentadilla trasera convencional (rack position = rotación externa + abducción); low-bar en particular. Con la SSB no hay motivo para asumirlo.</li>"+
+      "<li>Ab-wheel y core colgado de barra.</li><li>Flexiones profundas (las inclinadas con codos pegados sí valen).</li></ul></div>";
+    h+='<div class="card lcard"><h3>Salida de fase — llevar a la revisión</h3><ul>'+
+      "<li>¿Qué <b>techo de carga</b> me autorizas para press?</li>"+
+      "<li>¿Aval para dead hang adaptado, elevaciones en rango cómodo y sentadilla trasera?</li>"+
+      "<li>Orden de reintroducción del trabajo pesado: tracción (remo, jalón) → press inclinado → banca plana lo último.</li>"+
+      "<li>El bloque de manguito se queda para siempre (prehab): es lo que sostiene todo lo demás.</li></ul></div>";
+    h+='<p class="note" style="margin:14px 4px;color:var(--mut)">Rutina diseñada para entrenar fuerza protegiendo un hombro con conflicto subacromial (supraespinoso) en recuperación. Es una fase puente hasta la revisión médica: la decisión de volver a carga alta es siempre del equipo de rehabilitación, no de una app.</p>';
+  }
+  v.innerHTML=h;
+  window.scrollTo(0,0);
+}
+
+/* ---------- rest timer ---------- */
+var rest={t:null,left:0};
+function restStart(sec){
+  clearInterval(rest.t);rest.left=sec;
+  document.getElementById("sheet").classList.add("show");restTick();
+  rest.t=setInterval(restTick,1000);
+}
+function restTick(){
+  var n=document.getElementById("tnum");
+  n.textContent=Math.floor(rest.left/60)+":"+pad(rest.left%60);
+  if(rest.left<=0){clearInterval(rest.t);document.getElementById("sheet").classList.remove("show");beep();return}
+  rest.left--;
+}
+
+/* ---------- iso timer ---------- */
+var isoST={series:0,t:null,left:0,running:false};
+function isoStart(){
+  if(isoST.running)return;
+  if(isoST.series>=5){isoST.series=0;isoDots()}
+  isoST.running=true;isoST.left=45;
+  var btn=document.getElementById("isobtn");btn.disabled=true;btn.textContent="Aguanta…";
+  document.getElementById("isophase").textContent="Serie "+(isoST.series+1)+" de 5 · empuja al 50-60%";
+  isoTick();isoST.t=setInterval(isoTick,1000);
+}
+function isoTick(){
+  var n=document.getElementById("isonum");if(!n){clearInterval(isoST.t);isoST.running=false;return}
+  n.textContent="0:"+pad(isoST.left);
+  if(isoST.left<=0){
+    clearInterval(isoST.t);isoST.running=false;isoST.series++;beep();isoDots();
+    var btn=document.getElementById("isobtn");btn.disabled=false;
+    if(isoST.series>=5){btn.textContent="Bloque hecho ✓ · Reiniciar";document.getElementById("isophase").textContent="5 de 5 — manguito contento";}
+    else{btn.textContent="Serie "+(isoST.series+1)+" (descansa ~1 min)";document.getElementById("isophase").textContent="Descanso · "+isoST.series+" de 5 hechas";}
+    return;
+  }
+  isoST.left--;
+}
+function isoDots(){
+  var d=document.getElementById("isodots");if(!d)return;
+  Array.prototype.forEach.call(d.children,function(el,i){el.className=i<isoST.series?"on":""});
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-act],[data-tab]");if(!b)return;
+  var tab=b.getAttribute("data-tab"),act=b.getAttribute("data-act");
+  if(tab&&!act){state.tab=tab;state.sid=null;syncNav();render();return}
+  if(act==="goto"){e.preventDefault();state.tab=b.getAttribute("data-tab");syncNav();render();return}
+  if(act==="pill"){
+    var sid=b.dataset.sid,i=+b.dataset.i,j=+b.dataset.j;
+    var st=S(setsKey(sid),{});var arr=st[i]||[];
+    arr[j]=!arr[j];st[i]=arr;W(setsKey(sid),st);
+    b.classList.toggle("on",arr[j]);
+    if(arr[j])restStart(90);
+    return;
+  }
+  if(act==="how"){var how=b.closest(".card").querySelector(".how");how.classList.toggle("open");return}
+  if(act==="pain"){
+    var v=+b.dataset.v;W("pain:"+TODAY,v);render();return;
+  }
+  if(act==="run-done"){
+    var k="done:"+TODAY+":"+b.dataset.sid;W(k,!S(k,false));render();return;
+  }
+  if(act==="day"){state.sid=b.dataset.sid;state.tab="hoy";syncNav();render();return}
+  if(act==="back"){state.sid=null;render();return}
+  if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
+  if(act==="rest-add"){rest.left+=30;restTick();return}
+  if(act==="rest-skip"){clearInterval(rest.t);document.getElementById("sheet").classList.remove("show");return}
+  if(act==="iso"){isoStart();return}
+});
+document.addEventListener("change",function(e){
+  var inp=e.target.closest(".w-in");if(!inp)return;
+  W(inp.dataset.key,inp.value.trim());
+});
+function syncNav(){
+  document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("sel",b.dataset.tab===state.tab)});
+}
+syncNav();render();
+</script>
+</body>
+</html>
