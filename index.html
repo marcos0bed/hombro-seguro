@@ -250,8 +250,9 @@ activo:{title:"Descanso activo",sub:"Isométricos + movilidad · 15-20 min en ca
   {n:"Movilidad de cadera y tobillo",sets:1,reps:"5 min",chips:[],yt:"movilidad cadera tobillo runners",
    how:"Para el running y el día de pierna: 90/90 de cadera, dorsiflexión de tobillo contra pared."}
 ]},
-run1:{title:"Running",sub:"Rodaje corto",type:"run",km:"6-8 km",note:"Ritmo cómodo, conversacional. No es un test: es la base. El hombro no participa — si está reactivo, correr no lo empeora."},
-run2:{title:"Running",sub:"La salida larga de la semana",type:"run",km:"8-10 km",note:"Tu salida de referencia semanal. Ritmo sostenible, brazos relajados."},
+run1:{title:"Run corta o HIIT",sub:"Primera sesión corta de la semana",type:"run",km:"5-8 km",note:"Rodaje fácil o HIIT de carrera (6-10×400 m, 30/30, cuestas cortas). Si toca HIIT, que sea CORRIENDO: nada de circuitos con burpees, battle ropes o thrusters — eso es tren superior encubierto con gestos overhead. El braceo de los sprints no es problema para el hombro."},
+run2:{title:"Run corta o HIIT",sub:"Segunda sesión corta de la semana",type:"run",km:"5-8 km",note:"La otra corta: alterna con la del martes — si aquella fue HIIT, hoy rodaje fácil (o al revés). Dos HIIT + tirada larga es demasiada intensidad acumulada."},
+runLong:{title:"Tirada larga",sub:"La salida de referencia de la semana",type:"run",km:"10-12 km",note:"Ritmo sostenible, brazos relajados. Es la base del 10K, no una carrera. Llegas con el sábado de descanso por delante: aprovéchalo."},
 rest:{title:"Descanso",sub:"Sin sesión programada",type:"rest",note:"Descanso completo. El músculo y el tendón crecen hoy, no ayer. Si el cuerpo pide movimiento: caminar."},
 
 hotelA:{title:"Hotel · Full-body A",sub:"Con gimnasio de hotel",type:"gym",items:[
@@ -318,10 +319,10 @@ var WEEK=[
  {d:"LUN",name:"Lunes",sid:"upperA"},
  {d:"MAR",name:"Martes",sid:"run1"},
  {d:"MIÉ",name:"Miércoles",sid:"lowerA"},
- {d:"JUE",name:"Jueves",sid:"activo"},
+ {d:"JUE",name:"Jueves",sid:"run2"},
  {d:"VIE",name:"Viernes",sid:"upperB"},
- {d:"SÁB",name:"Sábado",sid:"run2"},
- {d:"DOM",name:"Domingo",sid:"rest"}
+ {d:"SÁB",name:"Sábado",sid:"activo"},
+ {d:"DOM",name:"Domingo",sid:"runLong"}
 ];
 
 var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas")};
