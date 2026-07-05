@@ -183,7 +183,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v32";
+var APP_VERSION="v33";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -343,7 +343,7 @@ function loadLogs(){
   if(!cloudOn()||LOGS.loading)return;
   LOGS.loading=true;
   var since=new Date();since.setDate(since.getDate()-90);
-  sb.from("workout_logs").select("day,session_id,title,entries,total_sets,est_volume")
+  sb.from("workout_logs").select("day,session_id,title,entries,total_sets,est_volume,created_at")
     .gte("day",iso(since)).order("day",{ascending:true})
     .then(function(r){LOGS.loading=false;LOGS.data=r.data||[];render();},
           function(){LOGS.loading=false;LOGS.data=[];render();});
@@ -364,8 +364,8 @@ var GACT={data:null,loading:false};
 function loadGact(){
   if(!cloudOn()||GACT.loading)return;
   GACT.loading=true;
-  sb.from("garmin_activities").select("start_time,type,distance_km,duration_min,pace,hr_avg,calories")
-    .order("start_time",{ascending:false}).limit(10)
+  sb.from("garmin_activities").select("activity_id,start_time,type,distance_km,duration_min,pace,hr_avg,calories")
+    .order("start_time",{ascending:false}).limit(60)
     .then(function(r){GACT.loading=false;GACT.data=r.data||[];render();},
           function(){GACT.loading=false;GACT.data=[];render();});
 }
@@ -1195,6 +1195,27 @@ function pickSeries(rows,key){
   return rows.filter(function(r){return r[key]!=null}).map(function(r){return {day:r.day,v:+r[key]}});
 }
 
+/* Casa un workout_log con su actividad Garmin: runs por id exacto; fuerza por
+   mismo día, tipo no-running, la más cercana en hora al momento del guardado. */
+function garminFor(l){
+  var acts=GACT.data||[];
+  var sid=l.session_id||"";
+  if(sid.indexOf("garmin-")===0){
+    var id=sid.slice(7);
+    for(var a=0;a<acts.length;a++)if(String(acts[a].activity_id)===id)return acts[a];
+    return null;
+  }
+  var day=acts.filter(function(x){return (x.start_time||"").slice(0,10)===l.day&&(x.type||"").indexOf("running")<0});
+  if(!day.length)return null;
+  if(day.length===1||!l.created_at)return day[0];
+  var ct=+new Date(l.created_at);
+  day.sort(function(x,y){
+    var ex=+new Date(x.start_time)+(+x.duration_min||0)*60000;
+    var ey=+new Date(y.start_time)+(+y.duration_min||0)*60000;
+    return Math.abs(ex-ct)-Math.abs(ey-ct)});
+  return day[0];
+}
+
 /* Historial de sesiones guardadas (los workout_logs ya cargados en LOGS) */
 function histView(){
   var L=(LOGS.data||[]).slice().reverse().slice(0,20);
@@ -1202,10 +1223,16 @@ function histView(){
   var rows=L.map(function(l,k){
     var key=l.day+"|"+(l.session_id||"")+"|"+k;
     var open=state.histOpen===key;
+    var g=garminFor(l),gtxt="";
+    if(g){
+      gtxt=" · ⌚ "+String(g.start_time||"").slice(11,16)+
+        (g.duration_min?" · "+Math.round(+g.duration_min)+" min":"")+
+        (g.calories?" · "+Math.round(+g.calories)+" kcal":"");
+    }
     var head='<button class="dayrow" style="margin:6px 0" data-act="hist" data-k="'+esc(key)+'">'+
       '<span class="dn" style="width:52px">'+l.day.slice(8,10)+"/"+l.day.slice(5,7)+"</span>"+
       '<span class="dt"><b>'+esc(l.title||l.session_id||"?")+"</b><small>"+(l.total_sets||0)+" "+u("setsLbl")+
-      (l.est_volume>0?" · "+fmtK(+l.est_volume)+" kg":"")+"</small></span>"+
+      (l.est_volume>0?" · "+fmtK(+l.est_volume)+" kg":"")+esc(gtxt)+"</small></span>"+
       '<span class="tick" style="border:none;color:var(--mut)">'+(open?"▾":"▸")+"</span></button>";
     var det="";
     if(open){
@@ -1227,7 +1254,7 @@ function gactView(){
   if(GACT.data===null){loadGact();return '<div class="card"><p class="note">'+u("loading")+"</p></div>"}
   if(!GACT.data.length)return "";
   var hrL=LANG==="es"?"FC ":"HR ";
-  var trs=GACT.data.map(function(a){
+  var trs=GACT.data.slice(0,10).map(function(a){
     var iso10=(a.start_time||"").slice(0,10);
     var d=iso10.slice(8,10)+"/"+iso10.slice(5,7);
     var t=T(GTYPES[a.type]||{es:a.type||"—",en:a.type||"—"});
