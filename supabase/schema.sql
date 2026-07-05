@@ -108,3 +108,6 @@ alter table public.daily_metrics enable row level security;
 drop policy if exists "own metrics" on public.daily_metrics;
 create policy "own metrics" on public.daily_metrics
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- v34: notas libres por sesión
+alter table public.workout_logs add column if not exists note text;

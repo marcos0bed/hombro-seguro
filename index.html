@@ -89,6 +89,7 @@ h1.day{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-siz
 /* 16px mínimo: por debajo, iOS hace auto-zoom al enfocar el campo */
 .w-in{width:70px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;color:var(--text);font:16px var(--mono);padding:6px 8px;text-align:right}
 
+.note-in{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px 12px;font-size:16px;margin-top:10px;font-family:inherit;resize:vertical;min-height:44px}
 .rng{display:flex;gap:4px}
 .rng button{font-family:var(--disp);font-size:11px;font-weight:600;letter-spacing:.04em;padding:3px 9px;border:1px solid var(--line);border-radius:99px;color:var(--mut)}
 .rng button.sel{color:var(--acc);border-color:var(--acc-dim);background:rgba(240,166,60,.1)}
@@ -183,7 +184,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v33";
+var APP_VERSION="v34";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -343,7 +344,7 @@ function loadLogs(){
   if(!cloudOn()||LOGS.loading)return;
   LOGS.loading=true;
   var since=new Date();since.setDate(since.getDate()-90);
-  sb.from("workout_logs").select("day,session_id,title,entries,total_sets,est_volume,created_at")
+  sb.from("workout_logs").select("day,session_id,title,entries,total_sets,est_volume,created_at,note")
     .gte("day",iso(since)).order("day",{ascending:true})
     .then(function(r){LOGS.loading=false;LOGS.data=r.data||[];render();},
           function(){LOGS.loading=false;LOGS.data=[];render();});
@@ -423,8 +424,9 @@ function buildLog(sid){
     entries.push({n:T(it.n),m:muscleOf(sid,i,it),sets:c,reps:rp||null,target:it.sets+"×"+T(it.reps),weight:w>0?w:null});
   });
   if(!entries.length)return null;
+  var nt=String(S("note:"+TODAY+":"+sid,"")).trim();
   return {user_id:sbUser?sbUser.id:null,day:TODAY,session_id:sid,title:T(s.title),
-          entries:entries,total_sets:total,est_volume:Math.round(vol)};
+          entries:entries,total_sets:total,est_volume:Math.round(vol),note:nt||null};
 }
 function saveLog(row,sid){
   sb.from("workout_logs").insert(row).then(
@@ -498,7 +500,8 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   restDone:"⏱️ Descanso terminado — ¡a la siguiente serie!",isoDoneN:"Isométrico completado — descansa ~1 min",
   restDoneShort:"⏱️ Descanso terminado",serieLbl:"serie",nextLbl:"Siguiente:",
   sessDone:"🏁 Todas las series hechas — ¡guarda la sesión!",
-  histT:"Historial de sesiones",thEj:"Ejercicio",thSets:"Series",setsLbl:"series"},
+  histT:"Historial de sesiones",thEj:"Ejercicio",thSets:"Series",setsLbl:"series",
+  notePh:"Notas de la sesión (sensaciones, ajustes…)"},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -547,7 +550,8 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   restDone:"⏱️ Rest over — next set!",isoDoneN:"Isometric hold done — rest ~1 min",
   restDoneShort:"⏱️ Rest over",serieLbl:"set",nextLbl:"Next:",
   sessDone:"🏁 All sets done — save your workout!",
-  histT:"Workout history",thEj:"Exercise",thSets:"Sets",setsLbl:"sets"}};
+  histT:"Workout history",thEj:"Exercise",thSets:"Sets",setsLbl:"sets",
+  notePh:"Session notes (how it felt, tweaks…)"}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -781,6 +785,9 @@ function orderOf(sid,n){
 function orderedIdx(sid,items){
   return orderOf(sid,items.length)||items.map(function(_,k){return k});
 }
+/* El semáforo del hombro y el marco de fase son del plan integrado (Marcos).
+   Usuarios con rutina propia no ven nada del hombro salvo que su rutina lo pida. */
+function shoulderUser(){var rt=getRT();return !rt||rt.shoulderCheck===true}
 
 var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas"),pview:"train"};
 var todayIdx=(new Date().getDay()+6)%7;
@@ -857,8 +864,9 @@ function sessionView(sid){
   }else{
     var ordV=orderedIdx(sid,s.items);
     ordV.forEach(function(oi,pos){h+=exCard(sid,oi,s.items[oi],pos,s.items.length)});
-    if(sid!=="manguito"&&sid!=="activo")h+=painBlock();
+    if(sid!=="manguito"&&sid!=="activo"&&shoulderUser())h+=painBlock();
     var saved=S("savedlog:"+TODAY+":"+sid,false);
+    h+='<textarea class="note-in" rows="2" data-key="note:'+TODAY+":"+sid+'" placeholder="'+u("notePh")+'">'+esc(String(S("note:"+TODAY+":"+sid,"")))+"</textarea>";
     h+='<button class="donebtn'+(saved?" on":"")+'" data-act="savelog" data-sid="'+sid+'">'+(saved?u("savedSession"):u("saveSession"))+"</button>";
   }
   return h;
@@ -889,8 +897,8 @@ function renderHdr(){
     '<button data-act="lang" data-l="en"'+(LANG==="en"?' class="sel"':"")+' aria-label="English">🇬🇧</button></div>'+
     '<button class="acct'+(sbUser?" on":"")+'" data-act="acct" aria-label="'+u("acct")+'">'+ai+"</button></div></div>"+
     '<h1 class="day">'+esc(big)+"</h1>"+(sub?'<p class="sub">'+esc(sub)+"</p>":"")+
-    '<div class="phase"><b>'+esc((cx&&cx.phaseB)||u("phaseB"))+"</b><span>"+esc((cx&&cx.phaseS)||u("phaseS"))+"</span></div>"+
-    '<div class="strip">'+strip+"</div>";
+    (shoulderUser()?'<div class="phase"><b>'+esc((cx&&cx.phaseB)||u("phaseB"))+"</b><span>"+esc((cx&&cx.phaseS)||u("phaseS"))+"</span></div>"+
+    '<div class="strip">'+strip+"</div>":"");
 }
 
 var RULES={
@@ -1239,7 +1247,8 @@ function histView(){
       var trs=(l.entries||[]).map(function(e){
         return '<tr><td style="white-space:normal;text-transform:none;font-family:inherit;font-weight:400;color:#c6cdd6">'+esc(e.n||"")+"</td><td>"+(e.sets||"—")+"</td><td>"+esc(e.reps||e.target||"—")+"</td><td>"+(e.weight!=null?e.weight:"—")+"</td></tr>";
       }).join("");
-      det='<div class="card" style="margin:0 0 10px"><div style="overflow-x:auto"><table class="mini"><tr><td>'+u("thEj")+"</td><td>"+u("thSets")+"</td><td>Reps</td><td>kg</td></tr>"+trs+"</table></div></div>";
+      var noteHtml=l.note?'<p class="note" style="margin-top:10px;padding:8px 10px;background:var(--bg);border-radius:8px;border-left:3px solid var(--acc-dim)">📝 '+esc(l.note)+"</p>":"";
+      det='<div class="card" style="margin:0 0 10px"><div style="overflow-x:auto"><table class="mini"><tr><td>'+u("thEj")+"</td><td>"+u("thSets")+"</td><td>Reps</td><td>kg</td></tr>"+trs+"</table></div>"+noteHtml+"</div>";
     }
     return head+det;
   }).join("");
@@ -1550,7 +1559,7 @@ document.addEventListener("click",function(e){
   if(act==="iso"){isoStart();return}
 });
 document.addEventListener("change",function(e){
-  var inp=e.target.closest(".w-in");if(!inp)return;
+  var inp=e.target.closest(".w-in,.note-in");if(!inp)return;
   W(inp.dataset.key,inp.value.trim());
 });
 render();
