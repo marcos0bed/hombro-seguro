@@ -180,7 +180,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v27";
+var APP_VERSION="v28";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -213,10 +213,27 @@ function yt(q){return "https://www.youtube.com/results?search_query="+encodeURIC
 function pad(n){return (n<10?"0":"")+n}
 function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+/* Vibración: Android tiene navigator.vibrate; iOS no expone API de vibración a
+   webapps, pero los <input switch> nativos emiten un tick háptico al conmutarse
+   (iOS 17.4+) — se dispara por código como sucedáneo. Si Apple lo capa, no-op. */
+var _hap=null;
+function haptic(){
+  try{
+    if(navigator.vibrate){navigator.vibrate([150,80,150]);return}
+    if(!_hap){
+      _hap=document.createElement("input");
+      _hap.type="checkbox";_hap.setAttribute("switch","");
+      _hap.tabIndex=-1;_hap.setAttribute("aria-hidden","true");
+      _hap.style.cssText="position:fixed;left:-100px;top:0;width:1px;height:1px;opacity:0;pointer-events:none";
+      document.body.appendChild(_hap);
+    }
+    [0,160,320].forEach(function(t){setTimeout(function(){try{_hap.click()}catch(e){}},t)});
+  }catch(e){}
+}
 function beep(){try{var A=window.AudioContext||window.webkitAudioContext;var ctx=beep.ctx||(beep.ctx=new A());
   [0,0.22].forEach(function(t){var o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;o.connect(g);g.connect(ctx.destination);
   g.gain.setValueAtTime(.25,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.18);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.2)});
-  if(navigator.vibrate)navigator.vibrate([120,80,120]);}catch(e){}}
+  haptic();}catch(e){}}
 
 /* ---------- cloud (Supabase) ---------- */
 var SB_URL="https://rinjfomkmxvnyqpeftxa.supabase.co";
