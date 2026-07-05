@@ -1,4 +1,4 @@
-# Hombro Seguro
+# Fitmet
 
 PWA de entrenamiento de fuerza diseñada para entrenar **protegiendo un hombro en recuperación** (conflicto subacromial / supraespinoso): nada por encima del hombro, cargas moderadas y trabajo de manguito rotador integrado.
 
