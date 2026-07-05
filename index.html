@@ -176,7 +176,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v16";
+var APP_VERSION="v17";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -251,7 +251,7 @@ if(sb){
   sb.auth.onAuthStateChange(function(ev,session){
     var was=!!sbUser;sbUser=session?session.user:null;
     if(sbUser&&!was){Promise.all([pullAll(),loadProfile()]).then(function(){flushDirty();flushLogs();render()});}
-    else if(!sbUser&&was){sbProfile=null;state.tab="hoy";LOGS.data=null;
+    else if(!sbUser&&was){sbProfile=null;state.tab="hoy";LOGS.data=null;METRICS.data=null;
       try{localStorage.removeItem("hs:clinical");localStorage.removeItem("hs:routine")}catch(e){}render();}
   });
   window.addEventListener("online",function(){flushDirty();flushLogs()});
@@ -298,6 +298,17 @@ function loadLogs(){
     .then(function(r){LOGS.loading=false;LOGS.data=r.data||[];render();},
           function(){LOGS.loading=false;LOGS.data=[];render();});
 }
+/* ---------- métricas diarias (balance energético) ---------- */
+var METRICS={data:null,loading:false};
+function loadMetrics(){
+  if(!cloudOn()||METRICS.loading)return;
+  METRICS.loading=true;
+  var since=new Date();since.setDate(since.getDate()-180);
+  sb.from("daily_metrics").select("*").gte("day",iso(since)).order("day",{ascending:true})
+    .then(function(r){METRICS.loading=false;METRICS.data=r.data||[];render();},
+          function(){METRICS.loading=false;METRICS.data=[];render();});
+}
+
 function repsMid(reps){
   var mm=/(\d+(?:[.,]\d+)?)(?:\s*[-–]\s*(\d+(?:[.,]\d+)?))?/.exec(String(reps));
   if(!mm)return 0;
@@ -376,7 +387,14 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   statsMuscle:"Series por grupo muscular · últimos 28 días",
   statsExercises:"Cargas por ejercicio · último peso vs máximo",
   noLogs:"Aún no hay sesiones guardadas. Al terminar una sesión de pesas, pulsa «Guardar sesión» al final.",
-  totalLbl:"sesiones guardadas",kgLbl:"kg"},
+  totalLbl:"sesiones guardadas",kgLbl:"kg",
+  entreno:"Entreno",balanceT:"Balance",
+  lastWeight:"Último peso",bodyFat:"Grasa corporal",
+  chart90:"Peso y grasa · 90 días",macros14:"Macros · últimos 14 días registrados",
+  weeklyT:"Resumen semanal",
+  thW:"Semana",thReg:"Días reg.",thIn:"Kcal in",thCarbs:"Carbs g",thOut:"Kcal out",thPeso:"Peso",thGrasa:"Grasa %",
+  legC:"Carbohidratos",legP:"Proteína",legF:"Grasa",
+  noMetrics:"Sin métricas todavía. Se alimentan de MyFitnessPal (comida), Garmin (gasto) y Apple Health (peso/grasa) — la sincronización se lanza desde el Mac."},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -409,7 +427,14 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   statsMuscle:"Sets by muscle group · last 28 days",
   statsExercises:"Exercise loads · latest vs max",
   noLogs:"No workouts saved yet. When you finish a lifting session, tap “Save workout” at the end.",
-  totalLbl:"workouts saved",kgLbl:"kg"}};
+  totalLbl:"workouts saved",kgLbl:"kg",
+  entreno:"Training",balanceT:"Balance",
+  lastWeight:"Latest weight",bodyFat:"Body fat",
+  chart90:"Weight & body fat · 90 days",macros14:"Macros · last 14 logged days",
+  weeklyT:"Weekly summary",
+  thW:"Week",thReg:"Logged",thIn:"Kcal in",thCarbs:"Carbs g",thOut:"Kcal out",thPeso:"Weight",thGrasa:"Fat %",
+  legC:"Carbs",legP:"Protein",legF:"Fat",
+  noMetrics:"No metrics yet. They come from MyFitnessPal (food), Garmin (expenditure) and Apple Health (weight/fat) — sync runs from the Mac."}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -631,7 +656,7 @@ function getRT(){return S("routine",null)}
 function getWeek(){var rt=getRT();return (rt&&rt.week)||WEEK}
 function getSession(sid){var rt=getRT();return (rt&&rt.sessions&&rt.sessions[sid])||EX[sid]}
 
-var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas")};
+var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas"),pview:"train"};
 var todayIdx=(new Date().getDay()+6)%7;
 var TODAY=iso(new Date());
 
@@ -856,9 +881,19 @@ function render(){
   else if(state.tab==="progreso"){
     if(!sb){h+='<div class="card"><p class="note">'+u("cloudOff")+"</p></div>";}
     else if(!sbUser){h+='<div class="card"><p class="note">'+u("needLoginStats")+'</p><button class="abtn" data-act="acct" style="margin-top:12px">'+u("signin")+"</button></div>";}
-    else if(LOGS.data===null){loadLogs();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
-    else if(!LOGS.data.length){h+='<div class="card"><p class="note">'+u("noLogs")+"</p></div>";}
-    else h+=statsView();
+    else{
+      h+='<div class="seg"><button data-act="pview" data-pv="train"'+(state.pview!=="balance"?' class="sel"':"")+'>'+u("entreno")+"</button>"+
+         '<button data-act="pview" data-pv="balance"'+(state.pview==="balance"?' class="sel"':"")+'>'+u("balanceT")+"</button></div>";
+      if(state.pview!=="balance"){
+        if(LOGS.data===null){loadLogs();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
+        else if(!LOGS.data.length){h+='<div class="card"><p class="note">'+u("noLogs")+"</p></div>";}
+        else h+=statsView();
+      }else{
+        if(METRICS.data===null){loadMetrics();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
+        else if(!METRICS.data.length){h+='<div class="card"><p class="note">'+u("noMetrics")+"</p></div>";}
+        else h+=balanceView();
+      }
+    }
   }
   else if(state.tab==="viaje"){
     var TR=TRAVEL[LANG];
@@ -972,6 +1007,90 @@ function visibleTabs(){
   var rt=getRT(),hide=(rt&&rt.hideTabs)||[];
   return ["hoy","semana","progreso","viaje","manguito","reglas"].filter(function(t){return hide.indexOf(t)<0});
 }
+function balanceView(){
+  var M=METRICS.data,h="";
+  var wR=M.filter(function(r){return r.weight_kg!=null});
+  var fR=M.filter(function(r){return r.body_fat_pct!=null});
+  var lastW=wR[wR.length-1],lastF=fR[fR.length-1];
+
+  // tarjeta resumen
+  h+='<div class="card"><div style="display:flex;gap:28px;flex-wrap:wrap">'+
+     '<div><div class="tlab">'+u("lastWeight")+'</div><div class="big" style="font-size:34px">'+(lastW?(+lastW.weight_kg).toFixed(1)+" kg":"—")+'</div>'+(lastW?'<span class="note" style="color:var(--mut);font-size:12px">'+lastW.day+"</span>":"")+"</div>"+
+     '<div><div class="tlab">'+u("bodyFat")+'</div><div class="big" style="font-size:34px;color:var(--ok)">'+(lastF?(+lastF.body_fat_pct).toFixed(1)+"%":"—")+'</div>'+(lastF?'<span class="note" style="color:var(--mut);font-size:12px">'+lastF.day+"</span>":"")+"</div></div></div>";
+
+  // gráfica 90 días: peso (ámbar) + grasa (verde discontinua)
+  var cut=new Date();cut.setDate(cut.getDate()-90);var cutS=iso(cut);
+  var w90=wR.filter(function(r){return r.day>=cutS}),f90=fR.filter(function(r){return r.day>=cutS});
+  if(w90.length>1){
+    var t0=+new Date(w90[0].day),t1=+new Date(w90[w90.length-1].day)||t0+1;
+    function series(rows,key,vmin,vmax,color,dash){
+      var pts=rows.map(function(r){
+        var x=8+304*((+new Date(r.day)-t0)/((t1-t0)||1));
+        var y=106-92*(((+r[key])-vmin)/((vmax-vmin)||1));
+        return x.toFixed(1)+","+y.toFixed(1)}).join(" ");
+      return '<polyline fill="none" stroke="'+color+'" stroke-width="2"'+(dash?' stroke-dasharray="4 3" opacity=".85"':"")+' stroke-linejoin="round" points="'+pts+'"/>';
+    }
+    var ws=w90.map(function(r){return +r.weight_kg}),wmin=Math.min.apply(null,ws)-.3,wmax=Math.max.apply(null,ws)+.3;
+    var svg='<svg viewBox="0 0 320 120" style="width:100%;height:auto;margin-top:8px" role="img">';
+    svg+=series(w90,"weight_kg",wmin,wmax,"#F0A63C");
+    var fmin=0,fmax=0;
+    if(f90.length>1){
+      var fs=f90.map(function(r){return +r.body_fat_pct});fmin=Math.min.apply(null,fs)-.2;fmax=Math.max.apply(null,fs)+.2;
+      svg+=series(f90,"body_fat_pct",fmin,fmax,"#46C08A",true);
+    }
+    svg+='<text x="8" y="10" fill="#F0A63C" font-size="9" font-family="monospace">'+wmax.toFixed(1)+' kg</text>'+
+         '<text x="8" y="118" fill="#F0A63C" font-size="9" font-family="monospace">'+wmin.toFixed(1)+'</text>';
+    if(f90.length>1)svg+='<text x="312" y="10" fill="#46C08A" font-size="9" font-family="monospace" text-anchor="end">'+fmax.toFixed(1)+'%</text>'+
+         '<text x="312" y="118" fill="#46C08A" font-size="9" font-family="monospace" text-anchor="end">'+fmin.toFixed(1)+'</text>';
+    svg+="</svg>";
+    h+='<div class="card"><h3>'+u("chart90")+"</h3>"+svg+
+       '<div class="chips" style="margin-top:6px"><span class="chip" style="color:#F0A63C">— '+u("thPeso")+'</span><span class="chip" style="color:#46C08A">┄ '+u("bodyFat")+"</span></div></div>";
+  }
+
+  // macros apilados (kcal por macro) últimos 14 días registrados
+  var eat=M.filter(function(r){return r.kcal_in!=null});
+  var l14=eat.slice(-14);
+  if(l14.length){
+    var mx=1;l14.forEach(function(r){if(+r.kcal_in>mx)mx=+r.kcal_in});
+    var cols=l14.map(function(r){
+      var c4=(+r.carbs_g||0)*4,p4=(+r.protein_g||0)*4,f9=(+r.fat_g||0)*9,tot=c4+p4+f9||1;
+      var hp=Math.round((+r.kcal_in)/mx*100);
+      var hc=Math.round(hp*c4/tot),hpr=Math.round(hp*p4/tot),hf=Math.max(0,hp-hc-hpr);
+      return '<div class="c"><span style="font-size:9px;color:var(--mut);font-family:var(--mono)">'+Math.round(+r.kcal_in)+'</span>'+
+        '<div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end">'+
+        '<div style="height:'+hf+'px;background:#7BA1D9;border-radius:3px 3px 0 0"></div>'+
+        '<div style="height:'+hpr+'px;background:#46C08A"></div>'+
+        '<div style="height:'+hc+'px;background:#F0A63C"></div></div>'+
+        '<span class="cl">'+r.day.slice(8,10)+"/"+r.day.slice(5,7)+"</span></div>";
+    }).join("");
+    h+='<div class="card"><h3>'+u("macros14")+'</h3><div class="cols" style="height:130px">'+cols+"</div>"+
+       '<div class="chips" style="margin-top:8px"><span class="chip" style="color:#F0A63C">■ '+u("legC")+'</span><span class="chip" style="color:#46C08A">■ '+u("legP")+'</span><span class="chip" style="color:#7BA1D9">■ '+u("legF")+"</span></div></div>";
+  }
+
+  // tabla semanal
+  var byweek={};
+  M.forEach(function(r){var m=mondayOf(r.day);(byweek[m]=byweek[m]||[]).push(r)});
+  var weeks=Object.keys(byweek).sort().slice(-8);
+  if(weeks.length){
+    var trs=weeks.map(function(wk){
+      var rs=byweek[wk],eatw=rs.filter(function(r){return r.kcal_in!=null});
+      var kin=eatw.length?Math.round(eatw.reduce(function(a,r){return a+ +r.kcal_in},0)/eatw.length):"—";
+      var cb=eatw.length?Math.round(eatw.reduce(function(a,r){return a+(+r.carbs_g||0)},0)/eatw.length):"—";
+      var outw=rs.filter(function(r){return r.kcal_out!=null});
+      var kout=outw.length?Math.round(outw.reduce(function(a,r){return a+ +r.kcal_out},0)/outw.length):"—";
+      var wsr=rs.filter(function(r){return r.weight_kg!=null});
+      var peso=wsr.length?(+wsr[0].weight_kg).toFixed(1)+"→"+(+wsr[wsr.length-1].weight_kg).toFixed(1):"—";
+      var fsr=rs.filter(function(r){return r.body_fat_pct!=null});
+      var fat=fsr.length?(+fsr[fsr.length-1].body_fat_pct).toFixed(1):"—";
+      var d=new Date(wk+"T12:00:00");
+      return "<tr><td>"+pad(d.getDate())+"/"+pad(d.getMonth()+1)+"</td><td>"+eatw.length+"</td><td>"+kin+"</td><td>"+cb+"</td><td>"+kout+"</td><td>"+peso+"</td><td>"+fat+"</td></tr>";
+    }).join("");
+    h+='<div class="card"><h3>'+u("weeklyT")+'</h3><div style="overflow-x:auto"><table class="mini" style="min-width:430px"><tr>'+
+       "<td>"+u("thW")+"</td><td>"+u("thReg")+"</td><td>"+u("thIn")+"</td><td>"+u("thCarbs")+"</td><td>"+u("thOut")+"</td><td>"+u("thPeso")+"</td><td>"+u("thGrasa")+"</td></tr>"+trs+"</table></div></div>";
+  }
+  return h;
+}
+
 function renderNav(){
   var tabs=visibleTabs();
   var el=document.getElementById("navin");
@@ -1071,6 +1190,7 @@ document.addEventListener("click",function(e){
   if(act==="day"){state.sid=b.dataset.sid;state.tab="hoy";render();return}
   if(act==="back"){state.sid=null;render();return}
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
+  if(act==="pview"){state.pview=b.dataset.pv;render();return}
   if(act==="rest-add"){rest.left+=30;restTick();return}
   if(act==="rest-skip"){clearInterval(rest.t);document.getElementById("sheet").classList.remove("show");return}
   if(act==="iso"){isoStart();return}

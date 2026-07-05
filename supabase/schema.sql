@@ -91,3 +91,20 @@ create policy "own logs" on public.workout_logs
 
 create index if not exists workout_logs_day_idx
   on public.workout_logs (user_id, day desc);
+
+-- ─── Métricas diarias (balance energético y composición corporal) ───────────
+-- Fusión de MyFitnessPal (ingesta+macros), Garmin (gasto) y Apple Health (peso/grasa).
+create table if not exists public.daily_metrics (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  day date not null,
+  kcal_in numeric, carbs_g numeric, protein_g numeric, fat_g numeric, sugar_g numeric,
+  kcal_bmr numeric, kcal_active numeric, kcal_out numeric,
+  weight_kg numeric, body_fat_pct numeric, lean_kg numeric,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, day)
+);
+alter table public.daily_metrics enable row level security;
+
+drop policy if exists "own metrics" on public.daily_metrics;
+create policy "own metrics" on public.daily_metrics
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
