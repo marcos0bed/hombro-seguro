@@ -173,7 +173,32 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v13";
+var APP_VERSION="v14";
+/* Re-anclaje de la barra inferior al viewport VISUAL de iOS: cubre teclado,
+   barra de estado expandida (llamada/navegación) y desajustes de standalone. */
+function pinNav(){
+  var nav=document.querySelector("nav"),vv=window.visualViewport;
+  if(!nav||!vv)return;
+  var gap=Math.round(window.innerHeight-vv.height-vv.offsetTop);
+  nav.style.bottom=(gap>0?gap:0)+"px";
+}
+if(window.visualViewport){
+  visualViewport.addEventListener("resize",pinNav);
+  visualViewport.addEventListener("scroll",pinNav);
+  window.addEventListener("orientationchange",function(){setTimeout(pinNav,350)});
+  window.addEventListener("focus",function(){setTimeout(pinNav,150)});
+}
+function diagLine(){
+  try{
+    var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
+    document.body.appendChild(p);var inset=getComputedStyle(p).paddingBottom;document.body.removeChild(p);
+    var vv=window.visualViewport;
+    var stand=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||window.navigator.standalone===true;
+    return APP_VERSION+" · win "+window.innerWidth+"×"+window.innerHeight+" · screen "+screen.width+"×"+screen.height+
+      " · vv "+(vv?Math.round(vv.width)+"×"+Math.round(vv.height)+"@"+Math.round(vv.offsetTop):"—")+
+      " · inset-b "+inset+" · standalone "+stand;
+  }catch(e){return APP_VERSION}
+}
 /* ---------- PWA setup ---------- */
 (function(){
   try{
@@ -818,6 +843,7 @@ function render(){
          '<p class="okmsg" id="okmsg"></p><p class="err" id="errmsg"></p></div>';
       h+='<div class="card"><p class="note">'+u("syncOn")+'</p><p class="note" style="margin-top:8px;color:var(--mut)">'+u("familyNote")+"</p>"+
          '<button class="abtn ghost" data-act="logout" style="margin-top:12px">'+u("signout")+"</button></div>";
+      h+='<p class="note" style="margin:10px 4px;font-family:var(--mono);font-size:10.5px;color:var(--mut);word-break:break-all">'+esc(diagLine())+"</p>";
     }else{
       h+='<div class="card"><h3>'+u("acct")+'</h3><p class="note" style="margin-top:6px">'+u("loginHint")+"</p>"+
          '<input class="fin" id="f-email" type="email" autocomplete="email" placeholder="'+u("email")+'">'+
