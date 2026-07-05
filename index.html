@@ -180,7 +180,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v25";
+var APP_VERSION="v26";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1278,42 +1278,71 @@ function renderNav(){
     return '<button data-tab="'+t+'"'+(state.tab===t?' class="sel"':"")+">"+(ICONS[t]||"")+"<span>"+u(t)+"</span></button>"}).join("");
 }
 
-/* ---------- rest timer ---------- */
-var rest={t:null,left:0};
+/* ---------- wake lock: pantalla despierta mientras corre un temporizador ---------- */
+var wakeL=null;
+function wakeOn(){
+  try{
+    if(navigator.wakeLock&&!wakeL)
+      navigator.wakeLock.request("screen").then(function(l){
+        wakeL=l;l.addEventListener("release",function(){wakeL=null});
+      },function(){});
+  }catch(e){}
+}
+function wakeOff(){try{if(wakeL){wakeL.release();wakeL=null}}catch(e){}}
+
+/* ---------- rest timer (basado en hora real: sobrevive al segundo plano) ---------- */
+var rest={t:null,endAt:0,done:true};
 function restStart(sec){
-  clearInterval(rest.t);rest.left=sec;
-  document.getElementById("sheet").classList.add("show");restTick();
-  rest.t=setInterval(restTick,1000);
+  clearInterval(rest.t);
+  rest.endAt=Date.now()+sec*1000;rest.done=false;
+  document.getElementById("sheet").classList.add("show");
+  wakeOn();
+  restTick();rest.t=setInterval(restTick,500);
+}
+function restStop(){
+  rest.done=true;clearInterval(rest.t);
+  document.getElementById("sheet").classList.remove("show");
+  if(!isoST.running)wakeOff();
 }
 function restTick(){
-  var n=document.getElementById("tnum");
-  n.textContent=Math.floor(rest.left/60)+":"+pad(rest.left%60);
-  if(rest.left<=0){clearInterval(rest.t);document.getElementById("sheet").classList.remove("show");beep();return}
-  rest.left--;
+  if(rest.done)return;
+  var n=document.getElementById("tnum");if(!n)return;
+  var left=Math.max(0,Math.ceil((rest.endAt-Date.now())/1000));
+  n.textContent=Math.floor(left/60)+":"+pad(left%60);
+  if(left<=0){restStop();beep();}
 }
 
-/* ---------- iso timer ---------- */
-var isoST={series:0,t:null,left:0,running:false};
+/* ---------- iso timer (basado en hora real) ---------- */
+var isoST={series:0,t:null,endAt:0,running:false};
 function isoStart(){
   if(isoST.running)return;
   if(isoST.series>=5){isoST.series=0;isoDots()}
-  isoST.running=true;isoST.left=45;
+  isoST.running=true;isoST.endAt=Date.now()+45000;
   var btn=document.getElementById("isobtn");btn.disabled=true;btn.textContent=u("isoHold");
   document.getElementById("isophase").textContent=u("isoSerie")+" "+(isoST.series+1)+" "+u("isoOf")+" · "+u("isoPush");
-  isoTick();isoST.t=setInterval(isoTick,1000);
+  wakeOn();
+  isoTick();isoST.t=setInterval(isoTick,500);
 }
 function isoTick(){
+  if(!isoST.running)return;
   var n=document.getElementById("isonum");if(!n){clearInterval(isoST.t);isoST.running=false;return}
-  n.textContent="0:"+pad(isoST.left);
-  if(isoST.left<=0){
+  var left=Math.max(0,Math.ceil((isoST.endAt-Date.now())/1000));
+  n.textContent="0:"+pad(left);
+  if(left<=0){
     clearInterval(isoST.t);isoST.running=false;isoST.series++;beep();isoDots();
+    if(rest.done)wakeOff();
     var btn=document.getElementById("isobtn");btn.disabled=false;
     if(isoST.series>=5){btn.textContent=u("isoDone");document.getElementById("isophase").textContent=u("isoAllDone");}
     else{btn.textContent=u("isoSerie")+" "+(isoST.series+1)+" "+u("isoRestHint");document.getElementById("isophase").textContent=u("isoRest")+" · "+isoST.series+" "+u("isoOf");}
-    return;
   }
-  isoST.left--;
 }
+
+/* al volver del segundo plano: recalcular contra el reloj (si venció, suena ya) */
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState!=="visible")return;
+  if(!rest.done){wakeOn();restTick();}
+  if(isoST.running){wakeOn();isoTick();}
+});
 function isoDots(){
   var d=document.getElementById("isodots");if(!d)return;
   Array.prototype.forEach.call(d.children,function(el,i){el.className=i<isoST.series?"on":""});
@@ -1375,8 +1404,8 @@ document.addEventListener("click",function(e){
   if(act==="back"){state.sid=null;render();return}
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
-  if(act==="rest-add"){rest.left+=30;restTick();return}
-  if(act==="rest-skip"){clearInterval(rest.t);document.getElementById("sheet").classList.remove("show");return}
+  if(act==="rest-add"){rest.endAt+=30000;restTick();return}
+  if(act==="rest-skip"){restStop();return}
   if(act==="iso"){isoStart();return}
 });
 document.addEventListener("change",function(e){
