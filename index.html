@@ -35,7 +35,7 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .topright{display:flex;align-items:center;gap:8px}
 .acct{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);font-family:var(--disp);font-weight:700;font-size:13px;color:var(--mut);display:grid;place-items:center;padding:0}
 .acct.on{border-color:var(--acc);color:var(--acc)}
-.fin{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 12px;font-size:15px;margin-top:8px}
+.fin{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 12px;font-size:16px;margin-top:8px}
 .abtn{margin-top:12px;width:100%;padding:12px;border-radius:10px;background:var(--acc);color:#12151A;font-family:var(--disp);text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:15px}
 .abtn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
 .err{color:var(--bad);font-size:14px;margin-top:10px;display:none}
@@ -86,7 +86,8 @@ h1.day{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-siz
 .pill{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface2);font-family:var(--mono);font-size:14px;color:var(--mut);transition:background .15s,border-color .15s}
 .pill.on{background:var(--acc);border-color:var(--acc);color:#12151A;font-weight:700}
 .w-wrap{margin-left:auto;display:flex;align-items:center;gap:5px;color:var(--mut);font-size:13px}
-.w-in{width:64px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;color:var(--text);font:14px var(--mono);padding:7px 8px;text-align:right}
+/* 16px mínimo: por debajo, iOS hace auto-zoom al enfocar el campo */
+.w-in{width:70px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;color:var(--text);font:16px var(--mono);padding:6px 8px;text-align:right}
 
 .mv{display:flex;flex-direction:column;gap:2px}
 .mv button{width:24px;height:15px;font-size:8px;line-height:1;color:var(--mut);background:var(--surface2);border:1px solid var(--line);border-radius:4px;padding:0}
@@ -179,7 +180,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v24";
+var APP_VERSION="v25";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -334,6 +335,16 @@ function loadMetrics(){
           function(){METRICS.loading=false;METRICS.data=[];render();});
 }
 
+/* Estimación de reps para precargar: rango "8-12" → el mayor (12);
+   lista "15/15/12" → la lista tal cual; "15" → 15; sin números → vacío */
+function estReps(rs){
+  rs=String(rs||"");
+  var nums=rs.split(/[^\d.]+/).filter(Boolean).map(Number).filter(function(n){return n>0});
+  if(!nums.length)return "";
+  if(/[-–]/.test(rs)&&nums.length===2)return String(Math.max(nums[0],nums[1]));
+  if(nums.length===1)return String(nums[0]);
+  return nums.join(",");
+}
 function repsMid(reps){
   var mm=/(\d+(?:[.,]\d+)?)(?:\s*[-–]\s*(\d+(?:[.,]\d+)?))?/.exec(String(reps));
   if(!mm)return 0;
@@ -349,11 +360,16 @@ function buildLog(sid){
     if(!c)return;
     var w=parseFloat(String(S("w:"+sid+":"+i,"")).replace(",", "."));
     var rp=String(S("r:"+TODAY+":"+sid+":"+i,"")).trim();
+    if(!rp)rp=estReps(T(it.reps));   // misma estimación que se precarga en pantalla
     var tot=0;
     if(rp){
       var nums=rp.split(/[^\d.]+/).filter(Boolean).map(Number).filter(function(n){return n>0});
       if(nums.length===1)tot=nums[0]*c;
-      else if(nums.length>1)tot=nums.reduce(function(a,b){return a+b},0);
+      else if(nums.length>1){
+        var take=nums.slice(0,c);
+        while(take.length<c)take.push(nums[nums.length-1]);
+        tot=take.reduce(function(a,b){return a+b},0);
+      }
     }
     if(!tot){var rm=repsMid(T(it.reps));tot=rm>0?rm*c:0}
     total+=c;
@@ -753,7 +769,7 @@ function exCard(sid,i,it,pos,tot){
   }
   return '<div class="card"><div class="exhead"><h3>'+esc(T(it.n))+'</h3><span style="display:flex;align-items:center;gap:8px"><span class="dose">'+(it.sets?it.sets+"×":"")+esc(T(it.reps))+"</span>"+mv+"</span></div>"+
     (chips?'<div class="chips">'+chips+"</div>":"")+
-    (it.sets?'<div class="setrow">'+pills+'<span class="w-wrap"><input class="w-in" style="width:58px" data-key="r:'+TODAY+":"+sid+":"+i+'" inputmode="numeric" placeholder="'+u("repsPh")+'" value="'+esc(String(S("r:"+TODAY+":"+sid+":"+i,"")))+'" aria-label="Reps">×<input class="w-in" data-key="w:'+sid+":"+i+'" inputmode="decimal" placeholder="—" value="'+esc(String(w))+'" aria-label="Weight">'+u("kg")+"</span></div>":"")+
+    (it.sets?'<div class="setrow">'+pills+'<span class="w-wrap"><input class="w-in" style="width:62px" data-key="r:'+TODAY+":"+sid+":"+i+'" inputmode="numeric" placeholder="'+u("repsPh")+'" value="'+esc(String(S("r:"+TODAY+":"+sid+":"+i,""))||estReps(T(it.reps)))+'" aria-label="Reps">×<input class="w-in" data-key="w:'+sid+":"+i+'" inputmode="decimal" placeholder="—" value="'+esc(String(w))+'" aria-label="Weight">'+u("kg")+"</span></div>":"")+
     foot+'<div class="how">'+esc(T(it.how)||"")+"</div></div>";
 }
 
