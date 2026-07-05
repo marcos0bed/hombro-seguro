@@ -119,3 +119,8 @@ alter table public.daily_metrics
   add column if not exists sleep_score int,
   add column if not exists hrv_ms int,
   add column if not exists rhr int;
+
+-- v39: cualitativos de Garmin (calidad de sueño y estado HRV)
+alter table public.daily_metrics
+  add column if not exists sleep_q text,
+  add column if not exists hrv_q text;
