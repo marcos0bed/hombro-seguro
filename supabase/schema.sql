@@ -124,3 +124,6 @@ alter table public.daily_metrics
 alter table public.daily_metrics
   add column if not exists sleep_q text,
   add column if not exists hrv_q text;
+
+-- v40: curva intradía de pasos (acumulada, ~32 puntos)
+alter table public.daily_metrics add column if not exists steps_curve jsonb;
