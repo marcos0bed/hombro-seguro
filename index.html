@@ -180,7 +180,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v29";
+var APP_VERSION="v30";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -492,7 +492,9 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   noMetrics:"Sin métricas todavía. Se alimentan de MyFitnessPal (comida), Garmin (gasto) y Apple Health (peso/grasa) — la sincronización se lanza desde el Mac.",
   garmT:"Últimas actividades · Garmin",
   repsPh:"reps",srcT:"Último dato por fuente",upA:"Subir ejercicio",dnA:"Bajar ejercicio",
-  restDone:"⏱️ Descanso terminado — ¡a la siguiente serie!",isoDoneN:"Isométrico completado — descansa ~1 min"},
+  restDone:"⏱️ Descanso terminado — ¡a la siguiente serie!",isoDoneN:"Isométrico completado — descansa ~1 min",
+  restDoneShort:"⏱️ Descanso terminado",serieLbl:"serie",nextLbl:"Siguiente:",
+  sessDone:"🏁 Todas las series hechas — ¡guarda la sesión!"},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -538,7 +540,9 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   noMetrics:"No metrics yet. They come from MyFitnessPal (food), Garmin (expenditure) and Apple Health (weight/fat) — sync runs from the Mac.",
   garmT:"Latest activities · Garmin",
   repsPh:"reps",srcT:"Latest data by source",upA:"Move exercise up",dnA:"Move exercise down",
-  restDone:"⏱️ Rest over — next set!",isoDoneN:"Isometric hold done — rest ~1 min"}};
+  restDone:"⏱️ Rest over — next set!",isoDoneN:"Isometric hold done — rest ~1 min",
+  restDoneShort:"⏱️ Rest over",serieLbl:"set",nextLbl:"Next:",
+  sessDone:"🏁 All sets done — save your workout!"}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -1335,12 +1339,36 @@ function wakeOn(){
 }
 function wakeOff(){try{if(wakeL){wakeL.release();wakeL=null}}catch(e){}}
 
+/* ¿Qué toca después? Series pendientes del ejercicio actual, o el siguiente
+   ejercicio con series (en el orden visible del usuario), o sesión completa. */
+function nextSetMsg(sid,lastI){
+  var s=getSession(sid);if(!s||!s.items)return "";
+  var st=S(setsKey(sid),{});
+  var it=s.items[lastI],arr=st[lastI]||[];
+  if(it)for(var j=0;j<it.sets;j++)
+    if(!arr[j])return T(it.n)+" · "+u("serieLbl")+" "+(j+1)+"/"+it.sets;
+  var ord=orderedIdx(sid,s.items),pos=ord.indexOf(lastI);
+  for(var k=pos+1;k<ord.length;k++){
+    var oi=ord[k],it2=s.items[oi];
+    if(!it2.sets)continue;
+    var a2=st[oi]||[];
+    for(var j2=0;j2<it2.sets;j2++)
+      if(!a2[j2])return u("nextLbl")+" "+T(it2.n)+" · "+u("serieLbl")+" "+(j2+1)+"/"+it2.sets;
+  }
+  return u("sessDone");
+}
+
 /* ---------- rest timer (basado en hora real: sobrevive al segundo plano) ---------- */
-var rest={t:null,endAt:0,done:true};
-function restStart(sec){
+var rest={t:null,endAt:0,done:true,sid:null,i:-1};
+function restStart(sec,sid,i){
   clearInterval(rest.t);
-  rest.endAt=Date.now()+sec*1000;rest.done=false;
+  rest.endAt=Date.now()+sec*1000;rest.done=false;rest.sid=sid||null;rest.i=(i===undefined?-1:i);
   document.getElementById("sheet").classList.add("show");
+  var lab=document.getElementById("tlab");
+  if(lab){
+    var nx=rest.sid?nextSetMsg(rest.sid,rest.i):"";
+    lab.textContent=nx?(nx.length>34?nx.slice(0,33)+"…":nx):u("rest");
+  }
   wakeOn();
   restTick();rest.t=setInterval(restTick,500);
 }
@@ -1354,7 +1382,11 @@ function restTick(){
   var n=document.getElementById("tnum");if(!n)return;
   var left=Math.max(0,Math.ceil((rest.endAt-Date.now())/1000));
   n.textContent=Math.floor(left/60)+":"+pad(left%60);
-  if(left<=0){restStop();beep();notifyEnd(u("restDone"));}
+  if(left<=0){
+    restStop();beep();
+    var nx=rest.sid?nextSetMsg(rest.sid,rest.i):"";
+    notifyEnd(nx?u("restDoneShort")+" · "+nx:u("restDone"));
+  }
 }
 
 /* ---------- iso timer (basado en hora real) ---------- */
@@ -1417,7 +1449,7 @@ document.addEventListener("click",function(e){
     var st=S(setsKey(sid),{});var arr=st[i]||[];
     arr[j]=!arr[j];st[i]=arr;W(setsKey(sid),st);
     b.classList.toggle("on",arr[j]);
-    if(arr[j]){haptic(1);askNotif();restStart(60);}
+    if(arr[j]){haptic(1);askNotif();restStart(60,sid,i);}
     return;
   }
   if(act==="mvup"||act==="mvdn"){
