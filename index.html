@@ -206,7 +206,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v49";
+var APP_VERSION="v50";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1441,21 +1441,29 @@ function achCard(){
     return '<div class="achb'+(x.on?" on":"")+'"><span class="ai">'+x.i+'</span><span class="al">'+x.l+"</span></div>"}).join("")+"</div></div>";
 }
 
-/* Log del día: 5 hábitos con toggle de icono (kv habits:<día>, sincronizado) */
+/* Log del día: hábitos con toggle de icono (kv habits:<día>, sincronizado).
+   wk/viaje/madrugada se auto-marcan desde logs y daily_metrics (travel, sleep_start_h). */
 var HABITS=[
   {k:"ayuno",i:"⏳",n:B("Ayuno intermitente","Intermittent fasting")},
   {k:"cafe",i:"☕",n:B("Café","Coffee")},
   {k:"supl",i:"💊",n:B("Suplementos","Supplements")},
   {k:"alc",i:"🍷",n:B("Alcohol","Alcohol")},
+  {k:"fuera",i:"🍽️",n:B("Comida fuera / cena de trabajo","Eating out / work dinner")},
   {k:"sau",i:"♨️",n:B("Sauna","Sauna")},
   {k:"ir",i:"🔴",n:B("Infrarrojos","Infrared")},
+  {k:"viaje",i:"✈️",n:B("Viaje (otra zona horaria)","Travel (other timezone)")},
+  {k:"madr",i:"🌙",n:B("Madrugada (a dormir 3-7h)","Late night (slept 3-7am)")},
   {k:"wk",i:"🏋️",n:B("Entrenamiento","Workout")}
 ];
 function habCard(){
   var st=S("habits:"+TODAY,{});
   var autoWk=!!(LOGS.data&&LOGS.data.some(function(l){return l.day===TODAY}));
+  var mr=null,MM=METRICS.data||[];
+  for(var i=MM.length-1;i>=0;i--)if(MM[i].day===TODAY){mr=MM[i];break}
+  var auto={wk:autoWk,viaje:!!(mr&&mr.travel),
+    madr:!!(mr&&mr.sleep_start_h!=null&&mr.sleep_start_h>=3&&mr.sleep_start_h<7)};
   return '<div class="card"><h3>'+u("habT")+'</h3><div class="hab">'+HABITS.map(function(hb){
-    var on=!!st[hb.k]||(hb.k==="wk"&&autoWk);
+    var on=!!st[hb.k]||!!auto[hb.k];
     return '<button class="habb'+(on?" on":"")+'" data-act="habit" data-h="'+hb.k+'" aria-label="'+esc(T(hb.n))+'" aria-pressed="'+on+'">'+hb.i+"</button>"}).join("")+"</div></div>";
 }
 
