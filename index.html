@@ -181,8 +181,8 @@ function beep(){try{var A=window.AudioContext||window.webkitAudioContext;var ctx
   if(navigator.vibrate)navigator.vibrate([120,80,120]);}catch(e){}}
 
 /* ---------- cloud (Supabase) ---------- */
-var SB_URL="";   // se rellena al aprovisionar el backend / filled in when the backend is provisioned
-var SB_KEY="";
+var SB_URL="https://rinjfomkmxvnyqpeftxa.supabase.co";
+var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpbmpmb21rbXh2bnlxcGVmdHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzUzNTIsImV4cCI6MjA5ODgxMTM1Mn0.GGR10McZ2hxHSEFxFS3zE1yzh6YteQIEbM3VyaFcEhA";  // clave anon: publica por diseno, RLS protege los datos / anon key: public by design, RLS protects the data
 var sb=null,sbUser=null,sbProfile=null;
 try{if(SB_URL&&SB_KEY&&window.supabase)sb=window.supabase.createClient(SB_URL,SB_KEY);}catch(e){}
 function cloudOn(){return !!(sb&&sbUser)}
