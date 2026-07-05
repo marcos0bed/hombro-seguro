@@ -48,9 +48,11 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .doneline b{font-weight:600}
 .doneline small{color:var(--mut);margin-left:auto;white-space:nowrap;font-family:var(--mono);font-size:11px}
 .ach{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.achb{width:46px;text-align:center;padding:8px 0;border-radius:10px;border:1px solid var(--line);background:var(--surface2);opacity:.4}
+.achb{display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);opacity:.4}
 .achb.on{opacity:1;border-color:var(--acc-dim);background:rgba(240,166,60,.12)}
-.achb .ai{font-size:17px;display:block}
+.achb .ai{font-size:16px}
+.achb .al{font-family:var(--disp);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.achb.on .al{color:var(--acc)}
 .hab{display:grid;grid-template-columns:repeat(5,1fr);justify-items:center;row-gap:12px;column-gap:8px;margin-top:10px}
 .dnav{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 8px}
 .dnav b{font-family:var(--disp);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
@@ -208,7 +210,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v51";
+var APP_VERSION="v52";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1445,7 +1447,7 @@ function achCard(){
     {on:(+r.kcal_in||0)>0&&(+r.kcal_out||0)>(+r.kcal_in||0),i:"🔥",l:u("achDef")}
   ];
   return '<div class="card"><h3>'+u("achT")+'</h3><div class="ach">'+a.map(function(x){
-    return '<div class="achb'+(x.on?" on":"")+'" title="'+esc(x.l)+'" aria-label="'+esc(x.l)+'"><span class="ai">'+x.i+"</span></div>"}).join("")+"</div></div>";
+    return '<div class="achb'+(x.on?" on":"")+'"><span class="ai">'+x.i+'</span><span class="al">'+esc(x.l)+"</span></div>"}).join("")+"</div></div>";
 }
 
 /* Log del día: hábitos con toggle de icono (kv habits:<día>, sincronizado).
