@@ -2,6 +2,8 @@
 
 PWA de entrenamiento de fuerza diseñada para entrenar **protegiendo un hombro en recuperación** (conflicto subacromial / supraespinoso): nada por encima del hombro, cargas moderadas y trabajo de manguito rotador integrado.
 
+**Bilingüe ES/EN** — selector de idioma en la cabecera (se recuerda la elección; por defecto detecta el idioma del navegador). / **Bilingual ES/EN** — language switch in the header (choice is remembered; defaults to browser language).
+
 **App:** https://marcos0bed.github.io/hombro-seguro/
 
 ## Qué hace
