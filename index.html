@@ -9,6 +9,7 @@
 <title>Hombro Seguro — Rutina</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#12151A; --surface:#1A2028; --surface2:#222A35; --line:#2B3442;
@@ -28,6 +29,18 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 
 header{padding:18px 2px 10px}
 .topline{display:flex;justify-content:space-between;align-items:center}
+.topright{display:flex;align-items:center;gap:8px}
+.acct{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);font-family:var(--disp);font-weight:700;font-size:13px;color:var(--mut);display:grid;place-items:center;padding:0}
+.acct.on{border-color:var(--acc);color:var(--acc)}
+.fin{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 12px;font-size:15px;margin-top:8px}
+.abtn{margin-top:12px;width:100%;padding:12px;border-radius:10px;background:var(--acc);color:#12151A;font-family:var(--disp);text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:15px}
+.abtn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+.err{color:var(--bad);font-size:14px;margin-top:10px;display:none}
+.err.show{display:block}
+.okmsg{color:var(--ok);font-size:14px;margin-top:10px;display:none}
+.okmsg.show{display:block}
+.syncnote{font-size:13px;color:var(--mut);margin:6px 2px}
+.syncnote a{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .eyebrow{font-family:var(--disp);text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--acc);font-weight:600}
 .langsw{display:flex;gap:2px;border:1px solid var(--line);border-radius:99px;padding:2px}
 .langsw button{font-family:var(--disp);font-size:12px;font-weight:600;letter-spacing:.06em;padding:3px 10px;border-radius:99px;color:var(--mut)}
@@ -157,7 +170,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 /* ---------- helpers ---------- */
 function S(k,d){try{var v=localStorage.getItem("hs:"+k);return v===null?d:JSON.parse(v)}catch(e){return d}}
-function W(k,v){try{localStorage.setItem("hs:"+k,JSON.stringify(v))}catch(e){}}
+function W(k,v){try{localStorage.setItem("hs:"+k,JSON.stringify(v))}catch(e){}cloudPush(k,v)}
 function yt(q){return "https://www.youtube.com/results?search_query="+encodeURIComponent(q)}
 function pad(n){return (n<10?"0":"")+n}
 function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
@@ -166,6 +179,78 @@ function beep(){try{var A=window.AudioContext||window.webkitAudioContext;var ctx
   [0,0.22].forEach(function(t){var o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;o.connect(g);g.connect(ctx.destination);
   g.gain.setValueAtTime(.25,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.18);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.2)});
   if(navigator.vibrate)navigator.vibrate([120,80,120]);}catch(e){}}
+
+/* ---------- cloud (Supabase) ---------- */
+var SB_URL="";   // se rellena al aprovisionar el backend / filled in when the backend is provisioned
+var SB_KEY="";
+var sb=null,sbUser=null,sbProfile=null;
+try{if(SB_URL&&SB_KEY&&window.supabase)sb=window.supabase.createClient(SB_URL,SB_KEY);}catch(e){}
+function cloudOn(){return !!(sb&&sbUser)}
+function cloudPush(k,v){
+  if(!cloudOn()||k==="__dirty")return;
+  sb.from("kv_state").upsert({user_id:sbUser.id,k:k,v:v,updated_at:new Date().toISOString()})
+    .then(function(r){if(r.error)markDirty(k)},function(){markDirty(k)});
+}
+function markDirty(k){
+  var d=S("__dirty",[]);
+  if(d.indexOf(k)<0){d.push(k);try{localStorage.setItem("hs:__dirty",JSON.stringify(d))}catch(e){}}
+}
+function flushDirty(){
+  if(!cloudOn())return;
+  var d=S("__dirty",[]);if(!d.length)return;
+  try{localStorage.setItem("hs:__dirty","[]")}catch(e){}
+  d.forEach(function(k){cloudPush(k,S(k,null))});
+}
+function pullAll(){
+  return sb.from("kv_state").select("k,v").then(function(r){
+    if(r.error||!r.data)return;
+    r.data.forEach(function(row){try{localStorage.setItem("hs:"+row.k,JSON.stringify(row.v))}catch(e){}});
+    LANG=S("lang",LANG);
+    state.viaje=S("viajeMode",state.viaje);
+  });
+}
+function loadProfile(){
+  return sb.from("profiles").select("display_name").eq("id",sbUser.id).maybeSingle()
+    .then(function(r){sbProfile=(r&&r.data)||null},function(){});
+}
+if(sb){
+  sb.auth.onAuthStateChange(function(ev,session){
+    var was=!!sbUser;sbUser=session?session.user:null;
+    if(sbUser&&!was){Promise.all([pullAll(),loadProfile()]).then(function(){flushDirty();render()});}
+    else if(!sbUser&&was){sbProfile=null;state.tab="hoy";render();}
+  });
+  window.addEventListener("online",flushDirty);
+}
+function doAuth(kind){
+  var em=((document.getElementById("f-email")||{}).value||"").trim();
+  var pw=(document.getElementById("f-pass")||{}).value||"";
+  var nm=((document.getElementById("f-name")||{}).value||"").trim();
+  if(!em||!pw){authMsg(false,u("email")+" + "+u("pass"));return}
+  if(kind==="login"){
+    sb.auth.signInWithPassword({email:em,password:pw}).then(function(r){
+      if(r.error)authMsg(false,r.error.message);
+      else state.tab="hoy";
+    });
+  }else{
+    sb.auth.signUp({email:em,password:pw,options:{data:{display_name:nm||em.split("@")[0]}}}).then(function(r){
+      if(r.error)authMsg(false,r.error.message);
+      else if(r.data&&r.data.session)state.tab="hoy";
+      else authMsg(true,u("confirmMail"));
+    });
+  }
+}
+function saveName(){
+  var nm=((document.getElementById("f-name")||{}).value||"").trim();
+  sb.from("profiles").upsert({id:sbUser.id,display_name:nm}).then(function(r){
+    if(r.error)authMsg(false,r.error.message);
+    else{sbProfile={display_name:nm};authMsg(true,u("saved"));renderHdr();}
+  });
+}
+function authMsg(ok,msg){
+  var e=document.getElementById("errmsg"),o=document.getElementById("okmsg");
+  if(e){e.className="err"+(ok?"":" show");e.textContent=ok?"":msg}
+  if(o){o.className="okmsg"+(ok?" show":"");o.textContent=ok?msg:""}
+}
 
 /* ---------- i18n ---------- */
 var LANG=S("lang",((navigator.language||"es").slice(0,2)==="en")?"en":"es");
@@ -186,7 +271,16 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   isoHead:"Isométrico de pared · cronómetro guiado",isoSub:"5 × 30-45 s · al 50-60% de esfuerzo",isoStart:"Empezar serie",isoHold:"Aguanta…",
   isoNote:"Codo a 90° pegado al costado, dorso de la muñeca contra la pared. Empuja hacia afuera: nada se mueve. Pitido al acabar cada serie; descansa ~1 min entre series. Efecto analgésico documentado sobre el dolor tendinoso — perfecto para hotel, solo necesitas una pared.",
   isoDone:"Bloque hecho ✓ · Reiniciar",isoAllDone:"5 de 5 — manguito contento",isoRest:"Descanso",isoOf:"de 5",isoSerie:"Serie",isoRestHint:"(descansa ~1 min)",isoPush:"empuja al 50-60%",
-  day:"Día",days12:"Día 1-2",kg:"kg"},
+  day:"Día",days12:"Día 1-2",kg:"kg",
+  acct:"Cuenta",acctSub:"Sincronización y perfil",email:"Email",pass:"Contraseña",name:"Nombre",
+  signin:"Entrar",signup:"Crear cuenta",signout:"Cerrar sesión",save:"Guardar",saved:"Guardado ✓",
+  profileT:"Perfil",
+  syncOn:"Sincronizado en la nube: este dispositivo y los demás comparten tu progreso.",
+  cloudOff:"Backend aún no configurado — la app funciona en modo local (los datos viven solo en este dispositivo).",
+  confirmMail:"Cuenta creada. Revisa tu correo para confirmarla y después entra con tu contraseña.",
+  loginHint:"Con cuenta, tu progreso (series, pesos, semáforo) se sincroniza entre dispositivos. Cada miembro de la familia crea la suya y nadie ve los datos de otro.",
+  syncCta:"Inicia sesión para sincronizar",
+  familyNote:"Familia: cada persona crea su cuenta con su email. El aislamiento es por usuario a nivel de base de datos (RLS)."},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -201,7 +295,16 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   isoHead:"Wall isometric · guided timer",isoSub:"5 × 30-45 s · at 50-60% effort",isoStart:"Start set",isoHold:"Hold…",
   isoNote:"Elbow at 90° pinned to your side, back of the wrist against the wall. Push outward: nothing moves. Beep at the end of each set; rest ~1 min between sets. Documented analgesic effect on tendon pain — perfect for hotels, all you need is a wall.",
   isoDone:"Block done ✓ · Restart",isoAllDone:"5 of 5 — the cuff is happy",isoRest:"Rest",isoOf:"of 5",isoSerie:"Set",isoRestHint:"(rest ~1 min)",isoPush:"push at 50-60%",
-  day:"Day",days12:"Day 1-2",kg:"kg"}};
+  day:"Day",days12:"Day 1-2",kg:"kg",
+  acct:"Account",acctSub:"Sync and profile",email:"Email",pass:"Password",name:"Name",
+  signin:"Sign in",signup:"Create account",signout:"Sign out",save:"Save",saved:"Saved ✓",
+  profileT:"Profile",
+  syncOn:"Synced to the cloud: this device and your others share your progress.",
+  cloudOff:"Backend not configured yet — the app runs in local mode (data lives on this device only).",
+  confirmMail:"Account created. Check your email to confirm it, then sign in with your password.",
+  loginHint:"With an account, your progress (sets, weights, shoulder check) syncs across devices. Each family member creates their own and nobody sees anyone else's data.",
+  syncCta:"Sign in to sync",
+  familyNote:"Family: each person creates their own account with their email. Isolation is per-user at the database level (RLS)."}};
 function u(k){return UI[LANG][k]}
 
 /* ---------- data ---------- */
@@ -473,14 +576,18 @@ function renderHdr(){
   var s=EX[w.sid];
   var big,sub;
   if(state.tab==="hoy"){big=T(w.name)+" · "+T(s.title);sub=T(s.sub)||""}
-  else{big={semana:u("tSemana"),viaje:u("tViaje"),manguito:u("tManguito"),reglas:u("tReglas")}[state.tab];
-       sub={semana:u("subSemana"),viaje:u("subViaje"),manguito:u("subManguito"),reglas:u("subReglas")}[state.tab]}
+  else{big={semana:u("tSemana"),viaje:u("tViaje"),manguito:u("tManguito"),reglas:u("tReglas"),cuenta:u("acct")}[state.tab];
+       sub={semana:u("subSemana"),viaje:u("subViaje"),manguito:u("subManguito"),reglas:u("subReglas"),cuenta:u("acctSub")}[state.tab]}
   var strip=UI[LANG].strip.map(function(t,i){return '<span'+(i<2?' class="hot"':'')+'>'+t+"</span>"}).join("");
+  var ai;
+  if(sbUser)ai=esc(((sbProfile&&sbProfile.display_name)||sbUser.email||"?").charAt(0).toUpperCase());
+  else ai='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>';
   document.getElementById("hdr").innerHTML=
     '<div class="topline"><div class="eyebrow">Hombro Seguro</div>'+
-    '<div class="langsw" role="group" aria-label="Idioma / Language">'+
+    '<div class="topright"><div class="langsw" role="group" aria-label="Idioma / Language">'+
     '<button data-act="lang" data-l="es"'+(LANG==="es"?' class="sel"':"")+'>ES</button>'+
-    '<button data-act="lang" data-l="en"'+(LANG==="en"?' class="sel"':"")+'>EN</button></div></div>'+
+    '<button data-act="lang" data-l="en"'+(LANG==="en"?' class="sel"':"")+'>EN</button></div>'+
+    '<button class="acct'+(sbUser?" on":"")+'" data-act="acct" aria-label="'+u("acct")+'">'+ai+"</button></div></div>"+
     '<h1 class="day">'+esc(big)+"</h1>"+(sub?'<p class="sub">'+esc(sub)+"</p>":"")+
     '<div class="phase"><b>'+u("phaseB")+"</b><span>"+u("phaseS")+"</span></div>"+
     '<div class="strip">'+strip+"</div>";
@@ -569,8 +676,31 @@ function render(){
   if(state.tab==="hoy"){
     var idx=state.sid?WEEK.findIndex(function(w){return w.sid===state.sid}):todayIdx;
     if(idx<0)idx=todayIdx;
+    if(sb&&!sbUser)h+='<p class="syncnote"><a data-act="acct" role="button" tabindex="0">'+u("syncCta")+" →</a></p>";
     if(state.sid&&idx!==todayIdx)h+='<button class="backlink" data-act="back">'+u("back")+"</button>";
     h+=sessionView(WEEK[idx].sid);
+  }
+  else if(state.tab==="cuenta"){
+    if(!sb){
+      h+='<div class="card"><p class="note">'+u("cloudOff")+"</p></div>";
+    }else if(sbUser){
+      var nm=(sbProfile&&sbProfile.display_name)||"";
+      h+='<div class="card"><h3>'+u("profileT")+'</h3>'+
+         '<p class="note" style="margin-top:6px">'+esc(sbUser.email||"")+"</p>"+
+         '<input class="fin" id="f-name" value="'+esc(nm)+'" placeholder="'+u("name")+'" autocomplete="name">'+
+         '<button class="abtn ghost" data-act="savename">'+u("save")+"</button>"+
+         '<p class="okmsg" id="okmsg"></p><p class="err" id="errmsg"></p></div>';
+      h+='<div class="card"><p class="note">'+u("syncOn")+'</p><p class="note" style="margin-top:8px;color:var(--mut)">'+u("familyNote")+"</p>"+
+         '<button class="abtn ghost" data-act="logout" style="margin-top:12px">'+u("signout")+"</button></div>";
+    }else{
+      h+='<div class="card"><h3>'+u("acct")+'</h3><p class="note" style="margin-top:6px">'+u("loginHint")+"</p>"+
+         '<input class="fin" id="f-email" type="email" autocomplete="email" placeholder="'+u("email")+'">'+
+         '<input class="fin" id="f-pass" type="password" autocomplete="current-password" placeholder="'+u("pass")+'">'+
+         '<input class="fin" id="f-name" placeholder="'+u("name")+'" autocomplete="name">'+
+         '<button class="abtn" data-act="login">'+u("signin")+"</button>"+
+         '<button class="abtn ghost" data-act="signup">'+u("signup")+"</button>"+
+         '<p class="okmsg" id="okmsg"></p><p class="err" id="errmsg"></p></div>';
+    }
   }
   else if(state.tab==="semana"){
     WEEK.forEach(function(w,i){
@@ -667,6 +797,10 @@ document.addEventListener("click",function(e){
   var tab=b.getAttribute("data-tab"),act=b.getAttribute("data-act");
   if(tab&&!act){state.tab=tab;state.sid=null;render();return}
   if(act==="lang"){LANG=b.dataset.l;W("lang",LANG);render();return}
+  if(act==="acct"){state.tab="cuenta";state.sid=null;render();return}
+  if(act==="login"||act==="signup"){doAuth(act);return}
+  if(act==="logout"){sb.auth.signOut();return}
+  if(act==="savename"){saveName();return}
   if(act==="goto"){e.preventDefault();state.tab=b.getAttribute("data-tab");render();return}
   if(act==="pill"){
     var sid=b.dataset.sid,i=+b.dataset.i,j=+b.dataset.j;

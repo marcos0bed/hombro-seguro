@@ -1,5 +1,6 @@
-const CACHE = "hombro-v3";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg"];
+const CACHE = "hombro-v4";
+const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", CDN];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -14,7 +15,10 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET" || !e.request.url.startsWith(self.location.origin)) return;
+  const sameOrigin = e.request.url.startsWith(self.location.origin);
+  const cdn = e.request.url.startsWith("https://cdn.jsdelivr.net/");
+  // Las llamadas a la API (supabase.co) van siempre por red, sin caché.
+  if (e.request.method !== "GET" || (!sameOrigin && !cdn)) return;
   e.respondWith(
     caches.match(e.request).then(
       (hit) =>
@@ -25,7 +29,7 @@ self.addEventListener("fetch", (e) => {
             caches.open(CACHE).then((c) => c.put(e.request, copy));
             return res;
           })
-          .catch(() => caches.match("./index.html"))
+          .catch(() => (sameOrigin ? caches.match("./index.html") : undefined))
     )
   );
 });
