@@ -138,6 +138,7 @@ h1.day{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-siz
 .lcard h3{color:var(--acc)}
 h2.sect{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-size:15px;letter-spacing:.1em;color:var(--mut);margin:22px 0 4px}
 
+#ptr{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translateX(-50%);z-index:60;background:var(--surface2);border:1px solid var(--acc-dim);color:var(--acc);font-family:var(--disp);font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:6px 14px;border-radius:99px;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 #sheet{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));display:none;justify-content:center;z-index:40;pointer-events:none}
 #sheet.show{display:flex}
 .sheet-in{pointer-events:auto;display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--acc-dim);border-radius:16px;padding:12px 18px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
@@ -174,6 +175,8 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
   <main id="view"></main>
 </div>
 
+<div id="ptr" aria-live="polite"></div>
+
 <div id="sheet" role="timer"><div class="sheet-in">
   <div><div class="tlab" id="tlab">Descanso</div><div class="tnum" id="tnum">1:00</div></div>
   <button class="tbtn" data-act="rest-add">+30s</button>
@@ -184,7 +187,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v36";
+var APP_VERSION="v37";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -502,7 +505,8 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   restDoneShort:"⏱️ Descanso terminado",serieLbl:"serie",nextLbl:"Siguiente:",
   sessDone:"🏁 Todas las series hechas — ¡guarda la sesión!",
   histT:"Historial de sesiones",thEj:"Ejercicio",thSets:"Series",setsLbl:"series",
-  notePh:"Notas de la sesión (sensaciones, ajustes…)"},
+  notePh:"Notas de la sesión (sensaciones, ajustes…)",
+  ptrPull:"↓ Suelta para actualizar",ptrBusy:"↻ Actualizando…"},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -553,7 +557,8 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   restDoneShort:"⏱️ Rest over",serieLbl:"set",nextLbl:"Next:",
   sessDone:"🏁 All sets done — save your workout!",
   histT:"Workout history",thEj:"Exercise",thSets:"Sets",setsLbl:"sets",
-  notePh:"Session notes (how it felt, tweaks…)"}};
+  notePh:"Session notes (how it felt, tweaks…)",
+  ptrPull:"↓ Release to refresh",ptrBusy:"↻ Refreshing…"}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -1530,6 +1535,39 @@ function isoTick(){
     else{btn.textContent=u("isoSerie")+" "+(isoST.series+1)+" "+u("isoRestHint");document.getElementById("isophase").textContent=u("isoRest")+" · "+isoST.series+" "+u("isoOf");}
   }
 }
+
+/* ---------- pull-to-refresh: tirón hacia abajo desde el tope = recargar todo ---------- */
+var refreshing=false;
+function ptrEl(){return document.getElementById("ptr")}
+function doRefresh(){
+  if(refreshing)return;
+  refreshing=true;
+  var p=ptrEl();if(p){p.textContent=u("ptrBusy");p.style.display="block";}
+  LOGS.data=null;METRICS.data=null;GACT.data=null;LASTUP=null;LASTUPloading=false;
+  var fin=function(){refreshing=false;if(p)p.style.display="none";render(true);};
+  if(cloudOn()){
+    Promise.all([pullAll(),loadProfile()]).then(function(){render(true);setTimeout(fin,900);},function(){fin()});
+  }else{render(true);setTimeout(fin,500);}
+}
+(function(){
+  var sy=null,armed=false;
+  window.addEventListener("touchstart",function(e){
+    sy=(window.scrollY<=0&&e.touches.length===1)?e.touches[0].clientY:null;
+    armed=false;
+  },{passive:true});
+  window.addEventListener("touchmove",function(e){
+    if(sy===null||refreshing)return;
+    if(window.scrollY>0){sy=null;armed=false;var p=ptrEl();if(p)p.style.display="none";return}
+    var dy=e.touches[0].clientY-sy,p2=ptrEl();
+    if(dy>90&&!armed){armed=true;if(p2){p2.textContent=u("ptrPull");p2.style.display="block";}}
+    else if(dy<=90&&armed){armed=false;if(p2)p2.style.display="none";}
+  },{passive:true});
+  window.addEventListener("touchend",function(){
+    if(armed&&!refreshing)doRefresh();
+    else if(!refreshing){var p=ptrEl();if(p)p.style.display="none";}
+    sy=null;armed=false;
+  });
+})();
 
 /* al volver del segundo plano: recalcular contra el reloj (si venció, suena ya) */
 document.addEventListener("visibilitychange",function(){
