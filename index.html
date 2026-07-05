@@ -89,6 +89,9 @@ h1.day{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-siz
 /* 16px mínimo: por debajo, iOS hace auto-zoom al enfocar el campo */
 .w-in{width:70px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;color:var(--text);font:16px var(--mono);padding:6px 8px;text-align:right}
 
+.rng{display:flex;gap:4px}
+.rng button{font-family:var(--disp);font-size:11px;font-weight:600;letter-spacing:.04em;padding:3px 9px;border:1px solid var(--line);border-radius:99px;color:var(--mut)}
+.rng button.sel{color:var(--acc);border-color:var(--acc-dim);background:rgba(240,166,60,.1)}
 .mv{display:flex;flex-direction:column;gap:2px}
 .mv button{width:24px;height:15px;font-size:8px;line-height:1;color:var(--mut);background:var(--surface2);border:1px solid var(--line);border-radius:4px;padding:0}
 .mv button:disabled{opacity:.22}
@@ -180,7 +183,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v31";
+var APP_VERSION="v32";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -427,9 +430,9 @@ function saveLog(row,sid){
   sb.from("workout_logs").insert(row).then(
     function(r){
       if(r.error){queueLog(row)}
-      W("savedlog:"+TODAY+":"+sid,true);LOGS.data=null;render();
+      W("savedlog:"+TODAY+":"+sid,true);LOGS.data=null;render(true);
     },
-    function(){queueLog(row);W("savedlog:"+TODAY+":"+sid,true);render();});
+    function(){queueLog(row);W("savedlog:"+TODAY+":"+sid,true);render(true);});
 }
 function queueLog(row){var q=S("pendingLogs",[]);q.push(row);W("pendingLogs",q)}
 function flushLogs(){
@@ -482,9 +485,9 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   totalLbl:"sesiones guardadas",kgLbl:"kg",
   entreno:"Entreno",balanceT:"Balance",
   lastWeight:"Último peso",bodyFat:"Grasa corporal",
-  chart90:"Peso y grasa · 90 días",macros14:"Macros · últimos 14 días registrados",
+  chart90:"Peso y grasa",macros14:"Macros · últimos 14 días registrados",
   weeklyT:"Resumen semanal",
-  chartAll:"Tendencias · todo en uno · 90 días",
+  chartAll:"Tendencias · todo en uno",
   normNote:"Cada curva en su propia banda, con su propio rango y el último valor a la derecha. Nutrición suavizada (media de 3 registros).",
   legFdiet:"Grasa (dieta)",
   thW:"Semana",thReg:"Días reg.",thIn:"Kcal in",thCarbs:"Carbs g",thOut:"Kcal out",thPeso:"Peso",thGrasa:"Grasa %",
@@ -531,9 +534,9 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   totalLbl:"workouts saved",kgLbl:"kg",
   entreno:"Training",balanceT:"Balance",
   lastWeight:"Latest weight",bodyFat:"Body fat",
-  chart90:"Weight & body fat · 90 days",macros14:"Macros · last 14 logged days",
+  chart90:"Weight & body fat",macros14:"Macros · last 14 logged days",
   weeklyT:"Weekly summary",
-  chartAll:"Trends · everything · 90 days",
+  chartAll:"Trends · everything",
   normNote:"Each curve in its own lane, with its own range and the latest value on the right. Nutrition is smoothed (3-entry average).",
   legFdiet:"Fat (diet)",
   thW:"Week",thReg:"Logged",thIn:"Kcal in",thCarbs:"Carbs g",thOut:"Kcal out",thPeso:"Weight",thGrasa:"Fat %",
@@ -964,7 +967,7 @@ function structTable(rows){
   return '<div class="card"><table class="mini">'+rows.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("")+"</table></div>";
 }
 
-function render(){
+function render(keepScroll){
   if(state.tab!=="cuenta"&&visibleTabs().indexOf(state.tab)<0)state.tab="hoy";
   renderHdr();renderNav();
   document.documentElement.lang=LANG;
@@ -1078,7 +1081,7 @@ function render(){
     h+=R.grips+rules+R.ban+R.exit+foot;
   }
   v.innerHTML=h;
-  window.scrollTo(0,0);
+  if(!keepScroll)window.scrollTo(0,0);
 }
 
 /* ---------- dashboard ---------- */
@@ -1245,7 +1248,12 @@ function balanceView(){
   var lastW=wR[wR.length-1],lastF=fR[fR.length-1];
 
   // tendencias (primera tarjeta): todas las curvas en carriles, mismo eje temporal
-  var cut=new Date();cut.setDate(cut.getDate()-90);var cutS=iso(cut);
+  var rng=state.balRange||90;
+  function rngSwitch(){
+    return '<span class="rng"><button data-act="balrange" data-r="7"'+(rng===7?' class="sel"':"")+'>7d</button>'+
+           '<button data-act="balrange" data-r="90"'+(rng===90?' class="sel"':"")+'>90d</button></span>';
+  }
+  var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
   var m90=M.filter(function(r){return r.day>=cutS});
   var allDefs=[
     {rows:pickSeries(m90,"weight_kg"),color:"#F0A63C",label:u("thPeso")},
@@ -1257,7 +1265,7 @@ function balanceView(){
     {rows:pickSeries(m90,"fat_g"),color:"#D88B9E",label:u("legFdiet"),smooth:3}
   ];
   var mc=multiChart(allDefs);
-  if(mc)h+='<div class="card"><h3>'+u("chartAll")+"</h3>"+mc+
+  if(mc)h+='<div class="card"><div class="exhead"><h3>'+u("chartAll")+"</h3>"+rngSwitch()+"</div>"+mc+
     '<p class="note" style="font-size:12px;color:var(--mut);margin-top:6px">'+u("normNote")+"</p></div>";
 
   // tarjeta resumen (+ frescura de cada fuente de datos)
@@ -1298,7 +1306,7 @@ function balanceView(){
     if(f90.length>1)svg+='<text x="312" y="10" fill="#46C08A" font-size="9" font-family="monospace" text-anchor="end">'+fmax.toFixed(1)+'%</text>'+
          '<text x="312" y="118" fill="#46C08A" font-size="9" font-family="monospace" text-anchor="end">'+fmin.toFixed(1)+'</text>';
     svg+="</svg>";
-    h+='<div class="card"><h3>'+u("chart90")+"</h3>"+svg+
+    h+='<div class="card"><div class="exhead"><h3>'+u("chart90")+"</h3>"+rngSwitch()+"</div>"+svg+
        '<div class="chips" style="margin-top:6px"><span class="chip" style="color:#F0A63C">— '+u("thPeso")+'</span><span class="chip" style="color:#46C08A">┄ '+u("bodyFat")+"</span></div></div>";
   }
 
@@ -1486,15 +1494,15 @@ document.addEventListener("click",function(e){
     var p=ordM.indexOf(iM),q=act==="mvup"?p-1:p+1;
     if(p<0||q<0||q>=ordM.length)return;
     var tmp=ordM[p];ordM[p]=ordM[q];ordM[q]=tmp;
-    W("order:"+sidM,ordM);render();return;
+    W("order:"+sidM,ordM);render(true);return;
   }
   if(act==="how"){var how=b.closest(".card").querySelector(".how");how.classList.toggle("open");return}
-  if(act==="pain"){W("pain:"+TODAY,+b.dataset.v);render();return}
+  if(act==="pain"){W("pain:"+TODAY,+b.dataset.v);render(true);return}
   if(act==="run-done"){
     /* Solo marca adherencia al plan. El registro cardio con datos reales
        (km, ritmo, FC) llega solo desde Garmin vía la sincronización. */
     var k="done:"+TODAY+":"+b.dataset.sid;W(k,!S(k,false));
-    render();return;
+    render(true);return;
   }
   if(act==="savelog"){
     var sidL=b.dataset.sid;
@@ -1508,7 +1516,8 @@ document.addEventListener("click",function(e){
   if(act==="back"){state.sid=null;render();return}
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
-  if(act==="hist"){state.histOpen=state.histOpen===b.dataset.k?null:b.dataset.k;render();return}
+  if(act==="hist"){state.histOpen=state.histOpen===b.dataset.k?null:b.dataset.k;render(true);return}
+  if(act==="balrange"){state.balRange=+b.dataset.r;render(true);return}
   if(act==="rest-add"){rest.endAt+=30000;restTick();return}
   if(act==="rest-skip"){restStop();return}
   if(act==="iso"){isoStart();return}
