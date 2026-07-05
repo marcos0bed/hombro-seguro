@@ -21,8 +21,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
-.app{max-width:560px;margin:0 auto;padding:0 14px}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden}
+.app{max-width:560px;margin:0 auto;padding:0 14px calc(92px + env(safe-area-inset-bottom,0px));height:100dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable}
 a{color:var(--acc)}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
@@ -144,7 +145,8 @@ h2.sect{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-si
 
 nav{position:fixed;left:0;right:0;bottom:0;background:rgba(18,21,26,.92);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:50;padding-bottom:env(safe-area-inset-bottom,0px)}
 .nav-in{display:grid;grid-template-columns:repeat(6,1fr);width:100%;max-width:560px}
-nav button{padding:12px 1px 14px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.04em;font-size:11.5px;font-weight:600;color:var(--mut);border-top:2px solid transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 1px 9px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.03em;font-size:10px;font-weight:600;color:var(--mut);border-top:2px solid transparent;overflow:hidden;white-space:nowrap}
+nav button svg{width:20px;height:20px;flex:none}
 nav button.sel{color:var(--acc);border-top-color:var(--acc)}
 
 .backlink{display:inline-block;margin:10px 0 0;color:var(--mut);font-size:14px;text-decoration:underline;text-underline-offset:3px}
@@ -789,6 +791,7 @@ function structTable(rows){
 }
 
 function render(){
+  if(state.tab!=="cuenta"&&visibleTabs().indexOf(state.tab)<0)state.tab="hoy";
   renderHdr();renderNav();
   document.documentElement.lang=LANG;
   document.getElementById("tlab").textContent=u("rest");
@@ -842,6 +845,16 @@ function render(){
   }
   else if(state.tab==="viaje"){
     var TR=TRAVEL[LANG];
+    var rtv=getRT()&&getRT().travel;
+    if(rtv&&rtv.sessions&&rtv.sessions.length){
+      /* Viaje personalizado: sesiones con gomas equivalentes a la rutina cargada del usuario */
+      h+=TR.anchor+TR.dosing;
+      rtv.sessions.forEach(function(vsid){
+        var vs=getSession(vsid);if(!vs)return;
+        h+='<h2 class="sect">'+esc(T(vs.title))+"</h2>"+sessionView(vsid);
+      });
+      h+='<p class="note" style="margin:14px 4px;color:var(--mut)">'+u("travelNote")+"</p>";
+    }else{
     h+='<div class="seg"><button data-act="vmode" data-m="gomas"'+(state.viaje==="gomas"?' class="sel"':"")+'>'+u("segBands")+"</button>"+
        '<button data-act="vmode" data-m="hotel"'+(state.viaje==="hotel"?' class="sel"':"")+'>'+u("segHotel")+"</button></div>";
     if(state.viaje==="gomas"){
@@ -855,6 +868,7 @@ function render(){
       h+='<h2 class="sect">'+u("fbB")+"</h2>"+sessionView("hotelB");
     }
     h+='<p class="note" style="margin:14px 4px;color:var(--mut)">'+u("travelNote")+"</p>";
+    }
   }
   else if(state.tab==="manguito"){
     h+=sessionView("manguito");
@@ -876,7 +890,8 @@ function render(){
     h+=R.grips+rules+R.ban+R.exit+foot;
   }
   v.innerHTML=h;
-  window.scrollTo(0,0);
+  var ap=document.querySelector(".app");
+  if(ap)ap.scrollTo(0,0);else window.scrollTo(0,0);
 }
 
 /* ---------- dashboard ---------- */
@@ -930,10 +945,23 @@ function statsView(){
   return h;
 }
 
+var ICONS={
+hoy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/><circle cx="12" cy="15.5" r="1.7" fill="currentColor" stroke="none"/></svg>',
+semana:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M4 10h16M9 3v4M15 3v4M8 14h2.5M13.5 14h2.5M8 17.5h2.5M13.5 17.5h2.5"/></svg>',
+progreso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20v-7M12 20V5M19 20v-10"/></svg>',
+viaje:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="2.5"/><path d="M9 8V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V8M9.5 12v4M14.5 12v4"/></svg>',
+manguito:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-2.9 7.4-7 9-4.1-1.6-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+reglas:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 5.5l1 1L6.8 4.6M4 11.5l1 1 1.8-1.9M4 17.5l1 1 1.8-1.9"/></svg>'};
+function visibleTabs(){
+  var rt=getRT(),hide=(rt&&rt.hideTabs)||[];
+  return ["hoy","semana","progreso","viaje","manguito","reglas"].filter(function(t){return hide.indexOf(t)<0});
+}
 function renderNav(){
-  var tabs=["hoy","semana","progreso","viaje","manguito","reglas"];
-  document.getElementById("navin").innerHTML=tabs.map(function(t){
-    return '<button data-tab="'+t+'"'+(state.tab===t?' class="sel"':"")+">"+u(t)+"</button>"}).join("");
+  var tabs=visibleTabs();
+  var el=document.getElementById("navin");
+  el.style.gridTemplateColumns="repeat("+tabs.length+",1fr)";
+  el.innerHTML=tabs.map(function(t){
+    return '<button data-tab="'+t+'"'+(state.tab===t?' class="sel"':"")+">"+(ICONS[t]||"")+"<span>"+u(t)+"</span></button>"}).join("");
 }
 
 /* ---------- rest timer ---------- */
