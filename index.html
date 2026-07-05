@@ -176,7 +176,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v21";
+var APP_VERSION="v22";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -251,7 +251,7 @@ if(sb){
   sb.auth.onAuthStateChange(function(ev,session){
     var was=!!sbUser;sbUser=session?session.user:null;
     if(sbUser&&!was){Promise.all([pullAll(),loadProfile()]).then(function(){flushDirty();flushLogs();render()});}
-    else if(!sbUser&&was){sbProfile=null;state.tab="hoy";LOGS.data=null;METRICS.data=null;GACT.data=null;
+    else if(!sbUser&&was){sbProfile=null;state.tab="hoy";LOGS.data=null;METRICS.data=null;GACT.data=null;LASTUP=null;
       try{localStorage.removeItem("hs:clinical");localStorage.removeItem("hs:routine")}catch(e){}render();}
   });
   window.addEventListener("online",function(){flushDirty();flushLogs()});
@@ -298,6 +298,17 @@ function loadLogs(){
     .then(function(r){LOGS.loading=false;LOGS.data=r.data||[];render();},
           function(){LOGS.loading=false;LOGS.data=[];render();});
 }
+/* ---------- última actualización de datos (header del dashboard) ---------- */
+var LASTUP=null,LASTUPloading=false;
+function loadLastUp(){
+  if(!cloudOn()||LASTUPloading)return;
+  LASTUPloading=true;
+  sb.from("daily_metrics").select("updated_at").order("updated_at",{ascending:false}).limit(1)
+    .then(function(r){LASTUPloading=false;
+      if(r.data&&r.data[0]&&r.data[0].updated_at!==LASTUP){LASTUP=r.data[0].updated_at;renderHdr();}},
+      function(){LASTUPloading=false;});
+}
+
 /* ---------- últimas actividades Garmin ---------- */
 var GACT={data:null,loading:false};
 function loadGact(){
@@ -761,6 +772,10 @@ function renderHdr(){
   if(state.tab==="hoy"){big=T(w.name)+" · "+T(s.title);sub=T(s.sub)||""}
   else{big={semana:u("tSemana"),progreso:u("progreso"),viaje:u("tViaje"),manguito:u("tManguito"),reglas:u("tReglas"),cuenta:u("acct")}[state.tab];
        sub={semana:(cx&&cx.subSemana)||u("subSemana"),progreso:u("subProgreso"),viaje:u("subViaje"),manguito:u("subManguito"),reglas:u("subReglas"),cuenta:u("acctSub")}[state.tab]}
+  if(state.tab==="progreso"&&LASTUP){
+    var du=new Date(LASTUP);
+    sub=(sub?sub+" · ":"")+"⟳ "+pad(du.getDate())+"/"+pad(du.getMonth()+1)+" "+pad(du.getHours())+":"+pad(du.getMinutes());
+  }
   var strip=UI[LANG].strip.map(function(t,i){return '<span'+(i<2?' class="hot"':'')+'>'+t+"</span>"}).join("");
   var ai;
   if(sbUser)ai=esc(((sbProfile&&sbProfile.display_name)||sbUser.email||"?").charAt(0).toUpperCase());
@@ -901,6 +916,7 @@ function render(){
     if(!sb){h+='<div class="card"><p class="note">'+u("cloudOff")+"</p></div>";}
     else if(!sbUser){h+='<div class="card"><p class="note">'+u("needLoginStats")+'</p><button class="abtn" data-act="acct" style="margin-top:12px">'+u("signin")+"</button></div>";}
     else{
+      loadLastUp();
       h+='<div class="seg"><button data-act="pview" data-pv="train"'+(state.pview!=="balance"?' class="sel"':"")+'>'+u("entreno")+"</button>"+
          '<button data-act="pview" data-pv="balance"'+(state.pview==="balance"?' class="sel"':"")+'>'+u("balanceT")+"</button></div>";
       if(state.pview!=="balance"){
