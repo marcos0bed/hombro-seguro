@@ -206,7 +206,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v48";
+var APP_VERSION="v49";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1396,7 +1396,7 @@ function srcLine(){
   if(!ss)return "";
   function fd(x){return (x&&x.length>=10)?x.slice(8,10)+"/"+x.slice(5,7):"—"}
   function fs(d,t){return fd(d)+((t&&t.length>=16)?" ⟳"+t.slice(11,16):"")}
-  return '<p class="note" style="margin-top:10px;font-size:12px;color:var(--mut)">'+u("srcT")+" — 🍎 Apple Health: "+fs(ss.health,ss.health_t)+" · MFP: "+fs(ss.mfp,ss.mfp_t)+" · Garmin: "+fs(ss.garmin,ss.garmin_t)+"</p>";
+  return '<p class="note" style="margin-top:6px;font-size:10.5px;color:var(--mut)">Health '+fs(ss.health,ss.health_t)+" · MFP "+fs(ss.mfp,ss.mfp_t)+" · Garmin "+fs(ss.garmin,ss.garmin_t)+"</p>";
 }
 
 /* Cualitativos de Garmin: texto bilingüe + color semafórico */
