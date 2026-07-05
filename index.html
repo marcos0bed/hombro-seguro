@@ -176,7 +176,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v18";
+var APP_VERSION="v19";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -392,8 +392,9 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   lastWeight:"Último peso",bodyFat:"Grasa corporal",
   chart90:"Peso y grasa · 90 días",macros14:"Macros · últimos 14 días registrados",
   weeklyT:"Resumen semanal",
-  chartAll:"Todo solapado · 90 días",
-  normNote:"Cada serie está normalizada a su propio rango: compara formas y tendencias, no escalas.",
+  chartAll:"Tendencias · todo en uno · 90 días",
+  normNote:"Cada curva en su propia banda, con su propio rango y el último valor a la derecha. Nutrición suavizada (media de 3 registros).",
+  legFdiet:"Grasa (dieta)",
   thW:"Semana",thReg:"Días reg.",thIn:"Kcal in",thCarbs:"Carbs g",thOut:"Kcal out",thPeso:"Peso",thGrasa:"Grasa %",
   legC:"Carbohidratos",legP:"Proteína",legF:"Grasa",
   noMetrics:"Sin métricas todavía. Se alimentan de MyFitnessPal (comida), Garmin (gasto) y Apple Health (peso/grasa) — la sincronización se lanza desde el Mac."},
@@ -434,8 +435,9 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   lastWeight:"Latest weight",bodyFat:"Body fat",
   chart90:"Weight & body fat · 90 days",macros14:"Macros · last 14 logged days",
   weeklyT:"Weekly summary",
-  chartAll:"Everything overlaid · 90 days",
-  normNote:"Each series is normalized to its own range: compare shapes and trends, not scales.",
+  chartAll:"Trends · everything · 90 days",
+  normNote:"Each curve in its own lane, with its own range and the latest value on the right. Nutrition is smoothed (3-entry average).",
+  legFdiet:"Fat (diet)",
   thW:"Week",thReg:"Logged",thIn:"Kcal in",thCarbs:"Carbs g",thOut:"Kcal out",thPeso:"Weight",thGrasa:"Fat %",
   legC:"Carbs",legP:"Protein",legF:"Fat",
   noMetrics:"No metrics yet. They come from MyFitnessPal (food), Garmin (expenditure) and Apple Health (weight/fat) — sync runs from the Mac."}};
@@ -1011,28 +1013,45 @@ function visibleTabs(){
   var rt=getRT(),hide=(rt&&rt.hideTabs)||[];
   return ["hoy","semana","progreso","viaje","manguito","reglas"].filter(function(t){return hide.indexOf(t)<0});
 }
-/* Gráfica multi-serie normalizada (mismo formato que Peso y grasa) */
+/* Gráfica de tendencias por carriles: cada serie en su banda (mismo eje temporal),
+   con su etiqueta y último valor. Las series ruidosas se suavizan (media móvil). */
+function smoothRows(rows,n){
+  if(!n||rows.length<3)return rows;
+  var out=[];
+  for(var i=0;i<rows.length;i++){
+    var a=Math.max(0,i-n+1),s=0,c=0;
+    for(var j=a;j<=i;j++){s+=rows[j].v;c++}
+    out.push({day:rows[i].day,v:s/c});
+  }
+  return out;
+}
 function multiChart(defs){
-  var days=[];defs.forEach(function(s){s.rows.forEach(function(r){days.push(r.day)})});
-  if(days.length<2)return "";
+  var ds=defs.map(function(s){
+    return {label:s.label,color:s.color,dash:s.dash,rows:smoothRows(s.rows,s.smooth)};
+  }).filter(function(s){return s.rows.length>1});
+  if(!ds.length)return "";
+  var days=[];ds.forEach(function(s){s.rows.forEach(function(r){days.push(r.day)})});
   days.sort();
   var t0=+new Date(days[0]),t1=+new Date(days[days.length-1])||t0+1;
-  var svg='<svg viewBox="0 0 320 120" style="width:100%;height:auto;margin-top:8px" role="img">';
-  defs.forEach(function(s){
-    if(s.rows.length<2)return;
+  var LH=32,W=320,H=ds.length*LH+4;
+  var svg='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin-top:8px" role="img">';
+  ds.forEach(function(s,i){
+    var top=2+i*LH;
+    if(i)svg+='<line x1="0" y1="'+top+'" x2="'+W+'" y2="'+top+'" stroke="#2B3442" stroke-width="0.6"/>';
     var vs=s.rows.map(function(r){return r.v});
     var vmin=Math.min.apply(null,vs),vmax=Math.max.apply(null,vs);
     if(vmax-vmin<1e-9){vmax+=1;vmin-=1}
     var pts=s.rows.map(function(r){
-      var x=8+304*((+new Date(r.day)-t0)/((t1-t0)||1));
-      var y=112-104*((r.v-vmin)/(vmax-vmin));
+      var x=2+(W-4)*((+new Date(r.day)-t0)/((t1-t0)||1));
+      var y=(top+LH-5)-(LH-17)*((r.v-vmin)/(vmax-vmin));
       return x.toFixed(1)+","+y.toFixed(1)}).join(" ");
-    svg+='<polyline fill="none" stroke="'+s.color+'" stroke-width="1.8"'+(s.dash?' stroke-dasharray="4 3" opacity=".85"':"")+' stroke-linejoin="round" points="'+pts+'"/>';
+    svg+='<polyline fill="none" stroke="'+s.color+'" stroke-width="1.6"'+(s.dash?' stroke-dasharray="4 3"':"")+' stroke-linejoin="round" opacity=".95" points="'+pts+'"/>';
+    svg+='<text x="4" y="'+(top+10)+'" fill="'+s.color+'" font-size="8.5" font-family="-apple-system,sans-serif" font-weight="600">'+esc(s.label)+"</text>";
+    var last=s.rows[s.rows.length-1].v;
+    svg+='<text x="'+(W-4)+'" y="'+(top+10)+'" fill="'+s.color+'" font-size="8.5" font-family="monospace" text-anchor="end">'+(Math.round(last*10)/10)+"</text>";
   });
   svg+="</svg>";
-  var leg='<div class="chips" style="margin-top:6px">'+defs.filter(function(s){return s.rows.length>1})
-    .map(function(s){return '<span class="chip" style="color:'+s.color+'">'+(s.dash?"┄ ":"— ")+esc(s.label)+"</span>"}).join("")+"</div>";
-  return svg+leg;
+  return svg;
 }
 function pickSeries(rows,key){
   return rows.filter(function(r){return r[key]!=null}).map(function(r){return {day:r.day,v:+r[key]}});
@@ -1044,13 +1063,28 @@ function balanceView(){
   var fR=M.filter(function(r){return r.body_fat_pct!=null});
   var lastW=wR[wR.length-1],lastF=fR[fR.length-1];
 
+  // tendencias (primera tarjeta): todas las curvas en carriles, mismo eje temporal
+  var cut=new Date();cut.setDate(cut.getDate()-90);var cutS=iso(cut);
+  var m90=M.filter(function(r){return r.day>=cutS});
+  var allDefs=[
+    {rows:pickSeries(m90,"weight_kg"),color:"#F0A63C",label:u("thPeso")},
+    {rows:pickSeries(m90,"body_fat_pct"),color:"#46C08A",label:u("bodyFat")},
+    {rows:pickSeries(m90,"kcal_in"),color:"#7BA1D9",label:"Kcal in",smooth:3},
+    {rows:pickSeries(m90,"kcal_out"),color:"#E5484D",label:"Kcal out",smooth:3},
+    {rows:pickSeries(m90,"carbs_g"),color:"#C88BD8",label:u("legC"),smooth:3},
+    {rows:pickSeries(m90,"protein_g"),color:"#4DD0C0",label:u("legP"),smooth:3},
+    {rows:pickSeries(m90,"fat_g"),color:"#D88B9E",label:u("legFdiet"),smooth:3}
+  ];
+  var mc=multiChart(allDefs);
+  if(mc)h+='<div class="card"><h3>'+u("chartAll")+"</h3>"+mc+
+    '<p class="note" style="font-size:12px;color:var(--mut);margin-top:6px">'+u("normNote")+"</p></div>";
+
   // tarjeta resumen
   h+='<div class="card"><div style="display:flex;gap:28px;flex-wrap:wrap">'+
      '<div><div class="tlab">'+u("lastWeight")+'</div><div class="big" style="font-size:34px">'+(lastW?(+lastW.weight_kg).toFixed(1)+" kg":"—")+'</div>'+(lastW?'<span class="note" style="color:var(--mut);font-size:12px">'+lastW.day+"</span>":"")+"</div>"+
      '<div><div class="tlab">'+u("bodyFat")+'</div><div class="big" style="font-size:34px;color:var(--ok)">'+(lastF?(+lastF.body_fat_pct).toFixed(1)+"%":"—")+'</div>'+(lastF?'<span class="note" style="color:var(--mut);font-size:12px">'+lastF.day+"</span>":"")+"</div></div></div>";
 
   // gráfica 90 días: peso (ámbar) + grasa (verde discontinua)
-  var cut=new Date();cut.setDate(cut.getDate()-90);var cutS=iso(cut);
   var w90=wR.filter(function(r){return r.day>=cutS}),f90=fR.filter(function(r){return r.day>=cutS});
   if(w90.length>1){
     var t0=+new Date(w90[0].day),t1=+new Date(w90[w90.length-1].day)||t0+1;
@@ -1077,19 +1111,6 @@ function balanceView(){
     h+='<div class="card"><h3>'+u("chart90")+"</h3>"+svg+
        '<div class="chips" style="margin-top:6px"><span class="chip" style="color:#F0A63C">— '+u("thPeso")+'</span><span class="chip" style="color:#46C08A">┄ '+u("bodyFat")+"</span></div></div>";
   }
-
-  // todo solapado: mismas líneas, cada serie normalizada a su rango
-  var m90=M.filter(function(r){return r.day>=cutS});
-  var allDefs=[
-    {rows:pickSeries(m90,"weight_kg"),color:"#F0A63C",label:u("thPeso")},
-    {rows:pickSeries(m90,"body_fat_pct"),color:"#46C08A",dash:true,label:u("bodyFat")},
-    {rows:pickSeries(m90,"kcal_in"),color:"#7BA1D9",label:"Kcal in"},
-    {rows:pickSeries(m90,"kcal_out"),color:"#E5484D",dash:true,label:"Kcal out"},
-    {rows:pickSeries(m90,"carbs_g"),color:"#C88BD8",label:u("legC")}
-  ];
-  var mc=multiChart(allDefs);
-  if(mc)h+='<div class="card"><h3>'+u("chartAll")+"</h3>"+mc+
-    '<p class="note" style="font-size:12px;color:var(--mut);margin-top:6px">'+u("normNote")+"</p></div>";
 
   // macros apilados (kcal por macro) últimos 14 días registrados
   var eat=M.filter(function(r){return r.kcal_in!=null});
