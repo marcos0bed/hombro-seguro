@@ -184,7 +184,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v34";
+var APP_VERSION="v35";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1307,10 +1307,11 @@ function balanceView(){
   // tarjeta resumen (+ frescura de cada fuente de datos)
   var ss=S("sync_status",null);
   function fd(x){return (x&&x.length>=10)?x.slice(8,10)+"/"+x.slice(5,7):"—"}
+  function fsrc(d,t){return fd(d)+((t&&t.length>=16)?" ⟳"+t.slice(11,16):"")}
   h+='<div class="card"><div style="display:flex;gap:28px;flex-wrap:wrap">'+
      '<div><div class="tlab">'+u("lastWeight")+'</div><div class="big" style="font-size:34px">'+(lastW?(+lastW.weight_kg).toFixed(1)+" kg":"—")+'</div>'+(lastW?'<span class="note" style="color:var(--mut);font-size:12px">'+lastW.day+"</span>":"")+"</div>"+
      '<div><div class="tlab">'+u("bodyFat")+'</div><div class="big" style="font-size:34px;color:var(--ok)">'+(lastF?(+lastF.body_fat_pct).toFixed(1)+"%":"—")+'</div>'+(lastF?'<span class="note" style="color:var(--mut);font-size:12px">'+lastF.day+"</span>":"")+"</div></div>"+
-     (ss?'<p class="note" style="margin-top:10px;font-size:12px;color:var(--mut)">'+u("srcT")+" — 🍎 Apple Health: "+fd(ss.health)+" · MFP: "+fd(ss.mfp)+" · Garmin: "+fd(ss.garmin)+"</p>":"")+
+     (ss?'<p class="note" style="margin-top:10px;font-size:12px;color:var(--mut)">'+u("srcT")+" — 🍎 Apple Health: "+fsrc(ss.health,ss.health_t)+" · MFP: "+fsrc(ss.mfp,ss.mfp_t)+" · Garmin: "+fsrc(ss.garmin,ss.garmin_t)+"</p>":"")+
      "</div>";
 
   // gráfica 90 días: peso (ámbar) + grasa (verde discontinua)
