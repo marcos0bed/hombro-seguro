@@ -42,15 +42,15 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .err.show{display:block}
 .okmsg{color:var(--ok);font-size:14px;margin-top:10px;display:none}
 .okmsg.show{display:block}
-.donebox{padding:10px 14px}
-.doneline{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:14px}
-.doneline .di{font-size:17px}
+.donebox{padding:8px 12px}
+.doneline{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px}
+.doneline .di{font-size:14px}
 .doneline b{font-weight:600}
-.doneline small{color:var(--mut);margin-left:auto;white-space:nowrap;font-family:var(--mono);font-size:12px}
+.doneline small{color:var(--mut);margin-left:auto;white-space:nowrap;font-family:var(--mono);font-size:11px}
 .ach{display:flex;gap:10px;margin-top:10px}
-.achb{flex:1;text-align:center;padding:10px 6px 8px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);opacity:.4}
+.achb{flex:1;text-align:center;padding:7px 6px 6px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);opacity:.4}
 .achb.on{opacity:1;border-color:var(--acc-dim);background:rgba(240,166,60,.12)}
-.achb .ai{font-size:22px;display:block}
+.achb .ai{font-size:15px;display:block}
 .achb .al{font-family:var(--disp);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-top:3px}
 .achb.on .al{color:var(--acc)}
 .hab{display:flex;justify-content:space-around;gap:8px;margin-top:10px}
@@ -85,11 +85,11 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .langsw button.sel{background:var(--surface2);filter:none}
 h1.day{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:34px;line-height:1.05;letter-spacing:.01em;text-wrap:balance;margin-top:2px}
 .sub{color:var(--mut);font-size:14px;margin-top:4px}
-.phase{display:flex;align-items:center;gap:8px;margin-top:12px;padding:9px 12px;background:linear-gradient(90deg,rgba(240,166,60,.14),rgba(240,166,60,.04));border:1px solid var(--acc-dim);border-radius:10px;font-size:13px;color:#f4c47c}
+.phase{display:flex;align-items:center;gap:8px;margin-top:10px;padding:5px 10px;background:linear-gradient(90deg,rgba(240,166,60,.14),rgba(240,166,60,.04));border:1px solid var(--acc-dim);border-radius:9px;font-size:11px;color:#f4c47c;line-height:1.35}
 .phase b{font-family:var(--disp);text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--acc);white-space:nowrap}
 
-.strip{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
-.strip span{font-family:var(--disp);text-transform:uppercase;letter-spacing:.07em;font-size:12.5px;font-weight:600;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.strip{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0 2px}
+.strip span{font-family:var(--disp);text-transform:uppercase;letter-spacing:.06em;font-size:10px;font-weight:600;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:2px 7px}
 .strip span.hot{color:var(--acc);border-color:var(--acc-dim)}
 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:10px 0}
@@ -206,7 +206,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v44";
+var APP_VERSION="v45";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -527,7 +527,7 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   notePh:"Notas de la sesión (sensaciones, ajustes…)",
   ptrPull:"↓ Suelta para actualizar",ptrBusy:"↻ Actualizando…",
   dSteps:"Pasos",dSleep:"Sueño",dRhr:"FC reposo",
-  achT:"Logros del día",ach10k:"10k pasos",ach80:"Sueño 80+",achDef:"Déficit",habT:"Log del día"},
+  doneT:"Hecho hoy",bodyT:"Tu cuerpo hoy",achT:"Logros del día",ach10k:"10k pasos",ach80:"Sueño 80+",achDef:"Déficit",habT:"Log del día"},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -581,7 +581,7 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   notePh:"Session notes (how it felt, tweaks…)",
   ptrPull:"↓ Release to refresh",ptrBusy:"↻ Refreshing…",
   dSteps:"Steps",dSleep:"Sleep",dRhr:"Resting HR",
-  achT:"Daily wins",ach10k:"10k steps",ach80:"Sleep 80+",achDef:"Deficit",habT:"Daily log"}};
+  doneT:"Done today",bodyT:"Your body today",achT:"Daily wins",ach10k:"10k steps",ach80:"Sleep 80+",achDef:"Deficit",habT:"Daily log"}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -1419,7 +1419,7 @@ function doneTodayBox(){
       ((l.total_sets||0)+" "+u("setsLbl")+(l.est_volume>0?" · "+fmtK(+l.est_volume)+" kg":""));
     return '<div class="doneline"><span class="di">'+(cardio?"🏃":"💪")+"</span><b>"+esc(l.title||"?")+"</b><small>"+esc(res)+"</small></div>";
   }).join("");
-  return '<div class="card donebox">'+rows+"</div>";
+  return '<div class="card donebox"><div class="tlab" style="margin-bottom:3px">'+u("doneT")+"</div>"+rows+"</div>";
 }
 
 function todayRow(){
@@ -1483,7 +1483,7 @@ function dayCard(){
     ["🍽️ Kcal in",v(r.kcal_in,function(x){return Math.round(x)}),null,spark(last7("kcal_in"),"#7BA1D9")],
     ["🔥 Kcal out",v(r.kcal_out,function(x){return Math.round(x)}),null,spark(last7("kcal_out"),"#E8963E")]
   ];
-  return '<div class="card"><div class="dgrid">'+tiles.map(function(t){
+  return '<div class="card"><div class="tlab" style="margin-bottom:9px">'+u("bodyT")+'</div><div class="dgrid">'+tiles.map(function(t){
     return '<div><div class="tlab">'+t[0]+'</div><div class="dval">'+t[1]+"</div>"+qualSub(t[2])+(t[3]||"")+"</div>"}).join("")+"</div>"+
     (r.day!==TODAY?'<p class="note" style="font-size:11px;color:var(--mut);margin-top:8px">'+r.day+"</p>":"")+srcLine()+"</div>";
 }
