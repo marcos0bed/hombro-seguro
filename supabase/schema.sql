@@ -127,3 +127,6 @@ alter table public.daily_metrics
 
 -- v40: curva intradía de pasos (acumulada, ~32 puntos)
 alter table public.daily_metrics add column if not exists steps_curve jsonb;
+
+-- v43: curva intradía de frecuencia cardiaca
+alter table public.daily_metrics add column if not exists hr_curve jsonb;

@@ -206,7 +206,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v42";
+var APP_VERSION="v43";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1436,12 +1436,15 @@ var HABITS=[
   {k:"ayuno",i:"⏳",n:B("Ayuno intermitente","Intermittent fasting")},
   {k:"cafe",i:"☕",n:B("Café","Coffee")},
   {k:"supl",i:"💊",n:B("Suplementos","Supplements")},
-  {k:"alc",i:"🍷",n:B("Alcohol","Alcohol")}
+  {k:"alc",i:"🍷",n:B("Alcohol","Alcohol")},
+  {k:"wk",i:"🏋️",n:B("Entrenamiento","Workout")}
 ];
 function habCard(){
   var st=S("habits:"+TODAY,{});
+  var autoWk=!!(LOGS.data&&LOGS.data.some(function(l){return l.day===TODAY}));
   return '<div class="card"><h3>'+u("habT")+'</h3><div class="hab">'+HABITS.map(function(hb){
-    return '<button class="habb'+(st[hb.k]?" on":"")+'" data-act="habit" data-h="'+hb.k+'" aria-label="'+esc(T(hb.n))+'" aria-pressed="'+(!!st[hb.k])+'">'+hb.i+"</button>"}).join("")+"</div></div>";
+    var on=!!st[hb.k]||(hb.k==="wk"&&autoWk);
+    return '<button class="habb'+(on?" on":"")+'" data-act="habit" data-h="'+hb.k+'" aria-label="'+esc(T(hb.n))+'" aria-pressed="'+on+'">'+hb.i+"</button>"}).join("")+"</div></div>";
 }
 
 /* Resumen del día en la pantalla Hoy: pasos, sueño, HRV, FC reposo, kcal in/out */
@@ -1464,7 +1467,8 @@ function dayCard(){
     ["👣 "+u("dSteps"),v(r.steps,function(x){return Math.round(x).toLocaleString()}),null,stepsSpark],
     ["😴 "+u("dSleep"),r.sleep_h!=null?(+r.sleep_h).toFixed(1)+" h"+(r.sleep_score?" · "+r.sleep_score:""):"—",r.sleep_q,spark(last7("sleep_h"),"#46C08A")],
     ["💓 HRV",v(r.hrv_ms,function(x){return Math.round(x)+" ms"}),r.hrv_q,spark(last7("hrv_ms"),"#4DD0C0")],
-    ["🫀 "+u("dRhr"),v(r.rhr,function(x){return Math.round(x)}),null,spark(last7("rhr"),"#E5484D")],
+    ["🫀 "+u("dRhr"),v(r.rhr,function(x){return Math.round(x)}),null,
+      (r.day===TODAY&&Array.isArray(r.hr_curve)&&r.hr_curve.length>1)?spark(r.hr_curve,"#E5484D"):spark(last7("rhr"),"#E5484D")],
     ["🍽️ Kcal in",v(r.kcal_in,function(x){return Math.round(x)}),null,spark(last7("kcal_in"),"#7BA1D9")],
     ["🔥 Kcal out",v(r.kcal_out,function(x){return Math.round(x)}),null,spark(last7("kcal_out"),"#E8963E")]
   ];
