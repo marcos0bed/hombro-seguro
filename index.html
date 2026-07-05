@@ -171,7 +171,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 </div>
 
 <div id="sheet" role="timer"><div class="sheet-in">
-  <div><div class="tlab" id="tlab">Descanso</div><div class="tnum" id="tnum">1:30</div></div>
+  <div><div class="tlab" id="tlab">Descanso</div><div class="tnum" id="tnum">1:00</div></div>
   <button class="tbtn" data-act="rest-add">+30s</button>
   <button class="tbtn" id="tskip" data-act="rest-skip">Saltar</button>
 </div></div>
@@ -180,7 +180,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v26";
+var APP_VERSION="v27";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1372,7 +1372,7 @@ document.addEventListener("click",function(e){
     var st=S(setsKey(sid),{});var arr=st[i]||[];
     arr[j]=!arr[j];st[i]=arr;W(setsKey(sid),st);
     b.classList.toggle("on",arr[j]);
-    if(arr[j])restStart(90);
+    if(arr[j])restStart(60);
     return;
   }
   if(act==="mvup"||act==="mvdn"){
