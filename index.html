@@ -42,6 +42,9 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .err.show{display:block}
 .okmsg{color:var(--ok);font-size:14px;margin-top:10px;display:none}
 .okmsg.show{display:block}
+.dgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 8px}
+.dgrid .dval{font-family:var(--disp);font-weight:700;font-size:19px;margin-top:2px}
+.dgrid .tlab{font-size:10.5px}
 .syncnote{font-size:13px;color:var(--mut);margin:6px 2px}
 .syncnote a{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .bar{display:flex;align-items:center;gap:8px;margin:7px 0}
@@ -187,7 +190,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v37";
+var APP_VERSION="v38";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -506,7 +509,8 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   sessDone:"🏁 Todas las series hechas — ¡guarda la sesión!",
   histT:"Historial de sesiones",thEj:"Ejercicio",thSets:"Series",setsLbl:"series",
   notePh:"Notas de la sesión (sensaciones, ajustes…)",
-  ptrPull:"↓ Suelta para actualizar",ptrBusy:"↻ Actualizando…"},
+  ptrPull:"↓ Suelta para actualizar",ptrBusy:"↻ Actualizando…",
+  dSteps:"Pasos",dSleep:"Sueño",dRhr:"FC reposo"},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -558,7 +562,8 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   sessDone:"🏁 All sets done — save your workout!",
   histT:"Workout history",thEj:"Exercise",thSets:"Sets",setsLbl:"sets",
   notePh:"Session notes (how it felt, tweaks…)",
-  ptrPull:"↓ Release to refresh",ptrBusy:"↻ Refreshing…"}};
+  ptrPull:"↓ Release to refresh",ptrBusy:"↻ Refreshing…",
+  dSteps:"Steps",dSleep:"Sleep",dRhr:"Resting HR"}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -994,6 +999,7 @@ function render(keepScroll){
     var idx=state.sid?WK.findIndex(function(w){return w.sid===state.sid}):todayIdx;
     if(idx<0)idx=todayIdx;
     if(sb&&!sbUser)h+='<p class="syncnote"><a data-act="acct" role="button" tabindex="0">'+u("syncCta")+" →</a></p>";
+    h+=dayCard();
     if(state.sid&&idx!==todayIdx)h+='<button class="backlink" data-act="back">'+u("back")+"</button>";
     h+=sessionView(WK[idx].sid);
   }
@@ -1340,6 +1346,28 @@ function gactView(){
     return "<tr><td>"+d+"</td><td>"+esc(t)+"</td><td>"+esc(det.join(" · "))+"</td></tr>";
   }).join("");
   return '<div class="card"><h3>'+u("garmT")+'</h3><div style="overflow-x:auto"><table class="mini">'+trs+"</table></div></div>";
+}
+
+/* Resumen del día en la pantalla Hoy: pasos, sueño, HRV, FC reposo, kcal in/out */
+function dayCard(){
+  if(!cloudOn())return "";
+  if(METRICS.data===null){loadMetrics();return ""}
+  var M=METRICS.data;if(!M.length)return "";
+  var r=null;
+  for(var i=M.length-1;i>=0;i--)if(M[i].day===TODAY){r=M[i];break}
+  r=r||M[M.length-1];if(!r)return "";
+  function v(x,f){return (x==null)?"—":(f?f(x):x)}
+  var tiles=[
+    ["👣 "+u("dSteps"),v(r.steps,function(x){return Math.round(x).toLocaleString()})],
+    ["😴 "+u("dSleep"),r.sleep_h!=null?(+r.sleep_h).toFixed(1)+" h"+(r.sleep_score?" · "+r.sleep_score:""):"—"],
+    ["💓 HRV",v(r.hrv_ms,function(x){return Math.round(x)+" ms"})],
+    ["🫀 "+u("dRhr"),v(r.rhr,function(x){return Math.round(x)})],
+    ["🍽️ Kcal in",v(r.kcal_in,function(x){return Math.round(x)})],
+    ["🔥 Kcal out",v(r.kcal_out,function(x){return Math.round(x)})]
+  ];
+  return '<div class="card"><div class="dgrid">'+tiles.map(function(t){
+    return '<div><div class="tlab">'+t[0]+'</div><div class="dval">'+t[1]+"</div></div>"}).join("")+"</div>"+
+    (r.day!==TODAY?'<p class="note" style="font-size:11px;color:var(--mut);margin-top:8px">'+r.day+"</p>":"")+"</div>";
 }
 
 function balanceView(){

@@ -111,3 +111,11 @@ create policy "own metrics" on public.daily_metrics
 
 -- v34: notas libres por sesión
 alter table public.workout_logs add column if not exists note text;
+
+-- v38: salud diaria en métricas (pasos, sueño, HRV, FC reposo)
+alter table public.daily_metrics
+  add column if not exists steps int,
+  add column if not exists sleep_h numeric,
+  add column if not exists sleep_score int,
+  add column if not exists hrv_ms int,
+  add column if not exists rhr int;
