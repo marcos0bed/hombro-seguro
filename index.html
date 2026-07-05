@@ -42,6 +42,21 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .err.show{display:block}
 .okmsg{color:var(--ok);font-size:14px;margin-top:10px;display:none}
 .okmsg.show{display:block}
+.donebox{padding:10px 14px}
+.doneline{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:14px}
+.doneline .di{font-size:17px}
+.doneline b{font-weight:600}
+.doneline small{color:var(--mut);margin-left:auto;white-space:nowrap;font-family:var(--mono);font-size:12px}
+.ach{display:flex;gap:10px;margin-top:10px}
+.achb{flex:1;text-align:center;padding:10px 6px 8px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);opacity:.4}
+.achb.on{opacity:1;border-color:var(--acc-dim);background:rgba(240,166,60,.12)}
+.achb .ai{font-size:22px;display:block}
+.achb .al{font-family:var(--disp);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-top:3px}
+.achb.on .al{color:var(--acc)}
+.hab{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+.habb{width:50px;height:50px;border-radius:50%;font-size:22px;border:1.5px solid var(--line);background:var(--surface2);opacity:.45;position:relative;padding:0}
+.habb.on{opacity:1;border-color:var(--acc);background:rgba(240,166,60,.14)}
+.habb.on::after{content:"✓";position:absolute;right:-3px;top:-3px;background:var(--acc);color:#12151A;font-size:10px;font-weight:700;width:16px;height:16px;border-radius:50%;line-height:16px}
 .dgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 8px}
 .dgrid .dval{font-family:var(--disp);font-weight:700;font-size:19px;margin-top:2px}
 .dgrid .tlab{font-size:10.5px}
@@ -191,7 +206,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v40";
+var APP_VERSION="v41";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -511,7 +526,8 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   histT:"Historial de sesiones",thEj:"Ejercicio",thSets:"Series",setsLbl:"series",
   notePh:"Notas de la sesión (sensaciones, ajustes…)",
   ptrPull:"↓ Suelta para actualizar",ptrBusy:"↻ Actualizando…",
-  dSteps:"Pasos",dSleep:"Sueño",dRhr:"FC reposo"},
+  dSteps:"Pasos",dSleep:"Sueño",dRhr:"FC reposo",
+  achT:"Logros del día",ach10k:"10k pasos",ach80:"Sueño 80+",achDef:"Déficit",habT:"Log del día"},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -564,7 +580,8 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   histT:"Workout history",thEj:"Exercise",thSets:"Sets",setsLbl:"sets",
   notePh:"Session notes (how it felt, tweaks…)",
   ptrPull:"↓ Release to refresh",ptrBusy:"↻ Refreshing…",
-  dSteps:"Steps",dSleep:"Sleep",dRhr:"Resting HR"}};
+  dSteps:"Steps",dSleep:"Sleep",dRhr:"Resting HR",
+  achT:"Daily wins",ach10k:"10k steps",ach80:"Sleep 80+",achDef:"Deficit",habT:"Daily log"}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -1000,7 +1017,10 @@ function render(keepScroll){
     var idx=state.sid?WK.findIndex(function(w){return w.sid===state.sid}):todayIdx;
     if(idx<0)idx=todayIdx;
     if(sb&&!sbUser)h+='<p class="syncnote"><a data-act="acct" role="button" tabindex="0">'+u("syncCta")+" →</a></p>";
+    h+=doneTodayBox();
     h+=dayCard();
+    h+=achCard();
+    h+=habCard();
     if(state.sid&&idx!==todayIdx)h+='<button class="backlink" data-act="back">'+u("back")+"</button>";
     h+=sessionView(WK[idx].sid);
   }
@@ -1378,6 +1398,53 @@ function qualSub(q){
   return '<div class="dsub" style="color:'+(QCOLOR[q]||"var(--mut)")+'">'+esc(T(QUALT[q]))+"</div>";
 }
 
+/* Ejercicios ya hechos hoy (caja compacta encima de las gráficas) */
+function doneTodayBox(){
+  if(!cloudOn())return "";
+  if(LOGS.data===null){loadLogs();return ""}
+  var hoyL=(LOGS.data||[]).filter(function(l){return l.day===TODAY});
+  if(!hoyL.length)return "";
+  var rows=hoyL.map(function(l){
+    var cardio=isCardioLog(l);
+    var res=cardio?((l.entries&&l.entries[0]&&l.entries[0].n)||""):
+      ((l.total_sets||0)+" "+u("setsLbl")+(l.est_volume>0?" · "+fmtK(+l.est_volume)+" kg":""));
+    return '<div class="doneline"><span class="di">'+(cardio?"🏃":"💪")+"</span><b>"+esc(l.title||"?")+"</b><small>"+esc(res)+"</small></div>";
+  }).join("");
+  return '<div class="card donebox">'+rows+"</div>";
+}
+
+function todayRow(){
+  var M=METRICS.data||[];
+  for(var i=M.length-1;i>=0;i--)if(M[i].day===TODAY)return M[i];
+  return null;
+}
+
+/* Logros del día: 10k pasos, sueño 80+, déficit calórico */
+function achCard(){
+  var r=todayRow();if(!r)return "";
+  var a=[
+    {on:(+r.steps||0)>=10000,i:"👣",l:u("ach10k")},
+    {on:(+r.sleep_score||0)>=80,i:"😴",l:u("ach80")},
+    {on:(+r.kcal_in||0)>0&&(+r.kcal_out||0)>(+r.kcal_in||0),i:"🔥",l:u("achDef")}
+  ];
+  return '<div class="card"><h3>'+u("achT")+'</h3><div class="ach">'+a.map(function(x){
+    return '<div class="achb'+(x.on?" on":"")+'"><span class="ai">'+x.i+'</span><span class="al">'+x.l+"</span></div>"}).join("")+"</div></div>";
+}
+
+/* Log del día: 5 hábitos con toggle de icono (kv habits:<día>, sincronizado) */
+var HABITS=[
+  {k:"ayuno",i:"⏳",n:B("Ayuno intermitente","Intermittent fasting")},
+  {k:"cafe",i:"☕",n:B("Café","Coffee")},
+  {k:"supl",i:"💊",n:B("Suplementos","Supplements")},
+  {k:"alc",i:"🍷",n:B("Alcohol","Alcohol")},
+  {k:"caf",i:"⚡",n:B("Cafeína","Caffeine")}
+];
+function habCard(){
+  var st=S("habits:"+TODAY,{});
+  return '<div class="card"><h3>'+u("habT")+'</h3><div class="hab">'+HABITS.map(function(hb){
+    return '<button class="habb'+(st[hb.k]?" on":"")+'" data-act="habit" data-h="'+hb.k+'" aria-label="'+esc(T(hb.n))+'" aria-pressed="'+(!!st[hb.k])+'">'+hb.i+"</button>"}).join("")+"</div></div>";
+}
+
 /* Resumen del día en la pantalla Hoy: pasos, sueño, HRV, FC reposo, kcal in/out */
 function dayCard(){
   if(!cloudOn())return "";
@@ -1702,6 +1769,10 @@ document.addEventListener("click",function(e){
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
   if(act==="hist"){state.histOpen=state.histOpen===b.dataset.k?null:b.dataset.k;render(true);return}
+  if(act==="habit"){
+    var hs=S("habits:"+TODAY,{});hs[b.dataset.h]=!hs[b.dataset.h];
+    W("habits:"+TODAY,hs);render(true);return;
+  }
   if(act==="balrange"){state.balRange=+b.dataset.r;render(true);return}
   if(act==="macrange"){state.macRange=+b.dataset.r;render(true);return}
   if(act==="musrange"){state.musRange=+b.dataset.r;render(true);return}
