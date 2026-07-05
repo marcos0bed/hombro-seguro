@@ -206,7 +206,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v45";
+var APP_VERSION="v46";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1017,10 +1017,10 @@ function render(keepScroll){
     var idx=state.sid?WK.findIndex(function(w){return w.sid===state.sid}):todayIdx;
     if(idx<0)idx=todayIdx;
     if(sb&&!sbUser)h+='<p class="syncnote"><a data-act="acct" role="button" tabindex="0">'+u("syncCta")+" →</a></p>";
-    h+=doneTodayBox();
     h+=dayCard();
     h+=achCard();
     h+=habCard();
+    h+=doneTodayBox();
     if(state.sid&&idx!==todayIdx)h+='<button class="backlink" data-act="back">'+u("back")+"</button>";
     h+=sessionView(WK[idx].sid);
   }
