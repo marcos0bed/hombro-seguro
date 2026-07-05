@@ -70,3 +70,24 @@ create policy "own activities" on public.garmin_activities
 
 create index if not exists garmin_activities_time_idx
   on public.garmin_activities (user_id, start_time desc);
+
+-- ─── Registro de sesiones de entrenamiento ──────────────────────────────────
+create table if not exists public.workout_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  day date not null,
+  session_id text,
+  title text,
+  entries jsonb,          -- [{n, m (grupo muscular), sets, target, weight}]
+  total_sets int,
+  est_volume numeric,     -- kg estimados (series × reps medias × peso)
+  created_at timestamptz not null default now()
+);
+alter table public.workout_logs enable row level security;
+
+drop policy if exists "own logs" on public.workout_logs;
+create policy "own logs" on public.workout_logs
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create index if not exists workout_logs_day_idx
+  on public.workout_logs (user_id, day desc);
