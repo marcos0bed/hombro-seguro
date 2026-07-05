@@ -184,7 +184,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v35";
+var APP_VERSION="v36";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -481,13 +481,14 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   needLoginStats:"Inicia sesión para guardar sesiones y ver tu progreso.",
   loading:"Cargando…",
   statsSessions:"Sesiones por semana",statsVolume:"Volumen estimado por semana",
-  statsMuscle:"Series por grupo muscular · últimos 28 días",
+  statsMuscle:"Series por grupo muscular",
+  legF2:"Fuerza",legCar:"Cardio",legUp:"Tren superior",legLo:"Tren inferior",
   statsExercises:"Cargas por ejercicio · último peso vs máximo",
   noLogs:"Aún no hay sesiones guardadas. Al terminar una sesión de pesas, pulsa «Guardar sesión» al final.",
   totalLbl:"sesiones guardadas",kgLbl:"kg",
   entreno:"Entreno",balanceT:"Balance",
   lastWeight:"Último peso",bodyFat:"Grasa corporal",
-  chart90:"Peso y grasa",macros14:"Macros · últimos 14 días registrados",
+  chart90:"Peso y grasa",macros14:"Macros",
   weeklyT:"Resumen semanal",
   chartAll:"Tendencias · todo en uno",
   normNote:"Cada curva en su propia banda, con su propio rango y el último valor a la derecha. Nutrición suavizada (media de 3 registros).",
@@ -531,13 +532,14 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   needLoginStats:"Sign in to save workouts and see your progress.",
   loading:"Loading…",
   statsSessions:"Sessions per week",statsVolume:"Estimated weekly volume",
-  statsMuscle:"Sets by muscle group · last 28 days",
+  statsMuscle:"Sets by muscle group",
+  legF2:"Strength",legCar:"Cardio",legUp:"Upper body",legLo:"Lower body",
   statsExercises:"Exercise loads · latest vs max",
   noLogs:"No workouts saved yet. When you finish a lifting session, tap “Save workout” at the end.",
   totalLbl:"workouts saved",kgLbl:"kg",
   entreno:"Training",balanceT:"Balance",
   lastWeight:"Latest weight",bodyFat:"Body fat",
-  chart90:"Weight & body fat",macros14:"Macros · last 14 logged days",
+  chart90:"Weight & body fat",macros14:"Macros",
   weeklyT:"Weekly summary",
   chartAll:"Trends · everything",
   normNote:"Each curve in its own lane, with its own range and the latest value on the right. Nutrition is smoothed (3-entry average).",
@@ -1035,6 +1037,7 @@ function render(keepScroll){
         else h+=statsView();
         h+=histView();
         h+=gactView();
+        h+=muscleView();
       }else{
         if(METRICS.data===null){loadMetrics();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
         else if(!METRICS.data.length){h+='<div class="card"><p class="note">'+u("noMetrics")+"</p></div>";}
@@ -1103,21 +1106,62 @@ function colChart(pairs,fmt){
     var hpx=Math.round(p[1]/max*76);
     return '<div class="c"><span style="font-size:10px;color:var(--mut);font-family:var(--mono)">'+(p[1]?(fmt?fmt(p[1]):p[1]):"")+'</span><div class="cb" style="height:'+hpx+'px'+(p[1]?"":";background:var(--surface2)")+'"></div><span class="cl">'+p[0]+"</span></div>"}).join("")+"</div>";
 }
+/* selector de rango compartido 7/30/90 */
+function rangeSel(cur,act){
+  return '<span class="rng">'+[7,30,90].map(function(r){
+    return '<button data-act="'+act+'" data-r="'+r+'"'+(cur===r?' class="sel"':"")+'>'+r+"d</button>"}).join("")+"</span>";
+}
+/* barras apiladas de dos segmentos (a abajo, b arriba) */
+function stack2(pairs,colA,colB,fmt){
+  var max=1;pairs.forEach(function(p){if(p.a+p.b>max)max=p.a+p.b});
+  return '<div class="cols">'+pairs.map(function(p){
+    var tot=p.a+p.b,hT=Math.round(tot/max*76);
+    var hA=tot?Math.round(hT*p.a/tot):0,hB=hT-hA;
+    return '<div class="c"><span style="font-size:10px;color:var(--mut);font-family:var(--mono)">'+(tot?(fmt?fmt(tot):tot):"")+'</span>'+
+      '<div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end">'+
+      '<div style="height:'+hB+'px;background:'+colB+';border-radius:4px 4px 0 0"></div>'+
+      '<div style="height:'+hA+'px;background:'+colA+(hB?"":";border-radius:4px 4px 0 0")+'"></div></div>'+
+      '<span class="cl">'+p.lbl+"</span></div>"}).join("")+"</div>";
+}
+var UPPERSET={chest:1,back:1,shoulders:1,biceps:1,triceps:1,cuff:1};
+function isCardioLog(l){
+  var es=l.entries||[];
+  return (l.session_id||"").indexOf("garmin-")===0||(es.length>0&&es.every(function(e){return e.m==="cardio"}));
+}
+function entryVol(e){
+  var w=+e.weight||0;if(!w)return 0;
+  var reps=0;
+  if(e.reps){
+    var ns=String(e.reps).split(/[^\d.]+/).filter(Boolean).map(Number).filter(function(n){return n>0});
+    if(ns.length===1)reps=ns[0]*(+e.sets||1);
+    else if(ns.length>1)reps=ns.reduce(function(a,b){return a+b},0);
+  }
+  if(!reps&&e.target){
+    var mm=/×(.+)$/.exec(e.target);
+    reps=repsMid(mm?mm[1]:e.target)*(+e.sets||1);
+  }
+  return w*reps;
+}
+
 function statsView(){
   var logs=LOGS.data,h="";
   // semanas: últimas 8
   var weeks=[],wk={};
   for(var i=7;i>=0;i--){
     var d=new Date();d.setDate(d.getDate()-i*7);
-    var m=mondayOf(iso(d));weeks.push(m);wk[m]={n:0,vol:0};
+    var m=mondayOf(iso(d));weeks.push(m);wk[m]={f:0,c:0,up:0,lo:0};
   }
-  var mus={},exs={};
-  var lim28=new Date();lim28.setDate(lim28.getDate()-28);var lim28s=iso(lim28);
+  var exs={};
   logs.forEach(function(l){
-    var m=mondayOf(l.day);
-    if(wk[m]){wk[m].n++;wk[m].vol+=(+l.est_volume||0);}
+    var m=mondayOf(l.day),cardio=isCardioLog(l);
+    if(wk[m]){
+      if(cardio)wk[m].c++;else wk[m].f++;
+      if(!cardio)(l.entries||[]).forEach(function(e){
+        var v=entryVol(e);if(!v)return;
+        if(e.m==="legs")wk[m].lo+=v;else if(UPPERSET[e.m])wk[m].up+=v;
+      });
+    }
     (l.entries||[]).forEach(function(e){
-      if(e.m&&l.day>=lim28s)mus[e.m]=(mus[e.m]||0)+(e.sets||0);
       if(e.weight>0){
         var x=exs[e.n]||(exs[e.n]={first:e.weight,last:e.weight,max:e.weight,n:0});
         x.last=e.weight;if(e.weight>x.max)x.max=e.weight;x.n++;
@@ -1125,14 +1169,12 @@ function statsView(){
     });
   });
   var lbl=function(m){var d=new Date(m+"T12:00:00");return pad(d.getDate())+"/"+pad(d.getMonth()+1)};
-  h+='<div class="card"><h3>'+u("statsSessions")+'</h3>'+colChart(weeks.map(function(m){return[lbl(m),wk[m].n]}))+"</div>";
-  h+='<div class="card"><h3>'+u("statsVolume")+" ("+u("kgLbl")+')</h3>'+colChart(weeks.map(function(m){return[lbl(m),Math.round(wk[m].vol)]}),fmtK)+"</div>";
-  var mkeys=Object.keys(mus).sort(function(a,b){return mus[b]-mus[a]});
-  if(mkeys.length){
-    var mmax=mus[mkeys[0]]||1;
-    h+='<div class="card"><h3>'+u("statsMuscle")+"</h3><div style='margin-top:8px'>"+mkeys.map(function(k){
-      return '<div class="bar"><span class="bl">'+esc(T(MUSC[k]||{es:k,en:k}))+'</span><span class="bt"><span class="bf" style="width:'+Math.round(mus[k]/mmax*100)+'%"></span></span><span class="bv">'+mus[k]+"</span></div>"}).join("")+"</div></div>";
-  }
+  h+='<div class="card"><h3>'+u("statsSessions")+"</h3>"+
+     stack2(weeks.map(function(m){return{lbl:lbl(m),a:wk[m].f,b:wk[m].c}}),"#F0A63C","#7BA1D9")+
+     '<div class="chips" style="margin-top:8px"><span class="chip" style="color:#F0A63C">■ '+u("legF2")+'</span><span class="chip" style="color:#7BA1D9">■ '+u("legCar")+"</span></div></div>";
+  h+='<div class="card"><h3>'+u("statsVolume")+" ("+u("kgLbl")+')</h3>'+
+     stack2(weeks.map(function(m){return{lbl:lbl(m),a:Math.round(wk[m].up),b:Math.round(wk[m].lo)}}),"#F0A63C","#46C08A",fmtK)+
+     '<div class="chips" style="margin-top:8px"><span class="chip" style="color:#F0A63C">■ '+u("legUp")+'</span><span class="chip" style="color:#46C08A">■ '+u("legLo")+"</span></div></div>";
   var ekeys=Object.keys(exs).sort(function(a,b){return exs[b].n-exs[a].n}).slice(0,10);
   if(ekeys.length){
     h+='<div class="card"><h3>'+u("statsExercises")+"</h3><div style='margin-top:6px'>"+ekeys.map(function(k){
@@ -1141,6 +1183,24 @@ function statsView(){
   }
   h+='<p class="note" style="margin:12px 4px;color:var(--mut)">'+logs.length+" "+u("totalLbl")+"</p>";
   return h;
+}
+
+/* Series por grupo muscular — caja final con su propio rango */
+function muscleView(){
+  var logs=LOGS.data||[];if(!logs.length)return "";
+  var rng=state.musRange||30;
+  var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
+  var mus={};
+  logs.forEach(function(l){
+    if(l.day<cutS)return;
+    (l.entries||[]).forEach(function(e){if(e.m)mus[e.m]=(mus[e.m]||0)+(e.sets||0)});
+  });
+  var mk=Object.keys(mus).sort(function(a,b){return mus[b]-mus[a]});
+  if(!mk.length)return "";
+  var mmax=mus[mk[0]]||1;
+  return '<div class="card"><div class="exhead"><h3>'+u("statsMuscle")+"</h3>"+rangeSel(rng,"musrange")+'</div><div style="margin-top:8px">'+
+    mk.map(function(k){
+      return '<div class="bar"><span class="bl">'+esc(T(MUSC[k]||{es:k,en:k}))+'</span><span class="bt"><span class="bf" style="width:'+Math.round(mus[k]/mmax*100)+'%"></span></span><span class="bv">'+mus[k]+"</span></div>"}).join("")+"</div></div>";
 }
 
 var ICONS={
@@ -1285,10 +1345,7 @@ function balanceView(){
 
   // tendencias (primera tarjeta): todas las curvas en carriles, mismo eje temporal
   var rng=state.balRange||90;
-  function rngSwitch(){
-    return '<span class="rng"><button data-act="balrange" data-r="7"'+(rng===7?' class="sel"':"")+'>7d</button>'+
-           '<button data-act="balrange" data-r="90"'+(rng===90?' class="sel"':"")+'>90d</button></span>';
-  }
+  function rngSwitch(){return rangeSel(rng,"balrange")}
   var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
   var m90=M.filter(function(r){return r.day>=cutS});
   var allDefs=[
@@ -1314,58 +1371,46 @@ function balanceView(){
      (ss?'<p class="note" style="margin-top:10px;font-size:12px;color:var(--mut)">'+u("srcT")+" — 🍎 Apple Health: "+fsrc(ss.health,ss.health_t)+" · MFP: "+fsrc(ss.mfp,ss.mfp_t)+" · Garmin: "+fsrc(ss.garmin,ss.garmin_t)+"</p>":"")+
      "</div>";
 
-  // gráfica 90 días: peso (ámbar) + grasa (verde discontinua)
+  // peso y grasa: carriles separados (sin solape), mismo motor que Tendencias
   var w90=wR.filter(function(r){return r.day>=cutS}),f90=fR.filter(function(r){return r.day>=cutS});
-  if(w90.length>1){
-    var t0=+new Date(w90[0].day),t1=+new Date(w90[w90.length-1].day)||t0+1;
-    function series(rows,key,vmin,vmax,color,dash){
-      var pts=rows.map(function(r){
-        var x=8+304*((+new Date(r.day)-t0)/((t1-t0)||1));
-        var y=106-92*(((+r[key])-vmin)/((vmax-vmin)||1));
-        return x.toFixed(1)+","+y.toFixed(1)}).join(" ");
-      return '<polyline fill="none" stroke="'+color+'" stroke-width="2"'+(dash?' stroke-dasharray="4 3" opacity=".85"':"")+' stroke-linejoin="round" points="'+pts+'"/>';
-    }
-    var ws=w90.map(function(r){return +r.weight_kg}),wmin=Math.min.apply(null,ws)-.3,wmax=Math.max.apply(null,ws)+.3;
-    var svg='<svg viewBox="0 0 320 134" style="width:100%;height:auto;margin-top:8px" role="img">';
-    [0,1/3,2/3,1].forEach(function(fr){
-      var d=new Date(t0+fr*(t1-t0));
-      var anchor=fr===0?"start":(fr===1?"end":"middle");
-      svg+='<text x="'+(8+304*fr).toFixed(0)+'" y="131" fill="#8E99A8" font-size="8" font-family="monospace" text-anchor="'+anchor+'">'+pad(d.getDate())+"/"+pad(d.getMonth()+1)+"</text>";
-    });
-    svg+=series(w90,"weight_kg",wmin,wmax,"#F0A63C");
-    var fmin=0,fmax=0;
-    if(f90.length>1){
-      var fs=f90.map(function(r){return +r.body_fat_pct});fmin=Math.min.apply(null,fs)-.2;fmax=Math.max.apply(null,fs)+.2;
-      svg+=series(f90,"body_fat_pct",fmin,fmax,"#46C08A",true);
-    }
-    svg+='<text x="8" y="10" fill="#F0A63C" font-size="9" font-family="monospace">'+wmax.toFixed(1)+' kg</text>'+
-         '<text x="8" y="118" fill="#F0A63C" font-size="9" font-family="monospace">'+wmin.toFixed(1)+'</text>';
-    if(f90.length>1)svg+='<text x="312" y="10" fill="#46C08A" font-size="9" font-family="monospace" text-anchor="end">'+fmax.toFixed(1)+'%</text>'+
-         '<text x="312" y="118" fill="#46C08A" font-size="9" font-family="monospace" text-anchor="end">'+fmin.toFixed(1)+'</text>';
-    svg+="</svg>";
-    h+='<div class="card"><div class="exhead"><h3>'+u("chart90")+"</h3>"+rngSwitch()+"</div>"+svg+
-       '<div class="chips" style="margin-top:6px"><span class="chip" style="color:#F0A63C">— '+u("thPeso")+'</span><span class="chip" style="color:#46C08A">┄ '+u("bodyFat")+"</span></div></div>";
-  }
+  var wfDefs=[
+    {rows:w90.map(function(r){return{day:r.day,v:+r.weight_kg}}),color:"#F0A63C",label:u("thPeso")},
+    {rows:f90.map(function(r){return{day:r.day,v:+r.body_fat_pct}}),color:"#46C08A",label:u("bodyFat")}
+  ];
+  var wf=multiChart(wfDefs);
+  if(wf)h+='<div class="card"><div class="exhead"><h3>'+u("chart90")+"</h3>"+rngSwitch()+"</div>"+wf+"</div>";
 
-  // macros apilados (kcal por macro) últimos 14 días registrados
-  var eat=M.filter(function(r){return r.kcal_in!=null});
-  var l14=eat.slice(-14);
-  if(l14.length){
-    var mx=1;l14.forEach(function(r){if(+r.kcal_in>mx)mx=+r.kcal_in});
-    var cols=l14.map(function(r){
+  // macros apilados con rango propio (7/30 = diario; 90 = medias semanales)
+  var mrng=state.macRange||30;
+  var mcut=new Date();mcut.setDate(mcut.getDate()-mrng);var mcutS=iso(mcut);
+  var eat=M.filter(function(r){return r.kcal_in!=null&&r.day>=mcutS});
+  var mrows;
+  if(mrng===90){
+    var bw={};eat.forEach(function(r){var kk=mondayOf(r.day);(bw[kk]=bw[kk]||[]).push(r)});
+    mrows=Object.keys(bw).sort().map(function(kk){
+      var rs=bw[kk],n=rs.length;
+      function avg(f){return rs.reduce(function(a,r){return a+(+r[f]||0)},0)/n}
+      return {day:kk,kcal_in:avg("kcal_in"),carbs_g:avg("carbs_g"),protein_g:avg("protein_g"),fat_g:avg("fat_g")};
+    });
+  }else mrows=eat;
+  if(mrows.length){
+    var mx=1;mrows.forEach(function(r){if(+r.kcal_in>mx)mx=+r.kcal_in});
+    var showN=mrows.length<=15,step=Math.max(1,Math.ceil(mrows.length/10));
+    var cols=mrows.map(function(r,ix){
       var c4=(+r.carbs_g||0)*4,p4=(+r.protein_g||0)*4,f9=(+r.fat_g||0)*9,tot=c4+p4+f9||1;
       var hp=Math.round((+r.kcal_in)/mx*100);
       var hc=Math.round(hp*c4/tot),hpr=Math.round(hp*p4/tot),hf=Math.max(0,hp-hc-hpr);
-      return '<div class="c"><span style="font-size:9px;color:var(--mut);font-family:var(--mono)">'+Math.round(+r.kcal_in)+'</span>'+
+      return '<div class="c"><span style="font-size:9px;color:var(--mut);font-family:var(--mono)">'+(showN?Math.round(+r.kcal_in):"")+'</span>'+
         '<div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end">'+
         '<div style="height:'+hf+'px;background:#7BA1D9;border-radius:3px 3px 0 0"></div>'+
         '<div style="height:'+hpr+'px;background:#46C08A"></div>'+
         '<div style="height:'+hc+'px;background:#F0A63C"></div></div>'+
-        '<span class="cl">'+r.day.slice(8,10)+"/"+r.day.slice(5,7)+"</span></div>";
+        '<span class="cl">'+(ix%step===0?r.day.slice(8,10)+"/"+r.day.slice(5,7):"")+"</span></div>";
     }).join("");
-    h+='<div class="card"><h3>'+u("macros14")+'</h3><div class="cols" style="height:130px">'+cols+"</div>"+
+    h+='<div class="card"><div class="exhead"><h3>'+u("macros14")+"</h3>"+rangeSel(mrng,"macrange")+'</div><div class="cols" style="height:130px">'+cols+"</div>"+
        '<div class="chips" style="margin-top:8px"><span class="chip" style="color:#F0A63C">■ '+u("legC")+'</span><span class="chip" style="color:#46C08A">■ '+u("legP")+'</span><span class="chip" style="color:#7BA1D9">■ '+u("legF")+"</span></div></div>";
   }
+
 
   // tabla semanal
   var byweek={};
@@ -1555,6 +1600,8 @@ document.addEventListener("click",function(e){
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
   if(act==="hist"){state.histOpen=state.histOpen===b.dataset.k?null:b.dataset.k;render(true);return}
   if(act==="balrange"){state.balRange=+b.dataset.r;render(true);return}
+  if(act==="macrange"){state.macRange=+b.dataset.r;render(true);return}
+  if(act==="musrange"){state.musRange=+b.dataset.r;render(true);return}
   if(act==="rest-add"){rest.endAt+=30000;restTick();return}
   if(act==="rest-skip"){restStop();return}
   if(act==="iso"){isoStart();return}
