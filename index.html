@@ -180,7 +180,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v28";
+var APP_VERSION="v29";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -213,27 +213,53 @@ function yt(q){return "https://www.youtube.com/results?search_query="+encodeURIC
 function pad(n){return (n<10?"0":"")+n}
 function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
-/* Vibración: Android tiene navigator.vibrate; iOS no expone API de vibración a
-   webapps, pero los <input switch> nativos emiten un tick háptico al conmutarse
-   (iOS 17.4+) — se dispara por código como sucedáneo. Si Apple lo capa, no-op. */
-var _hap=null;
-function haptic(){
+/* Vibración: Android tiene navigator.vibrate. iOS no expone API de vibración a
+   webapps; el sucedáneo es el tick háptico de los <input switch> nativos vía
+   click de su <label> (iOS 17.4+), que puede requerir gesto de usuario. */
+var _hapL=null;
+function haptic(n){
   try{
-    if(navigator.vibrate){navigator.vibrate([150,80,150]);return}
-    if(!_hap){
-      _hap=document.createElement("input");
-      _hap.type="checkbox";_hap.setAttribute("switch","");
-      _hap.tabIndex=-1;_hap.setAttribute("aria-hidden","true");
-      _hap.style.cssText="position:fixed;left:-100px;top:0;width:1px;height:1px;opacity:0;pointer-events:none";
-      document.body.appendChild(_hap);
+    if(navigator.vibrate){navigator.vibrate(n>1?[150,80,150]:[60]);return}
+    if(!_hapL){
+      _hapL=document.createElement("label");
+      _hapL.style.cssText="position:fixed;left:-9999px;top:0";
+      _hapL.setAttribute("aria-hidden","true");
+      var sw=document.createElement("input");
+      sw.type="checkbox";sw.setAttribute("switch","");sw.tabIndex=-1;
+      _hapL.appendChild(sw);
+      document.body.appendChild(_hapL);
     }
-    [0,160,320].forEach(function(t){setTimeout(function(){try{_hap.click()}catch(e){}},t)});
+    (n>1?[0,160,320]:[0]).forEach(function(t){setTimeout(function(){try{_hapL.click()}catch(e){}},t)});
   }catch(e){}
 }
+
+/* Notificación local al terminar un temporizador: el canal que en iOS vibra y
+   suena a nivel de sistema (requiere permiso; se pide en el primer descanso,
+   dentro del gesto del usuario). */
+function notifyEnd(msg){
+  try{
+    if(!("Notification" in window)||Notification.permission!=="granted")return;
+    if(!navigator.serviceWorker)return;
+    navigator.serviceWorker.ready.then(function(reg){
+      reg.showNotification("Fitmet",{body:msg,tag:"fitmet-timer",silent:false});
+      setTimeout(function(){
+        reg.getNotifications({tag:"fitmet-timer"}).then(function(ns){ns.forEach(function(x){x.close()})});
+      },5000);
+    });
+  }catch(e){}
+}
+function askNotif(){
+  try{
+    if(("Notification" in window)&&Notification.permission==="default")
+      Notification.requestPermission();
+  }catch(e){}
+}
+
 function beep(){try{var A=window.AudioContext||window.webkitAudioContext;var ctx=beep.ctx||(beep.ctx=new A());
+  try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
   [0,0.22].forEach(function(t){var o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;o.connect(g);g.connect(ctx.destination);
   g.gain.setValueAtTime(.25,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.18);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.2)});
-  haptic();}catch(e){}}
+  haptic(3);}catch(e){}}
 
 /* ---------- cloud (Supabase) ---------- */
 var SB_URL="https://rinjfomkmxvnyqpeftxa.supabase.co";
@@ -465,7 +491,8 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   legC:"Carbohidratos",legP:"Proteína",legF:"Grasa",
   noMetrics:"Sin métricas todavía. Se alimentan de MyFitnessPal (comida), Garmin (gasto) y Apple Health (peso/grasa) — la sincronización se lanza desde el Mac.",
   garmT:"Últimas actividades · Garmin",
-  repsPh:"reps",srcT:"Último dato por fuente",upA:"Subir ejercicio",dnA:"Bajar ejercicio"},
+  repsPh:"reps",srcT:"Último dato por fuente",upA:"Subir ejercicio",dnA:"Bajar ejercicio",
+  restDone:"⏱️ Descanso terminado — ¡a la siguiente serie!",isoDoneN:"Isométrico completado — descansa ~1 min"},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -510,7 +537,8 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   legC:"Carbs",legP:"Protein",legF:"Fat",
   noMetrics:"No metrics yet. They come from MyFitnessPal (food), Garmin (expenditure) and Apple Health (weight/fat) — sync runs from the Mac.",
   garmT:"Latest activities · Garmin",
-  repsPh:"reps",srcT:"Latest data by source",upA:"Move exercise up",dnA:"Move exercise down"}};
+  repsPh:"reps",srcT:"Latest data by source",upA:"Move exercise up",dnA:"Move exercise down",
+  restDone:"⏱️ Rest over — next set!",isoDoneN:"Isometric hold done — rest ~1 min"}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -1326,7 +1354,7 @@ function restTick(){
   var n=document.getElementById("tnum");if(!n)return;
   var left=Math.max(0,Math.ceil((rest.endAt-Date.now())/1000));
   n.textContent=Math.floor(left/60)+":"+pad(left%60);
-  if(left<=0){restStop();beep();}
+  if(left<=0){restStop();beep();notifyEnd(u("restDone"));}
 }
 
 /* ---------- iso timer (basado en hora real) ---------- */
@@ -1346,7 +1374,7 @@ function isoTick(){
   var left=Math.max(0,Math.ceil((isoST.endAt-Date.now())/1000));
   n.textContent="0:"+pad(left);
   if(left<=0){
-    clearInterval(isoST.t);isoST.running=false;isoST.series++;beep();isoDots();
+    clearInterval(isoST.t);isoST.running=false;isoST.series++;beep();notifyEnd(u("isoDoneN"));isoDots();
     if(rest.done)wakeOff();
     var btn=document.getElementById("isobtn");btn.disabled=false;
     if(isoST.series>=5){btn.textContent=u("isoDone");document.getElementById("isophase").textContent=u("isoAllDone");}
@@ -1389,7 +1417,7 @@ document.addEventListener("click",function(e){
     var st=S(setsKey(sid),{});var arr=st[i]||[];
     arr[j]=!arr[j];st[i]=arr;W(setsKey(sid),st);
     b.classList.toggle("on",arr[j]);
-    if(arr[j])restStart(60);
+    if(arr[j]){haptic(1);askNotif();restStart(60);}
     return;
   }
   if(act==="mvup"||act==="mvdn"){
