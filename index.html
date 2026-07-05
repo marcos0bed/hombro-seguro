@@ -180,7 +180,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v30";
+var APP_VERSION="v31";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -494,7 +494,8 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   repsPh:"reps",srcT:"Último dato por fuente",upA:"Subir ejercicio",dnA:"Bajar ejercicio",
   restDone:"⏱️ Descanso terminado — ¡a la siguiente serie!",isoDoneN:"Isométrico completado — descansa ~1 min",
   restDoneShort:"⏱️ Descanso terminado",serieLbl:"serie",nextLbl:"Siguiente:",
-  sessDone:"🏁 Todas las series hechas — ¡guarda la sesión!"},
+  sessDone:"🏁 Todas las series hechas — ¡guarda la sesión!",
+  histT:"Historial de sesiones",thEj:"Ejercicio",thSets:"Series",setsLbl:"series"},
 en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
@@ -542,7 +543,8 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   repsPh:"reps",srcT:"Latest data by source",upA:"Move exercise up",dnA:"Move exercise down",
   restDone:"⏱️ Rest over — next set!",isoDoneN:"Isometric hold done — rest ~1 min",
   restDoneShort:"⏱️ Rest over",serieLbl:"set",nextLbl:"Next:",
-  sessDone:"🏁 All sets done — save your workout!"}};
+  sessDone:"🏁 All sets done — save your workout!",
+  histT:"Workout history",thEj:"Exercise",thSets:"Sets",setsLbl:"sets"}};
 function u(k){return UI[LANG][k]}
 /* Contenido privado (p. ej. contexto clínico): viaja en kv_state con la sesión,
    nunca en este código público. Se borra del dispositivo al cerrar sesión. */
@@ -1020,6 +1022,7 @@ function render(){
         if(LOGS.data===null){loadLogs();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
         else if(!LOGS.data.length){h+='<div class="card"><p class="note">'+u("noLogs")+"</p></div>";}
         else h+=statsView();
+        h+=histView();
         h+=gactView();
       }else{
         if(METRICS.data===null){loadMetrics();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
@@ -1187,6 +1190,30 @@ function multiChart(defs){
 }
 function pickSeries(rows,key){
   return rows.filter(function(r){return r[key]!=null}).map(function(r){return {day:r.day,v:+r[key]}});
+}
+
+/* Historial de sesiones guardadas (los workout_logs ya cargados en LOGS) */
+function histView(){
+  var L=(LOGS.data||[]).slice().reverse().slice(0,20);
+  if(!L.length)return "";
+  var rows=L.map(function(l,k){
+    var key=l.day+"|"+(l.session_id||"")+"|"+k;
+    var open=state.histOpen===key;
+    var head='<button class="dayrow" style="margin:6px 0" data-act="hist" data-k="'+esc(key)+'">'+
+      '<span class="dn" style="width:52px">'+l.day.slice(8,10)+"/"+l.day.slice(5,7)+"</span>"+
+      '<span class="dt"><b>'+esc(l.title||l.session_id||"?")+"</b><small>"+(l.total_sets||0)+" "+u("setsLbl")+
+      (l.est_volume>0?" · "+fmtK(+l.est_volume)+" kg":"")+"</small></span>"+
+      '<span class="tick" style="border:none;color:var(--mut)">'+(open?"▾":"▸")+"</span></button>";
+    var det="";
+    if(open){
+      var trs=(l.entries||[]).map(function(e){
+        return '<tr><td style="white-space:normal;text-transform:none;font-family:inherit;font-weight:400;color:#c6cdd6">'+esc(e.n||"")+"</td><td>"+(e.sets||"—")+"</td><td>"+esc(e.reps||e.target||"—")+"</td><td>"+(e.weight!=null?e.weight:"—")+"</td></tr>";
+      }).join("");
+      det='<div class="card" style="margin:0 0 10px"><div style="overflow-x:auto"><table class="mini"><tr><td>'+u("thEj")+"</td><td>"+u("thSets")+"</td><td>Reps</td><td>kg</td></tr>"+trs+"</table></div></div>";
+    }
+    return head+det;
+  }).join("");
+  return '<h2 class="sect">'+u("histT")+"</h2>"+rows;
 }
 
 var GTYPES={strength_training:B("Fuerza","Strength"),running:B("Carrera","Run"),
@@ -1481,6 +1508,7 @@ document.addEventListener("click",function(e){
   if(act==="back"){state.sid=null;render();return}
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
+  if(act==="hist"){state.histOpen=state.histOpen===b.dataset.k?null:b.dataset.k;render();return}
   if(act==="rest-add"){rest.endAt+=30000;restTick();return}
   if(act==="rest-skip"){restStop();return}
   if(act==="iso"){isoStart();return}
