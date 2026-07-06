@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v63";
+var APP_VERSION="v64";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1033,6 +1033,7 @@ function render(keepScroll){
     var lblD=dOff===0?T(B("Hoy","Today")):dOff===1?T(B("Ayer","Yesterday")):sdD.slice(8,10)+"/"+sdD.slice(5,7);
     h+='<div class="dnav"><button data-act="daynav" data-d="1"'+(dOff>=90?" disabled":"")+' aria-label="'+T(B("Día anterior","Previous day"))+'">‹</button><b>'+lblD+'</b><button data-act="daynav" data-d="-1"'+(dOff===0?" disabled":"")+' aria-label="'+T(B("Día siguiente","Next day"))+'">›</button></div>';
     h+=dayCard();
+    h+=hrDayCard();
     h+=achCard();
     h+=habCard();
     h+=doneTodayBox();
@@ -1466,6 +1467,31 @@ function rowFor(day){
 }
 function todayRow(){return rowFor(TODAY)}
 
+/* FC a lo largo del día: curva intradía grande con eje horario (aprox.) */
+function hrDayCard(){
+  if(!cloudOn())return "";
+  if((state.dayRange||1)!==1)return "";
+  var r=rowFor(selDay());
+  if(!r||!Array.isArray(r.hr_curve)||r.hr_curve.length<2)return "";
+  var vs=r.hr_curve.map(Number);
+  var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs);
+  var av=Math.round(vs.reduce(function(a,b){return a+b},0)/vs.length);
+  var W=320,H=84,P=4;
+  var pts=vs.map(function(v,i){
+    var x=P+(W-2*P)*i/(vs.length-1);
+    var y=(H-16)-(H-32)*((v-mn)/((mx-mn)||1));
+    return x.toFixed(1)+","+y.toFixed(1)}).join(" ");
+  var svg='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin-top:6px" role="img">';
+  [0,6,12,18,24].forEach(function(hh){
+    var x=(P+(W-2*P)*hh/24).toFixed(1);
+    svg+='<line x1="'+x+'" y1="8" x2="'+x+'" y2="'+(H-13)+'" stroke="#2B3442" stroke-width="0.5"/>'+
+         '<text x="'+x+'" y="'+(H-3)+'" fill="#8E99A8" font-size="8" font-family="monospace" text-anchor="middle">'+hh+"h</text>";
+  });
+  svg+='<polyline fill="none" stroke="#E5484D" stroke-width="1.5" stroke-linejoin="round" opacity=".95" points="'+pts+'"/></svg>';
+  return '<div class="card"><div class="exhead"><div class="tlab">❤️ '+T(B("FC del día","HR through the day"))+'</div>'+
+    '<span class="note" style="font-size:11px;color:var(--mut)">min '+mn+" · "+T(B("media","avg"))+" "+av+" · max "+mx+"</span></div>"+svg+"</div>";
+}
+
 /* Journal: impresiones del día (kv journal:<día>, sincronizado; lo lee el parte semanal) */
 function journalCard(){
   if(!cloudOn())return "";
@@ -1624,7 +1650,6 @@ function balanceView(){
     {rows:pickSeries(m90,"body_fat_pct"),color:"#46C08A",label:u("bodyFat"),goal:goal.body_fat_pct},
     {rows:pickSeries(m90,"kcal_in"),color:"#7BA1D9",label:"Kcal in",smooth:3},
     {rows:pickSeries(m90,"kcal_out"),color:"#E5484D",label:"Kcal out",smooth:3},
-    {rows:pickSeries(m90,"rhr"),color:"#E8963E",label:u("dRhr"),smooth:3,goal:goal.rhr},
     {rows:pickSeries(m90,"carbs_g"),color:"#C88BD8",label:u("legC"),smooth:3},
     {rows:pickSeries(m90,"protein_g"),color:"#4DD0C0",label:u("legP"),smooth:3},
     {rows:pickSeries(m90,"fat_g"),color:"#D88B9E",label:u("legFdiet"),smooth:3}
