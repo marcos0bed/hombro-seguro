@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v60";
+var APP_VERSION="v61";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1573,7 +1573,19 @@ function dayCard(){
   var slV;
   if(rng===1)slV=r.sleep_h!=null?(+r.sleep_h).toFixed(1)+" h"+(r.sleep_score?" · "+r.sleep_score:""):"—";
   else{var sh=avg(win("sleep_h")),sc=avg(win("sleep_score"));slV=sh==null?"—":sh.toFixed(1)+" h"+(sc?" · "+Math.round(sc):"")}
+  var wRow=null;
+  for(var wi=M.length-1;wi>=0;wi--){if(M[wi].day<=day&&M[wi].weight_kg!=null){wRow=M[wi];break}}
+  function wwin(){
+    var span=rng===1?14:rng;
+    var st1=new Date(day+"T12:00");st1.setDate(st1.getDate()-(span-1));var sS1=iso(st1);
+    var out=[];M.forEach(function(x){if(x.day>=sS1&&x.day<=day&&x.weight_kg!=null)out.push(+x.weight_kg)});
+    return out;
+  }
+  var wVal;
+  if(rng===1)wVal=wRow?(+wRow.weight_kg).toFixed(1)+" kg":"—";
+  else{var wa=avg(win("weight_kg"));wVal=wa==null?"—":wa.toFixed(1)+" kg"}
   var tiles=[
+    ["⚖️ "+T(B("Peso","Weight")),wVal,null,spark(wwin(),"#C88BD8")],
     ["👣 "+u("dSteps"),val("steps",function(x){return Math.round(x).toLocaleString()}),null,stepsSpark],
     ["😴 "+u("dSleep"),slV,rng===1?r.sleep_q:null,spark(win("sleep_h"),"#46C08A")],
     ["💓 HRV",val("hrv_ms",function(x){return Math.round(x)+" ms"}),rng===1?r.hrv_q:null,spark(win("hrv_ms"),"#4DD0C0")],
