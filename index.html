@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v62";
+var APP_VERSION="v63";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1624,6 +1624,7 @@ function balanceView(){
     {rows:pickSeries(m90,"body_fat_pct"),color:"#46C08A",label:u("bodyFat"),goal:goal.body_fat_pct},
     {rows:pickSeries(m90,"kcal_in"),color:"#7BA1D9",label:"Kcal in",smooth:3},
     {rows:pickSeries(m90,"kcal_out"),color:"#E5484D",label:"Kcal out",smooth:3},
+    {rows:pickSeries(m90,"rhr"),color:"#E8963E",label:u("dRhr"),smooth:3,goal:goal.rhr},
     {rows:pickSeries(m90,"carbs_g"),color:"#C88BD8",label:u("legC"),smooth:3},
     {rows:pickSeries(m90,"protein_g"),color:"#4DD0C0",label:u("legP"),smooth:3},
     {rows:pickSeries(m90,"fat_g"),color:"#D88B9E",label:u("legFdiet"),smooth:3}
