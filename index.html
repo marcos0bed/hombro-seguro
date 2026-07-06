@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v64";
+var APP_VERSION="v65";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1453,8 +1453,13 @@ function doneTodayBox(){
   if(LOGS.data===null){loadLogs();return ""}
   var hoyL=(LOGS.data||[]).filter(function(l){return l.day===selDay()});
   if(!hoyL.length)return "";
+  if(GACT.data===null)loadGact();
   var rows=hoyL.map(function(l){
-    return '<div class="doneline"><span class="di">'+(isCardioLog(l)?"🏃":"💪")+"</span><b>"+esc(l.title||"?")+"</b></div>";
+    var g=garminFor(l),gt="";
+    if(g)gt='<small>⌚ '+String(g.start_time||"").slice(11,16)+
+      (g.duration_min?" · "+Math.round(+g.duration_min)+" min":"")+
+      (g.calories?" · "+Math.round(+g.calories)+" kcal":"")+"</small>";
+    return '<div class="doneline"><span class="di">'+(isCardioLog(l)?"🏃":"💪")+"</span><b>"+esc(l.title||"?")+"</b>"+gt+"</div>";
   }).join("");
   return '<div class="card donebox"><div class="tlab" style="margin-bottom:3px">'+u("doneT")+"</div>"+rows+"</div>";
 }
@@ -1467,6 +1472,16 @@ function rowFor(day){
 }
 function todayRow(){return rowFor(TODAY)}
 
+var GOALQ=false;
+function ensureGoal(){
+  if(GOALQ||!cloudOn())return;
+  if(S("goal",null)!==null)return;
+  GOALQ=true;
+  sb.from("kv_state").select("v").eq("k","goal").maybeSingle().then(function(r){
+    if(r&&r.data&&r.data.v){try{localStorage.setItem("hs:goal",JSON.stringify(r.data.v))}catch(e){}render(true)}
+  },function(){});
+}
+
 /* FC a lo largo del día: curva intradía grande con eje horario (aprox.) */
 function hrDayCard(){
   if(!cloudOn())return "";
@@ -1476,20 +1491,20 @@ function hrDayCard(){
   var vs=r.hr_curve.map(Number);
   var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs);
   var av=Math.round(vs.reduce(function(a,b){return a+b},0)/vs.length);
-  var W=320,H=84,P=4;
+  var W=320,H=56,P=4;
   var pts=vs.map(function(v,i){
     var x=P+(W-2*P)*i/(vs.length-1);
-    var y=(H-16)-(H-32)*((v-mn)/((mx-mn)||1));
+    var y=(H-13)-(H-24)*((v-mn)/((mx-mn)||1));
     return x.toFixed(1)+","+y.toFixed(1)}).join(" ");
-  var svg='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin-top:6px" role="img">';
+  var svg='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin-top:4px" role="img">';
   [0,6,12,18,24].forEach(function(hh){
     var x=(P+(W-2*P)*hh/24).toFixed(1);
-    svg+='<line x1="'+x+'" y1="8" x2="'+x+'" y2="'+(H-13)+'" stroke="#2B3442" stroke-width="0.5"/>'+
-         '<text x="'+x+'" y="'+(H-3)+'" fill="#8E99A8" font-size="8" font-family="monospace" text-anchor="middle">'+hh+"h</text>";
+    svg+='<line x1="'+x+'" y1="4" x2="'+x+'" y2="'+(H-11)+'" stroke="#2B3442" stroke-width="0.5"/>'+
+         '<text x="'+x+'" y="'+(H-2)+'" fill="#8E99A8" font-size="7" font-family="monospace" text-anchor="middle">'+hh+"h</text>";
   });
-  svg+='<polyline fill="none" stroke="#E5484D" stroke-width="1.5" stroke-linejoin="round" opacity=".95" points="'+pts+'"/></svg>';
-  return '<div class="card"><div class="exhead"><div class="tlab">❤️ '+T(B("FC del día","HR through the day"))+'</div>'+
-    '<span class="note" style="font-size:11px;color:var(--mut)">min '+mn+" · "+T(B("media","avg"))+" "+av+" · max "+mx+"</span></div>"+svg+"</div>";
+  svg+='<polyline fill="none" stroke="#E5484D" stroke-width="1.3" stroke-linejoin="round" opacity=".95" points="'+pts+'"/></svg>';
+  return '<div class="card" style="padding:9px 12px"><div class="exhead"><div class="tlab">❤️ '+T(B("FC del día","HR through the day"))+'</div>'+
+    '<span class="note" style="font-size:10.5px;color:var(--mut)">min '+mn+" · "+T(B("media","avg"))+" "+av+" · max "+mx+"</span></div>"+svg+"</div>";
 }
 
 /* Journal: impresiones del día (kv journal:<día>, sincronizado; lo lee el parte semanal) */
@@ -1616,8 +1631,10 @@ function dayCard(){
   var wVal;
   if(rng===1)wVal=wRow?(+wRow.weight_kg).toFixed(1)+" kg":"—";
   else{var wa=avg(win("weight_kg"));wVal=wa==null?"—":wa.toFixed(1)+" kg"}
+  ensureGoal();
+  var gW=(S("goal",{})||{}).weight_kg;
   var tiles=[
-    ["⚖️ "+T(B("Peso","Weight")),wVal,null,spark(wwin(),"#C88BD8")],
+    ["⚖️ "+T(B("Peso","Weight")),wVal+(gW?' <span style="font-size:11px;color:var(--mut);font-weight:400">◎ '+gW+"</span>":""),null,spark(wwin(),"#C88BD8")],
     ["👣 "+u("dSteps"),val("steps",function(x){return Math.round(x).toLocaleString()}),null,stepsSpark],
     ["😴 "+u("dSleep"),slV,rng===1?r.sleep_q:null,spark(win("sleep_h"),"#46C08A")],
     ["💓 HRV",val("hrv_ms",function(x){return Math.round(x)+" ms"}),rng===1?r.hrv_q:null,spark(win("hrv_ms"),"#4DD0C0")],
@@ -1644,6 +1661,7 @@ function balanceView(){
   function rngSwitch(){return rangeSel(rng,"balrange")}
   var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
   var m90=M.filter(function(r){return r.day>=cutS});
+  ensureGoal();
   var goal=S("goal",{})||{};
   var allDefs=[
     {rows:pickSeries(m90,"weight_kg"),color:"#F0A63C",label:u("thPeso"),goal:goal.weight_kg},
