@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v59";
+var APP_VERSION="v60";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1059,7 +1059,6 @@ function render(keepScroll){
          '<button class="abtn ghost" data-act="savename">'+u("save")+"</button>"+
          '<p class="okmsg" id="okmsg"></p><p class="err" id="errmsg"></p></div>';
       h+=baselineCard();
-      h+=runplanCard();
       h+='<div class="card"><p class="note">'+u("syncOn")+'</p><p class="note" style="margin-top:8px;color:var(--mut)">'+u("familyNote")+"</p>"+
          '<button class="abtn ghost" data-act="logout" style="margin-top:12px">'+u("signout")+"</button></div>";
       h+='<p class="note" style="margin:10px 4px;font-family:var(--mono);font-size:10.5px;color:var(--mut);word-break:break-all">'+esc(diagLine())+"</p>";
@@ -1074,13 +1073,20 @@ function render(keepScroll){
     }
   }
   else if(state.tab==="semana"){
-    getWeek().forEach(function(w,i){
-      var s=getSession(w.sid);var done=isDone(w.sid);
-      h+='<button class="dayrow'+(i===todayIdx?" today":"")+'" data-act="day" data-sid="'+w.sid+'">'+
-        '<span class="dn">'+T(w.d)+'</span><span class="dt"><b>'+esc(T(s.title))+"</b><small>"+esc(T(s.sub)||s.km||"")+"</small></span>"+
-        '<span class="tick'+(done?" on":"")+'">'+(done?"✓":"")+"</span></button>";
-    });
-    h+='<p class="note" style="margin:14px 4px;color:var(--mut)">'+u("weekNote")+"</p>";
+    h+='<div class="seg"><button data-act="wview" data-wv="week"'+(state.wview!=="run"?' class="sel"':"")+'>Workouts</button>'+
+       '<button data-act="wview" data-wv="run"'+(state.wview==="run"?' class="sel"':"")+'>'+T(B("Plan de running","Running plan"))+"</button></div>";
+    if(state.wview==="run"){
+      var rp=runplanCard();
+      h+=rp||'<div class="card"><p class="note">'+T(B("Aún no hay plan de running asignado.","No running plan assigned yet."))+"</p></div>";
+    }else{
+      getWeek().forEach(function(w,i){
+        var s=getSession(w.sid);var done=isDone(w.sid);
+        h+='<button class="dayrow'+(i===todayIdx?" today":"")+'" data-act="day" data-sid="'+w.sid+'">'+
+          '<span class="dn">'+T(w.d)+'</span><span class="dt"><b>'+esc(T(s.title))+"</b><small>"+esc(T(s.sub)||s.km||"")+"</small></span>"+
+          '<span class="tick'+(done?" on":"")+'">'+(done?"✓":"")+"</span></button>";
+      });
+      h+='<p class="note" style="margin:14px 4px;color:var(--mut)">'+u("weekNote")+"</p>";
+    }
   }
   else if(state.tab==="progreso"){
     if(!sb){h+='<div class="card"><p class="note">'+u("cloudOff")+"</p></div>";}
@@ -1879,6 +1885,7 @@ document.addEventListener("click",function(e){
   if(act==="back"){state.sid=null;render();return}
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
+  if(act==="wview"){state.wview=b.dataset.wv;render();return}
   if(act==="hist"){state.histOpen=state.histOpen===b.dataset.k?null:b.dataset.k;render(true);return}
   if(act==="habit"){
     var dk="habits:"+selDay();
