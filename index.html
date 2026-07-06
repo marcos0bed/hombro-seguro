@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v65";
+var APP_VERSION="v66";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1631,10 +1631,23 @@ function dayCard(){
   var wVal;
   if(rng===1)wVal=wRow?(+wRow.weight_kg).toFixed(1)+" kg":"—";
   else{var wa=avg(win("weight_kg"));wVal=wa==null?"—":wa.toFixed(1)+" kg"}
+  var fRow=null;
+  for(var fi=M.length-1;fi>=0;fi--){if(M[fi].day<=day&&M[fi].body_fat_pct!=null){fRow=M[fi];break}}
+  function fwin(){
+    var span=rng===1?14:rng;
+    var st2=new Date(day+"T12:00");st2.setDate(st2.getDate()-(span-1));var sS2=iso(st2);
+    var out=[];M.forEach(function(x){if(x.day>=sS2&&x.day<=day&&x.body_fat_pct!=null)out.push(+x.body_fat_pct)});
+    return out;
+  }
+  var fVal;
+  if(rng===1)fVal=fRow?(+fRow.body_fat_pct).toFixed(1)+" %":"—";
+  else{var fa=avg(win("body_fat_pct"));fVal=fa==null?"—":fa.toFixed(1)+" %"}
   ensureGoal();
-  var gW=(S("goal",{})||{}).weight_kg;
+  var GG=S("goal",{})||{};
+  function gtag(v){return v?' <span style="font-size:11px;color:var(--mut);font-weight:400">◎ '+v+"</span>":""}
   var tiles=[
-    ["⚖️ "+T(B("Peso","Weight")),wVal+(gW?' <span style="font-size:11px;color:var(--mut);font-weight:400">◎ '+gW+"</span>":""),null,spark(wwin(),"#C88BD8")],
+    ["⚖️ "+T(B("Peso","Weight")),wVal+gtag(GG.weight_kg),null,spark(wwin(),"#C88BD8")],
+    ["🧈 "+u("bodyFat"),fVal+gtag(GG.body_fat_pct),null,spark(fwin(),"#46C08A")],
     ["👣 "+u("dSteps"),val("steps",function(x){return Math.round(x).toLocaleString()}),null,stepsSpark],
     ["😴 "+u("dSleep"),slV,rng===1?r.sleep_q:null,spark(win("sleep_h"),"#46C08A")],
     ["💓 HRV",val("hrv_ms",function(x){return Math.round(x)+" ms"}),rng===1?r.hrv_q:null,spark(win("hrv_ms"),"#4DD0C0")],
@@ -1680,10 +1693,10 @@ function balanceView(){
 
   var vR=M.filter(function(r){return r.vo2max!=null});
   var lastV=vR[vR.length-1];
-  h+='<div class="card"><div style="display:flex;gap:28px;flex-wrap:wrap">'+
-     '<div><div class="tlab">'+u("lastWeight")+'</div><div class="big" style="font-size:34px">'+(lastW?(+lastW.weight_kg).toFixed(1)+" kg":"—")+'</div>'+(lastW?'<span class="note" style="color:var(--mut);font-size:12px">'+lastW.day+"</span>":"")+"</div>"+
-     '<div><div class="tlab">'+u("bodyFat")+'</div><div class="big" style="font-size:34px;color:var(--ok)">'+(lastF?(+lastF.body_fat_pct).toFixed(1)+"%":"—")+'</div>'+(lastF?'<span class="note" style="color:var(--mut);font-size:12px">'+lastF.day+"</span>":"")+"</div>"+
-     (lastV?'<div><div class="tlab">VO₂max</div><div class="big" style="font-size:34px;color:#4DD0C0">'+(+lastV.vo2max).toFixed(0)+'</div><span class="note" style="color:var(--mut);font-size:12px">'+lastV.day+"</span></div>":"")+"</div>"+
+  h+='<div class="card"><div style="display:flex;gap:8px;flex-wrap:nowrap">'+
+     '<div style="flex:1;min-width:0"><div class="tlab">'+u("lastWeight")+'</div><div class="big" style="font-size:23px">'+(lastW?(+lastW.weight_kg).toFixed(1)+" kg":"—")+'</div>'+(lastW?'<span class="note" style="color:var(--mut);font-size:10px">'+lastW.day.slice(5)+"</span>":"")+"</div>"+
+     '<div style="flex:1;min-width:0"><div class="tlab">'+u("bodyFat")+'</div><div class="big" style="font-size:23px;color:var(--ok)">'+(lastF?(+lastF.body_fat_pct).toFixed(1)+"%":"—")+'</div>'+(lastF?'<span class="note" style="color:var(--mut);font-size:10px">'+lastF.day.slice(5)+"</span>":"")+"</div>"+
+     (lastV?'<div style="flex:1;min-width:0"><div class="tlab">VO₂max</div><div class="big" style="font-size:23px;color:#4DD0C0">'+(+lastV.vo2max).toFixed(0)+'</div><span class="note" style="color:var(--mut);font-size:10px">'+lastV.day.slice(5)+"</span></div>":"")+"</div>"+
      srcLine()+
      "</div>";
 
