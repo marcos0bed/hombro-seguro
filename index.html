@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v58";
+var APP_VERSION="v59";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1059,6 +1059,7 @@ function render(keepScroll){
          '<button class="abtn ghost" data-act="savename">'+u("save")+"</button>"+
          '<p class="okmsg" id="okmsg"></p><p class="err" id="errmsg"></p></div>';
       h+=baselineCard();
+      h+=runplanCard();
       h+='<div class="card"><p class="note">'+u("syncOn")+'</p><p class="note" style="margin-top:8px;color:var(--mut)">'+u("familyNote")+"</p>"+
          '<button class="abtn ghost" data-act="logout" style="margin-top:12px">'+u("signout")+"</button></div>";
       h+='<p class="note" style="margin:10px 4px;font-family:var(--mono);font-size:10.5px;color:var(--mut);word-break:break-all">'+esc(diagLine())+"</p>";
@@ -1496,6 +1497,12 @@ function baselineCard(){
   var txt=T(b.body)||"";if(!txt)return "";
   return '<div class="card"><div class="exhead"><h3>'+T(B("Línea base","Baseline"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
 }
+/* Plan de running (kv "runplan"): consultable en Cuenta */
+function runplanCard(){
+  var b=S("runplan",null);if(!b||!b.body)return "";
+  var txt=T(b.body)||"";if(!txt)return "";
+  return '<div class="card"><div class="exhead"><h3>🏃 '+T(B("Plan de running","Running plan"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
+}
 
 /* Logros del día: 10k pasos, sueño 80+, déficit calórico */
 function achCard(){
@@ -1602,9 +1609,12 @@ function balanceView(){
 
   // tarjeta resumen (+ frescura de cada fuente de datos)
 
+  var vR=M.filter(function(r){return r.vo2max!=null});
+  var lastV=vR[vR.length-1];
   h+='<div class="card"><div style="display:flex;gap:28px;flex-wrap:wrap">'+
      '<div><div class="tlab">'+u("lastWeight")+'</div><div class="big" style="font-size:34px">'+(lastW?(+lastW.weight_kg).toFixed(1)+" kg":"—")+'</div>'+(lastW?'<span class="note" style="color:var(--mut);font-size:12px">'+lastW.day+"</span>":"")+"</div>"+
-     '<div><div class="tlab">'+u("bodyFat")+'</div><div class="big" style="font-size:34px;color:var(--ok)">'+(lastF?(+lastF.body_fat_pct).toFixed(1)+"%":"—")+'</div>'+(lastF?'<span class="note" style="color:var(--mut);font-size:12px">'+lastF.day+"</span>":"")+"</div></div>"+
+     '<div><div class="tlab">'+u("bodyFat")+'</div><div class="big" style="font-size:34px;color:var(--ok)">'+(lastF?(+lastF.body_fat_pct).toFixed(1)+"%":"—")+'</div>'+(lastF?'<span class="note" style="color:var(--mut);font-size:12px">'+lastF.day+"</span>":"")+"</div>"+
+     (lastV?'<div><div class="tlab">VO₂max</div><div class="big" style="font-size:34px;color:#4DD0C0">'+(+lastV.vo2max).toFixed(0)+'</div><span class="note" style="color:var(--mut);font-size:12px">'+lastV.day+"</span></div>":"")+"</div>"+
      srcLine()+
      "</div>";
 
