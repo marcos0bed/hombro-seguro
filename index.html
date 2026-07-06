@@ -50,6 +50,9 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .ach{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px}
 button.wkhead{display:flex;justify-content:space-between;align-items:center;width:100%;font-family:var(--disp);font-weight:600;font-size:15px;letter-spacing:.01em;color:inherit;cursor:pointer;text-align:left}
 .wkhead .chev{color:var(--mut);font-size:13px;margin-left:10px}
+.jtab{width:100%;margin-top:12px;font-size:13px;border-collapse:collapse}
+.jtab td{padding:7px 0;border-top:1px solid var(--line);vertical-align:top;line-height:1.45}
+.jtab .jd{color:var(--mut);font-family:var(--mono);font-size:11px;white-space:nowrap;padding-right:12px;width:1%}
 .bp{font-size:13.5px;line-height:1.5;margin:7px 0}
 .blist{margin:6px 0 6px 4px;padding-left:16px;font-size:13.5px;line-height:1.55}
 .blist li{margin:3px 0}
@@ -215,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v54";
+var APP_VERSION="v55";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1043,6 +1046,7 @@ function render(keepScroll){
       if(wkOpen)h+=sessionView(WK[idx].sid);
     }
     h+=briefCard();
+    h+=journalCard();
   }
   else if(state.tab==="cuenta"){
     if(!sb){
@@ -1447,6 +1451,24 @@ function rowFor(day){
   return null;
 }
 function todayRow(){return rowFor(TODAY)}
+
+/* Journal: impresiones del día (kv journal:<día>, sincronizado; lo lee el parte semanal) */
+function journalCard(){
+  if(!cloudOn())return "";
+  var day=selDay();
+  var cur=String(S("journal:"+day,""));
+  var h='<div class="card"><h3>Journal</h3>'+
+    '<textarea class="note-in" rows="3" data-key="journal:'+day+'" placeholder="'+
+    esc(T(B("¿Cómo fue el día? Impresiones, contexto, cómo te sientes…","How was the day? Impressions, context, how you feel…")))+'">'+esc(cur)+"</textarea>";
+  var rows="";
+  for(var i=0;i<14;i++){
+    var d0=new Date(day+"T12:00");d0.setDate(d0.getDate()-i);var k=iso(d0);
+    var t=String(S("journal:"+k,"")).trim();
+    if(t)rows+='<tr><td class="jd">'+k.slice(8,10)+"/"+k.slice(5,7)+"</td><td>"+esc(t)+"</td></tr>";
+  }
+  if(rows)h+='<table class="jtab">'+rows+"</table>";
+  return h+"</div>";
+}
 
 /* Parte semanal (kv "brief" subido con fitmet_brief.py): viñetas "- ", párrafos y **negritas** */
 function briefCard(){
@@ -1854,6 +1876,7 @@ document.addEventListener("click",function(e){
 document.addEventListener("change",function(e){
   var inp=e.target.closest(".w-in,.note-in");if(!inp)return;
   W(inp.dataset.key,inp.value.trim());
+  if(inp.dataset.key.indexOf("journal:")===0)render(true);
 });
 render();
 </script>
