@@ -47,7 +47,10 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .doneline .di{font-size:14px}
 .doneline b{font-weight:600}
 .doneline small{color:var(--mut);margin-left:auto;white-space:nowrap;font-family:var(--mono);font-size:11px}
-.ach{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ach{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px}
+.bp{font-size:13.5px;line-height:1.5;margin:7px 0}
+.blist{margin:6px 0 6px 4px;padding-left:16px;font-size:13.5px;line-height:1.55}
+.blist li{margin:3px 0}
 .achb{display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);opacity:.4}
 .achb.on{opacity:1;border-color:var(--acc-dim);background:rgba(240,166,60,.12)}
 .achb .ai{font-size:16px}
@@ -210,7 +213,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v52";
+var APP_VERSION="v53";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1030,6 +1033,7 @@ function render(keepScroll){
     h+=doneTodayBox();
     if(state.sid&&idx!==todayIdx)h+='<button class="backlink" data-act="back">'+u("back")+"</button>";
     h+=sessionView(WK[idx].sid);
+    h+=briefCard();
   }
   else if(state.tab==="cuenta"){
     if(!sb){
@@ -1422,10 +1426,7 @@ function doneTodayBox(){
   var hoyL=(LOGS.data||[]).filter(function(l){return l.day===selDay()});
   if(!hoyL.length)return "";
   var rows=hoyL.map(function(l){
-    var cardio=isCardioLog(l);
-    var res=cardio?((l.entries&&l.entries[0]&&l.entries[0].n)||""):
-      ((l.total_sets||0)+" "+u("setsLbl")+(l.est_volume>0?" · "+fmtK(+l.est_volume)+" kg":""));
-    return '<div class="doneline"><span class="di">'+(cardio?"🏃":"💪")+"</span><b>"+esc(l.title||"?")+"</b><small>"+esc(res)+"</small></div>";
+    return '<div class="doneline"><span class="di">'+(isCardioLog(l)?"🏃":"💪")+"</span><b>"+esc(l.title||"?")+"</b></div>";
   }).join("");
   return '<div class="card donebox"><div class="tlab" style="margin-bottom:3px">'+u("doneT")+"</div>"+rows+"</div>";
 }
@@ -1437,6 +1438,23 @@ function rowFor(day){
   return null;
 }
 function todayRow(){return rowFor(TODAY)}
+
+/* Parte semanal (kv "brief" subido con fitmet_brief.py): viñetas "- ", párrafos y **negritas** */
+function briefCard(){
+  var b=S("brief",null);if(!b||!b.body)return "";
+  var txt=T(b.body)||"";if(!txt)return "";
+  var html="",list=[];
+  function fmt(x){return esc(x).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}
+  function flush(){if(list.length){html+='<ul class="blist">'+list.map(function(x){return "<li>"+x+"</li>"}).join("")+"</ul>";list=[]}}
+  txt.split("\n").forEach(function(ln){
+    ln=ln.trim();
+    if(!ln){flush();return}
+    if(ln.indexOf("- ")===0)list.push(fmt(ln.slice(2)));
+    else{flush();html+='<p class="bp">'+fmt(ln)+"</p>"}
+  });
+  flush();
+  return '<div class="card"><div class="exhead"><h3>'+T(B("Parte semanal","Weekly brief"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+html+"</div>";
+}
 
 /* Logros del día: 10k pasos, sueño 80+, déficit calórico */
 function achCard(){
