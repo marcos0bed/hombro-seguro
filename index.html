@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v66";
+var APP_VERSION="v67";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1312,7 +1312,12 @@ function multiChart(defs){
     if(i)svg+='<line x1="0" y1="'+top+'" x2="'+W+'" y2="'+top+'" stroke="#2B3442" stroke-width="0.6"/>';
     var vs=s.rows.map(function(r){return r.v});
     var vmin=Math.min.apply(null,vs),vmax=Math.max.apply(null,vs);
-    if(s.goal!=null){vmin=Math.min(vmin,s.goal);vmax=Math.max(vmax,s.goal)}
+    if(s.goal!=null){
+      vmin=Math.min(vmin,s.goal);vmax=Math.max(vmax,s.goal);
+      var vpad=(vmax-vmin)*0.14||0.5;
+      if(s.goal<=Math.min.apply(null,vs))vmin-=vpad*1.8;else vmin-=vpad;
+      if(s.goal>=Math.max.apply(null,vs))vmax+=vpad*1.8;else vmax+=vpad;
+    }
     if(vmax-vmin<1e-9){vmax+=1;vmin-=1}
     var pts=s.rows.map(function(r){
       var x=2+(W-4)*((+new Date(r.day)-t0)/((t1-t0)||1));
@@ -1320,8 +1325,8 @@ function multiChart(defs){
       return x.toFixed(1)+","+y.toFixed(1)}).join(" ");
     if(s.goal!=null){
       var gy=(top+LH-5)-(LH-17)*((s.goal-vmin)/(vmax-vmin));
-      svg+='<line x1="2" y1="'+gy.toFixed(1)+'" x2="'+(W-2)+'" y2="'+gy.toFixed(1)+'" stroke="'+s.color+'" stroke-width="0.9" stroke-dasharray="2 3" opacity=".55"/>';
-      svg+='<text x="'+(W-4)+'" y="'+(gy-2.5).toFixed(1)+'" fill="'+s.color+'" font-size="7.5" font-family="monospace" text-anchor="end" opacity=".85">◎ '+s.goal+"</text>";
+      svg+='<line x1="2" y1="'+gy.toFixed(1)+'" x2="'+(W-2)+'" y2="'+gy.toFixed(1)+'" stroke="'+s.color+'" stroke-width="1.1" stroke-dasharray="3 3" opacity=".8"/>';
+      svg+='<text x="'+(W-4)+'" y="'+(gy-3).toFixed(1)+'" fill="'+s.color+'" font-size="8" font-family="monospace" text-anchor="end" font-weight="600">◎ '+s.goal+"</text>";
     }
     svg+='<polyline fill="none" stroke="'+s.color+'" stroke-width="1.6"'+(s.dash?' stroke-dasharray="4 3"':"")+' stroke-linejoin="round" opacity=".95" points="'+pts+'"/>';
     svg+='<text x="4" y="'+(top+10)+'" fill="'+s.color+'" font-size="8.5" font-family="-apple-system,sans-serif" font-weight="600">'+esc(s.label)+"</text>";
