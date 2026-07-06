@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v61";
+var APP_VERSION="v62";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1293,7 +1293,7 @@ function smoothRows(rows,n){
 }
 function multiChart(defs){
   var ds=defs.map(function(s){
-    return {label:s.label,color:s.color,dash:s.dash,rows:smoothRows(s.rows,s.smooth)};
+    return {label:s.label,color:s.color,dash:s.dash,goal:s.goal,rows:smoothRows(s.rows,s.smooth)};
   }).filter(function(s){return s.rows.length>1});
   if(!ds.length)return "";
   var days=[];ds.forEach(function(s){s.rows.forEach(function(r){days.push(r.day)})});
@@ -1311,11 +1311,17 @@ function multiChart(defs){
     if(i)svg+='<line x1="0" y1="'+top+'" x2="'+W+'" y2="'+top+'" stroke="#2B3442" stroke-width="0.6"/>';
     var vs=s.rows.map(function(r){return r.v});
     var vmin=Math.min.apply(null,vs),vmax=Math.max.apply(null,vs);
+    if(s.goal!=null){vmin=Math.min(vmin,s.goal);vmax=Math.max(vmax,s.goal)}
     if(vmax-vmin<1e-9){vmax+=1;vmin-=1}
     var pts=s.rows.map(function(r){
       var x=2+(W-4)*((+new Date(r.day)-t0)/((t1-t0)||1));
       var y=(top+LH-5)-(LH-17)*((r.v-vmin)/(vmax-vmin));
       return x.toFixed(1)+","+y.toFixed(1)}).join(" ");
+    if(s.goal!=null){
+      var gy=(top+LH-5)-(LH-17)*((s.goal-vmin)/(vmax-vmin));
+      svg+='<line x1="2" y1="'+gy.toFixed(1)+'" x2="'+(W-2)+'" y2="'+gy.toFixed(1)+'" stroke="'+s.color+'" stroke-width="0.9" stroke-dasharray="2 3" opacity=".55"/>';
+      svg+='<text x="'+(W-4)+'" y="'+(gy-2.5).toFixed(1)+'" fill="'+s.color+'" font-size="7.5" font-family="monospace" text-anchor="end" opacity=".85">◎ '+s.goal+"</text>";
+    }
     svg+='<polyline fill="none" stroke="'+s.color+'" stroke-width="1.6"'+(s.dash?' stroke-dasharray="4 3"':"")+' stroke-linejoin="round" opacity=".95" points="'+pts+'"/>';
     svg+='<text x="4" y="'+(top+10)+'" fill="'+s.color+'" font-size="8.5" font-family="-apple-system,sans-serif" font-weight="600">'+esc(s.label)+"</text>";
     var last=s.rows[s.rows.length-1].v;
@@ -1612,9 +1618,10 @@ function balanceView(){
   function rngSwitch(){return rangeSel(rng,"balrange")}
   var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
   var m90=M.filter(function(r){return r.day>=cutS});
+  var goal=S("goal",{})||{};
   var allDefs=[
-    {rows:pickSeries(m90,"weight_kg"),color:"#F0A63C",label:u("thPeso")},
-    {rows:pickSeries(m90,"body_fat_pct"),color:"#46C08A",label:u("bodyFat")},
+    {rows:pickSeries(m90,"weight_kg"),color:"#F0A63C",label:u("thPeso"),goal:goal.weight_kg},
+    {rows:pickSeries(m90,"body_fat_pct"),color:"#46C08A",label:u("bodyFat"),goal:goal.body_fat_pct},
     {rows:pickSeries(m90,"kcal_in"),color:"#7BA1D9",label:"Kcal in",smooth:3},
     {rows:pickSeries(m90,"kcal_out"),color:"#E5484D",label:"Kcal out",smooth:3},
     {rows:pickSeries(m90,"carbs_g"),color:"#C88BD8",label:u("legC"),smooth:3},
@@ -1639,8 +1646,8 @@ function balanceView(){
   // peso y grasa: carriles separados (sin solape), mismo motor que Tendencias
   var w90=wR.filter(function(r){return r.day>=cutS}),f90=fR.filter(function(r){return r.day>=cutS});
   var wfDefs=[
-    {rows:w90.map(function(r){return{day:r.day,v:+r.weight_kg}}),color:"#F0A63C",label:u("thPeso")},
-    {rows:f90.map(function(r){return{day:r.day,v:+r.body_fat_pct}}),color:"#46C08A",label:u("bodyFat")}
+    {rows:w90.map(function(r){return{day:r.day,v:+r.weight_kg}}),color:"#F0A63C",label:u("thPeso"),goal:goal.weight_kg},
+    {rows:f90.map(function(r){return{day:r.day,v:+r.body_fat_pct}}),color:"#46C08A",label:u("bodyFat"),goal:goal.body_fat_pct}
   ];
   var wf=multiChart(wfDefs);
   if(wf)h+='<div class="card"><div class="exhead"><h3>'+u("chart90")+"</h3>"+rngSwitch()+"</div>"+wf+"</div>";
