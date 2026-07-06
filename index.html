@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v57";
+var APP_VERSION="v58";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1058,6 +1058,7 @@ function render(keepScroll){
          '<input class="fin" id="f-name" value="'+esc(nm)+'" placeholder="'+u("name")+'" autocomplete="name">'+
          '<button class="abtn ghost" data-act="savename">'+u("save")+"</button>"+
          '<p class="okmsg" id="okmsg"></p><p class="err" id="errmsg"></p></div>';
+      h+=baselineCard();
       h+='<div class="card"><p class="note">'+u("syncOn")+'</p><p class="note" style="margin-top:8px;color:var(--mut)">'+u("familyNote")+"</p>"+
          '<button class="abtn ghost" data-act="logout" style="margin-top:12px">'+u("signout")+"</button></div>";
       h+='<p class="note" style="margin:10px 4px;font-family:var(--mono);font-size:10.5px;color:var(--mut);word-break:break-all">'+esc(diagLine())+"</p>";
@@ -1470,21 +1471,30 @@ function journalCard(){
   return h+"</div>";
 }
 
-/* Parte semanal (kv "brief" subido con fitmet_brief.py): viñetas "- ", párrafos y **negritas** */
-function briefCard(){
-  var b=S("brief",null);if(!b||!b.body)return "";
-  var txt=T(b.body)||"";if(!txt)return "";
+/* Texto rico compartido (parte semanal y línea base): viñetas "- ", párrafos y **negritas** */
+function richBody(txt){
   var html="",list=[];
   function fmt(x){return esc(x).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}
   function flush(){if(list.length){html+='<ul class="blist">'+list.map(function(x){return "<li>"+x+"</li>"}).join("")+"</ul>";list=[]}}
-  txt.split("\n").forEach(function(ln){
+  String(txt).split("\n").forEach(function(ln){
     ln=ln.trim();
     if(!ln){flush();return}
     if(ln.indexOf("- ")===0)list.push(fmt(ln.slice(2)));
     else{flush();html+='<p class="bp">'+fmt(ln)+"</p>"}
   });
   flush();
-  return '<div class="card"><div class="exhead"><h3>'+T(B("Parte semanal","Weekly brief"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+html+"</div>";
+  return html;
+}
+function briefCard(){
+  var b=S("brief",null);if(!b||!b.body)return "";
+  var txt=T(b.body)||"";if(!txt)return "";
+  return '<div class="card"><div class="exhead"><h3>'+T(B("Parte semanal","Weekly brief"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
+}
+/* Línea base (kv "baseline"): resumen del análisis de 90 días, visible en Cuenta */
+function baselineCard(){
+  var b=S("baseline",null);if(!b||!b.body)return "";
+  var txt=T(b.body)||"";if(!txt)return "";
+  return '<div class="card"><div class="exhead"><h3>'+T(B("Línea base","Baseline"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
 }
 
 /* Logros del día: 10k pasos, sueño 80+, déficit calórico */
