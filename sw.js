@@ -1,4 +1,4 @@
-const CACHE = "hombro-v68";
+const CACHE = "hombro-v69";
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", CDN];
 
@@ -66,7 +66,13 @@ self.addEventListener("push", (e) => {
       if (meta.endAt && Date.now() < meta.endAt - 5000) body = "⏳ +30 s";
       else if (meta.msg) body = meta.msg;
     }
-    await self.registration.showNotification("Fitmet", { body, tag: "fitmet-timer" });
+    // etiqueta ÚNICA: en iOS, reutilizar tag reemplaza en silencio (sin sonido).
+    // Cerramos las viejas a mano y estrenamos tag para que el aviso suene.
+    try {
+      const old = await self.registration.getNotifications();
+      old.forEach((n) => { if ((n.tag || "").indexOf("fitmet-timer") === 0) n.close(); });
+    } catch (err) {}
+    await self.registration.showNotification("Fitmet", { body, tag: "fitmet-timer-" + Date.now() });
   })());
 });
 self.addEventListener("notificationclick", (e) => {

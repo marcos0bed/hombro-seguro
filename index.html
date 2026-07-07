@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v68";
+var APP_VERSION="v69";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -279,9 +279,11 @@ function notifyEnd(msg){
     if(!("Notification" in window)||Notification.permission!=="granted")return;
     if(!navigator.serviceWorker)return;
     navigator.serviceWorker.ready.then(function(reg){
-      reg.showNotification("Fitmet",{body:msg,tag:"fitmet-timer",silent:false});
+      var tg="fitmet-timer-"+Date.now();
+      reg.getNotifications().then(function(ns){ns.forEach(function(x){if((x.tag||"").indexOf("fitmet-timer")===0)x.close()})});
+      reg.showNotification("Fitmet",{body:msg,tag:tg,silent:false});
       setTimeout(function(){
-        reg.getNotifications({tag:"fitmet-timer"}).then(function(ns){ns.forEach(function(x){x.close()})});
+        reg.getNotifications({tag:tg}).then(function(ns){ns.forEach(function(x){x.close()})});
       },5000);
     });
   }catch(e){}
