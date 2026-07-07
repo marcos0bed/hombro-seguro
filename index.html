@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v70";
+var APP_VERSION="v71";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -309,7 +309,10 @@ function ensurePushSub(){
       return reg.pushManager.getSubscription().then(function(s){
         return s||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(VAPID_PUB)});
       });
-    }).then(function(s){PUSHSUB=s},function(){});
+    }).then(function(s){
+      PUSHSUB=s;
+      if(s&&s.endpoint&&(S("pushsub",{})||{}).endpoint!==s.endpoint)W("pushsub",{endpoint:s.endpoint});
+    },function(){});
   }catch(e){}
 }
 function pushMeta(endAt,msg){

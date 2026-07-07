@@ -1,4 +1,4 @@
-const CACHE = "hombro-v70";
+const CACHE = "hombro-v71";
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", CDN];
 
@@ -61,10 +61,13 @@ self.addEventListener("push", (e) => {
       const r = await c.match("/push-meta");
       if (r) meta = await r.json();
     } catch (err) {}
-    let body = "⏱️";
-    if (meta) {
-      if (meta.endAt && Date.now() < meta.endAt - 5000) body = "⏳ +30 s";
-      else if (meta.msg) body = meta.msg;
+    // Sin payload: distinguimos por contexto. Meta de temporizador reciente
+    // (±10 min) → aviso de descanso; si no, es el parte del día/semana.
+    let body = "☀️ Parte del día listo · Daily brief ready";
+    if (meta && meta.endAt) {
+      const now = Date.now();
+      if (now < meta.endAt - 5000) body = "⏳ +30 s";
+      else if (now - meta.endAt < 10 * 60 * 1000) body = meta.msg || "⏱️";
     }
     // etiqueta ÚNICA: en iOS, reutilizar tag reemplaza en silencio (sin sonido).
     // Cerramos las viejas a mano y estrenamos tag para que el aviso suene.
