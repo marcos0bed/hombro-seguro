@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v69";
+var APP_VERSION="v70";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1065,6 +1065,7 @@ function render(keepScroll){
     var lblD=dOff===0?T(B("Hoy","Today")):dOff===1?T(B("Ayer","Yesterday")):sdD.slice(8,10)+"/"+sdD.slice(5,7);
     h+='<div class="dnav"><button data-act="daynav" data-d="1"'+(dOff>=90?" disabled":"")+' aria-label="'+T(B("Día anterior","Previous day"))+'">‹</button><b>'+lblD+'</b><button data-act="daynav" data-d="-1"'+(dOff===0?" disabled":"")+' aria-label="'+T(B("Día siguiente","Next day"))+'">›</button></div>';
     h+=dayCard();
+    h+=daybriefCard();
     h+=hrDayCard();
     h+=achCard();
     h+=habCard();
@@ -1575,6 +1576,13 @@ function richBody(txt){
   });
   flush();
   return html;
+}
+function daybriefCard(){
+  var b=S("daybrief",null);if(!b||!b.body)return "";
+  var ayer=new Date();ayer.setDate(ayer.getDate()-1);
+  if((b.week||"")<iso(ayer))return "";
+  var txt=T(b.body)||"";if(!txt)return "";
+  return '<div class="card"><div class="exhead"><h3>☀️ '+T(B("Parte del día","Daily brief"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
 }
 function briefCard(){
   var b=S("brief",null);if(!b||!b.body)return "";
