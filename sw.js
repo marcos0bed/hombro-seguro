@@ -1,4 +1,4 @@
-const CACHE = "hombro-v67";
+const CACHE = "hombro-v68";
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", CDN];
 
@@ -49,4 +49,30 @@ self.addEventListener("fetch", (e) => {
           .catch(() => (sameOrigin ? caches.match("./index.html") : undefined))
     )
   );
+});
+
+// Web Push: el servidor (push-timer) avisa al vencer el descanso. El push llega
+// sin payload; el mensaje se lee de la cache que dejó la página al programarlo.
+self.addEventListener("push", (e) => {
+  e.waitUntil((async () => {
+    let meta = null;
+    try {
+      const c = await caches.open("fitmet-push");
+      const r = await c.match("/push-meta");
+      if (r) meta = await r.json();
+    } catch (err) {}
+    let body = "⏱️";
+    if (meta) {
+      if (meta.endAt && Date.now() < meta.endAt - 5000) body = "⏳ +30 s";
+      else if (meta.msg) body = meta.msg;
+    }
+    await self.registration.showNotification("Fitmet", { body, tag: "fitmet-timer" });
+  })());
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((cs) => {
+    for (const c of cs) if ("focus" in c) return c.focus();
+    return self.clients.openWindow("./");
+  }));
 });

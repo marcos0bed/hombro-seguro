@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v67";
+var APP_VERSION="v68";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -289,7 +289,37 @@ function notifyEnd(msg){
 function askNotif(){
   try{
     if(("Notification" in window)&&Notification.permission==="default")
-      Notification.requestPermission();
+      Notification.requestPermission().then(function(p){if(p==="granted")ensurePushSub()});
+    else ensurePushSub();
+  }catch(e){}
+}
+
+/* Web Push real (iOS 16.4+, PWA instalada): el servidor avisa al vencer el
+   descanso aunque la app esté congelada. Edge Function: push-timer. */
+var VAPID_PUB="BI-6PYH7flRk43qwRagKC5mx01aKtkDE58M35ihgW2jbRuHuYYv1wFTd_xuk-_mA6GHh-HSTe9ZOQRNyGZr37lQ";
+var PUSHSUB=null;
+function b64uToU8(s){var p="=".repeat((4-s.length%4)%4);var b=atob((s+p).replace(/-/g,"+").replace(/_/g,"/"));var a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+function ensurePushSub(){
+  try{
+    if(!("Notification" in window)||Notification.permission!=="granted")return;
+    if(!navigator.serviceWorker||!("PushManager" in window))return;
+    navigator.serviceWorker.ready.then(function(reg){
+      return reg.pushManager.getSubscription().then(function(s){
+        return s||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(VAPID_PUB)});
+      });
+    }).then(function(s){PUSHSUB=s},function(){});
+  }catch(e){}
+}
+function pushMeta(endAt,msg){
+  try{caches.open("fitmet-push").then(function(c){c.put("/push-meta",new Response(JSON.stringify({endAt:endAt,msg:msg})))})}catch(e){}
+}
+function schedulePush(sec,msg){
+  try{
+    if(!PUSHSUB)return;
+    pushMeta(Date.now()+sec*1000,msg);
+    fetch(SB_URL+"/functions/v1/push-timer",{method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SB_KEY},
+      body:JSON.stringify({endpoint:PUSHSUB.endpoint,delay_s:sec})}).catch(function(){});
   }catch(e){}
 }
 
@@ -1821,6 +1851,8 @@ function restStart(sec,sid,i){
     lab.textContent=nx?(nx.length>34?nx.slice(0,33)+"…":nx):u("rest");
   }
   wakeOn();
+  var nx2=rest.sid?nextSetMsg(rest.sid,rest.i):"";
+  schedulePush(sec,nx2||u("rest"));
   restTick();rest.t=setInterval(restTick,500);
 }
 function restStop(){
@@ -1978,7 +2010,12 @@ document.addEventListener("click",function(e){
   if(act==="balrange"){state.balRange=+b.dataset.r;render(true);return}
   if(act==="macrange"){state.macRange=+b.dataset.r;render(true);return}
   if(act==="musrange"){state.musRange=+b.dataset.r;render(true);return}
-  if(act==="rest-add"){rest.endAt+=30000;restTick();return}
+  if(act==="rest-add"){
+    rest.endAt+=30000;restTick();
+    var nx3=rest.sid?nextSetMsg(rest.sid,rest.i):"";
+    schedulePush(Math.max(1,Math.round((rest.endAt-Date.now())/1000)),nx3||u("rest"));
+    return;
+  }
   if(act==="rest-skip"){restStop();return}
   if(act==="iso"){isoStart();return}
 });
@@ -1987,6 +2024,7 @@ document.addEventListener("change",function(e){
   W(inp.dataset.key,inp.value.trim());
   if(inp.dataset.key.indexOf("journal:")===0)render(true);
 });
+ensurePushSub();
 render();
 </script>
 </body>
