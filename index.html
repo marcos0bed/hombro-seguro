@@ -218,7 +218,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v72";
+var APP_VERSION="v73";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1704,29 +1704,28 @@ function dayCard(){
     ["🍽️ Kcal in",val("kcal_in",function(x){return Math.round(x)}),null,spark(win("kcal_in"),"#7BA1D9")],
     ["🔥 Kcal out",val("kcal_out",function(x){return Math.round(x)}),null,spark(win("kcal_out"),"#E8963E")]
   ];
-  if(GG.deficit!=null){
-    var dsub=' <span style="font-size:11px;color:var(--mut);font-weight:400">obj −'+GG.deficit+"</span>";
+  if(GG.eat!=null){
+    var act=0,tR=rowFor(day);
+    if(tR&&tR.kcal_active!=null)act=+tR.kcal_active;
+    var budget=GG.eat+act;
+    var dsub=' <span style="font-size:11px;color:var(--mut);font-weight:400">'+GG.eat+"+"+Math.round(act)+"</span>";
     if(rng===1&&day===TODAY){
-      var bmrF=null;
-      for(var bi=M.length-1;bi>=0;bi--){if(M[bi].day<day&&M[bi].kcal_bmr!=null){bmrF=+M[bi].kcal_bmr;break}}
-      var tR=rowFor(day)||{};
-      var outP=(bmrF||(+tR.kcal_bmr||0))+(+tR.kcal_active||0);
-      var remain=Math.round(outP-GG.deficit-(+tR.kcal_in||0));
+      var remain=Math.round(budget-((tR&&tR.kcal_in)||0));
       tiles.push(["🎯 "+T(B("Por comer","Left to eat")),
         '<span style="color:'+(remain>=0?"var(--ok)":"#E5484D")+'">'+remain+"</span>"+dsub,null,""]);
     }else if(rng===1){
-      var tP=rowFor(day);
-      if(tP&&tP.kcal_out!=null&&tP.kcal_in!=null){
-        var dReal=Math.round(+tP.kcal_in-+tP.kcal_out);
-        tiles.push(["🎯 "+T(B("Déficit del día","Day deficit")),
-          '<span style="color:'+(dReal<=-GG.deficit?"var(--ok)":"#E8963E")+'">'+dReal+"</span>"+dsub,null,""]);
+      if(tR&&tR.kcal_in!=null){
+        var over=Math.round(+tR.kcal_in-budget);
+        tiles.push(["🎯 "+T(B("Vs presupuesto","Vs budget")),
+          '<span style="color:'+(over<=0?"var(--ok)":"#E5484D")+'">'+(over>0?"+":"")+over+"</span>"+dsub,null,""]);
       }
     }else{
-      var oW=avg(win("kcal_out")),iW=avg(win("kcal_in"));
-      if(oW!=null&&iW!=null){
-        var dAvg=Math.round(iW-oW);
-        tiles.push(["🎯 "+T(B("Déficit medio","Avg deficit")),
-          '<span style="color:'+(dAvg<=-GG.deficit?"var(--ok)":"#E8963E")+'">'+dAvg+"</span>"+dsub,null,""]);
+      var iW=avg(win("kcal_in")),aW=avg(win("kcal_active"));
+      if(iW!=null){
+        var bW=GG.eat+(aW||0);
+        var ovW=Math.round(iW-bW);
+        tiles.push(["🎯 "+T(B("Vs presupuesto","Vs budget")),
+          '<span style="color:'+(ovW<=0?"var(--ok)":"#E5484D")+'">'+(ovW>0?"+":"")+ovW+'</span> <span style="font-size:11px;color:var(--mut);font-weight:400">'+T(B("media","avg"))+"</span>",null,""]);
       }
     }
   }
