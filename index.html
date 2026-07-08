@@ -220,7 +220,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v75";
+var APP_VERSION="v76";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -313,7 +313,7 @@ function ensurePushSub(){
       });
     }).then(function(s){
       PUSHSUB=s;
-      if(s&&s.endpoint&&(S("pushsub",{})||{}).endpoint!==s.endpoint)W("pushsub",{endpoint:s.endpoint});
+      if(s&&s.endpoint)W("pushsub",{endpoint:s.endpoint});
     },function(){});
   }catch(e){}
 }
