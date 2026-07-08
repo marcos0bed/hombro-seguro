@@ -48,6 +48,8 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .doneline b{font-weight:600}
 .doneline small{color:var(--mut);margin-left:auto;white-space:nowrap;font-family:var(--mono);font-size:11px}
 .ach{display:flex;flex-wrap:nowrap;gap:6px;margin-top:10px}
+.dmv{display:flex;flex-direction:column;gap:1px;margin:0 8px;font-size:11px;color:var(--mut)}
+.dmv span{padding:2px 6px}
 button.wkhead{display:flex;justify-content:space-between;align-items:center;width:100%;font-family:var(--disp);font-weight:600;font-size:15px;letter-spacing:.01em;color:inherit;cursor:pointer;text-align:left}
 .wkhead .chev{color:var(--mut);font-size:13px;margin-left:10px}
 .jtab{width:100%;margin-top:12px;font-size:13px;border-collapse:collapse}
@@ -218,7 +220,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v73";
+var APP_VERSION="v74";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -847,7 +849,23 @@ function muscleOf(sid,i,it){return (it&&it.m)||((MGROUPS[sid]||[])[i])||null}
    sustituye a la semana/sesiones integradas. Así cada perfil (p. ej. Lorena)
    tiene su propio plan sin tocar este código. */
 function getRT(){return S("routine",null)}
-function getWeek(){var rt=getRT();return (rt&&rt.week)||WEEK}
+function getWeekBase(){var rt=getRT();return (rt&&rt.week)||WEEK}
+function weekOrder(){
+  var o=S("weekorder",null);
+  if(!Array.isArray(o)||o.length!==7)return null;
+  var seen={};
+  for(var i=0;i<7;i++){var v=+o[i];if(!(v>=0&&v<7)||seen[v])return null;seen[v]=1}
+  return o.map(Number);
+}
+function getWeek(){
+  var base=getWeekBase(),o=weekOrder();
+  if(!o)return base;
+  return base.map(function(w,pos){
+    var srcW=base[o[pos]],c={};
+    for(var k in srcW)c[k]=srcW[k];
+    c.d=w.d;return c;
+  });
+}
 function getSession(sid){var rt=getRT();return (rt&&rt.sessions&&rt.sessions[sid])||EX[sid]}
 /* Orden personalizado de ejercicios por sesión (kv "order:<sid>", sincronizado).
    Solo presentación: cada ejercicio conserva su índice interno, así pesos, series
@@ -1120,8 +1138,11 @@ function render(keepScroll){
         var s=getSession(w.sid);var done=isDone(w.sid);
         h+='<button class="dayrow'+(i===todayIdx?" today":"")+'" data-act="day" data-sid="'+w.sid+'">'+
           '<span class="dn">'+T(w.d)+'</span><span class="dt"><b>'+esc(T(s.title))+"</b><small>"+esc(T(s.sub)||s.km||"")+"</small></span>"+
+          '<span class="dmv"><span role="button" tabindex="0" data-act="wkmove" data-i="'+i+'" data-dir="-1" aria-label="'+T(B("Subir sesión","Move session up"))+'"'+(i===0?' style="opacity:.25"':"")+">▲</span>"+
+          '<span role="button" tabindex="0" data-act="wkmove" data-i="'+i+'" data-dir="1" aria-label="'+T(B("Bajar sesión","Move session down"))+'"'+(i===6?' style="opacity:.25"':"")+">▼</span></span>"+
           '<span class="tick'+(done?" on":"")+'">'+(done?"✓":"")+"</span></button>";
       });
+      if(weekOrder())h+='<p class="note" style="margin:8px 4px"><a role="button" tabindex="0" data-act="wkreset" style="color:var(--mut);text-decoration:underline">'+T(B("Restablecer orden original","Reset original order"))+"</a></p>";
       h+='<p class="note" style="margin:14px 4px;color:var(--mut)">'+u("weekNote")+"</p>";
     }
   }
@@ -2037,6 +2058,14 @@ document.addEventListener("click",function(e){
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
   if(act==="wview"){state.wview=b.dataset.wv;render();return}
+  if(act==="wkmove"){
+    var wi=+b.dataset.i,wd=+b.dataset.dir,wj=wi+wd;
+    if(wj<0||wj>6)return;
+    var wo=weekOrder()||[0,1,2,3,4,5,6];
+    var tmp=wo[wi];wo[wi]=wo[wj];wo[wj]=tmp;
+    W("weekorder",wo);render(true);return;
+  }
+  if(act==="wkreset"){W("weekorder",null);render(true);return}
   if(act==="hist"){state.histOpen=state.histOpen===b.dataset.k?null:b.dataset.k;render(true);return}
   if(act==="habit"){
     var dk="habits:"+selDay();
