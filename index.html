@@ -220,7 +220,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v74";
+var APP_VERSION="v75";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -863,7 +863,7 @@ function getWeek(){
   return base.map(function(w,pos){
     var srcW=base[o[pos]],c={};
     for(var k in srcW)c[k]=srcW[k];
-    c.d=w.d;return c;
+    c.d=w.d;c.name=w.name;return c;
   });
 }
 function getSession(sid){var rt=getRT();return (rt&&rt.sessions&&rt.sessions[sid])||EX[sid]}
@@ -1079,8 +1079,10 @@ function render(keepScroll){
   var v=document.getElementById("view");var h="";
   if(state.tab==="hoy"){
     var WK=getWeek();
-    var idx=state.sid?WK.findIndex(function(w){return w.sid===state.sid}):todayIdx;
-    if(idx<0)idx=todayIdx;
+    var selD0=new Date();selD0.setDate(selD0.getDate()-(state.dayOff||0));
+    var selIdx=(selD0.getDay()+6)%7;
+    var idx=state.sid?WK.findIndex(function(w){return w.sid===state.sid}):selIdx;
+    if(idx<0)idx=selIdx;
     if(sb&&!sbUser)h+='<p class="syncnote"><a data-act="acct" role="button" tabindex="0">'+u("syncCta")+" →</a></p>";
     var sdD=selDay(),dOff=state.dayOff||0;
     var lblD=dOff===0?T(B("Hoy","Today")):dOff===1?T(B("Ayer","Yesterday")):sdD.slice(8,10)+"/"+sdD.slice(5,7);
@@ -1093,12 +1095,17 @@ function render(keepScroll){
     h+=doneTodayBox();
     if(state.sid&&idx!==todayIdx)h+='<button class="backlink" data-act="back">'+u("back")+"</button>";
     var sS=getSession(WK[idx].sid);
-    var wkOpen=!!state.wkOpen;
+    var pastD=(state.dayOff||0)>0&&!state.sid;
+    var wkOpen=!!state.wkOpen&&!pastD;
     if(sS){
       var sIc=sS.type==="run"?"🏃":sS.type==="rest"?"😴":"💪";
-      h+='<button class="card wkhead" data-act="togglewk" aria-expanded="'+wkOpen+'">'+
-         "<span>"+sIc+" "+esc(T(sS.title)||"")+'</span><span class="chev">'+(wkOpen?"▾":"▸")+"</span></button>";
-      if(wkOpen)h+=sessionView(WK[idx].sid);
+      if(pastD){
+        h+='<div class="card wkhead" style="opacity:.75"><span>'+sIc+" "+esc(T(sS.title)||"")+'</span><span class="chev" style="font-size:10px">'+T(B("plan de ese día","that day's plan"))+"</span></div>";
+      }else{
+        h+='<button class="card wkhead" data-act="togglewk" aria-expanded="'+wkOpen+'">'+
+           "<span>"+sIc+" "+esc(T(sS.title)||"")+'</span><span class="chev">'+(wkOpen?"▾":"▸")+"</span></button>";
+        if(wkOpen)h+=sessionView(WK[idx].sid);
+      }
     }
     h+=briefCard();
     h+=journalCard();
