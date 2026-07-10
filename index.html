@@ -220,7 +220,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v78";
+var APP_VERSION="v79";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1175,7 +1175,12 @@ function render(keepScroll){
     }
   }
   else if(state.tab==="viaje"){
-    h+=tripCard();
+    h+='<div class="seg"><button data-act="tview" data-tv="wk"'+(state.tview!=="trip"?' class="sel"':"")+'>'+T(B("Ejercicios","Workouts"))+"</button>"+
+       '<button data-act="tview" data-tv="trip"'+(state.tview==="trip"?' class="sel"':"")+'>'+T(B("Hoteles y rutas","Hotels & routes"))+"</button></div>";
+    if(state.tview==="trip"){
+      var tc=tripCard();
+      h+=tc||'<div class="card"><p class="note">'+T(B("Sin guía de viaje cargada.","No trip guide loaded."))+"</p></div>";
+    }else{
     var TR=TRAVEL[LANG];
     var rtv=getRT()&&getRT().travel;
     if(rtv&&rtv.sessions&&rtv.sessions.length){
@@ -1200,6 +1205,7 @@ function render(keepScroll){
       h+='<h2 class="sect">'+u("fbB")+"</h2>"+sessionView("hotelB");
     }
     h+='<p class="note" style="margin:14px 4px;color:var(--mut)">'+u("travelNote")+"</p>";
+    }
     }
   }
   else if(state.tab==="manguito"){
