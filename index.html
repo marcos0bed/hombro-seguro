@@ -220,7 +220,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v77";
+var APP_VERSION="v78";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2074,6 +2074,7 @@ document.addEventListener("click",function(e){
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
   if(act==="wview"){state.wview=b.dataset.wv;render();return}
+  if(act==="tview"){state.tview=b.dataset.tv;render();return}
   if(act==="wkmove"){
     var wi=+b.dataset.i,wd=+b.dataset.dir,wj=wi+wd;
     if(wj<0||wj>6)return;
