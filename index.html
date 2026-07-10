@@ -220,7 +220,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v76";
+var APP_VERSION="v77";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1175,6 +1175,7 @@ function render(keepScroll){
     }
   }
   else if(state.tab==="viaje"){
+    h+=tripCard();
     var TR=TRAVEL[LANG];
     var rtv=getRT()&&getRT().travel;
     if(rtv&&rtv.sessions&&rtv.sessions.length){
@@ -1597,7 +1598,10 @@ function journalCard(){
 /* Texto rico compartido (parte semanal y línea base): viñetas "- ", párrafos y **negritas** */
 function richBody(txt){
   var html="",list=[];
-  function fmt(x){return esc(x).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}
+  function fmt(x){
+    return esc(x).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
+      .replace(/\[([^\]]+)\]\((https?:[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener" style="color:var(--acc)">$1</a>');
+  }
   function flush(){if(list.length){html+='<ul class="blist">'+list.map(function(x){return "<li>"+x+"</li>"}).join("")+"</ul>";list=[]}}
   String(txt).split("\n").forEach(function(ln){
     ln=ln.trim();
@@ -1627,6 +1631,11 @@ function baselineCard(){
   return '<div class="card"><div class="exhead"><h3>'+T(B("Línea base","Baseline"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
 }
 /* Plan de running (kv "runplan"): consultable en Cuenta */
+function tripCard(){
+  var b=S("trip",null);if(!b||!b.body)return "";
+  var txt=T(b.body)||"";if(!txt)return "";
+  return '<div class="card"><div class="exhead"><h3>🇬🇷 '+esc(T(b.title)||T(B("Viaje","Trip")))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
+}
 function runplanCard(){
   var b=S("runplan",null);if(!b||!b.body)return "";
   var txt=T(b.body)||"";if(!txt)return "";
