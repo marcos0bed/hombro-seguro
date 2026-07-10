@@ -172,7 +172,7 @@ h1.day{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-siz
 h2.sect{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-size:15px;letter-spacing:.1em;color:var(--mut);margin:22px 0 4px}
 
 #ptr{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translateX(-50%);z-index:60;background:var(--surface2);border:1px solid var(--acc-dim);color:var(--acc);font-family:var(--disp);font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:6px 14px;border-radius:99px;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
-#sheet{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));display:none;justify-content:center;z-index:40;pointer-events:none}
+#sheet{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));display:none;justify-content:center;z-index:40;pointer-events:none;transform:translateZ(0);will-change:transform}
 #sheet.show{display:flex}
 .sheet-in{pointer-events:auto;display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--acc-dim);border-radius:16px;padding:12px 18px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .tnum{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums;min-width:74px;text-align:center}
@@ -188,7 +188,7 @@ h2.sect{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-si
 .isobtn[disabled]{opacity:.5}
 .isophase{font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--mut);margin-bottom:4px}
 
-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(18,21,26,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:50;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(18,21,26,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:50;padding-bottom:env(safe-area-inset-bottom,0px);transform:translateZ(0);will-change:transform;-webkit-backface-visibility:hidden}
 .nav-in{display:grid;grid-template-columns:repeat(6,1fr);width:100%;max-width:560px}
 nav button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 2px 7px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.03em;font-size:10px;font-weight:600;color:var(--mut);border-top:2px solid transparent;overflow:hidden;white-space:nowrap}
 nav button svg{width:19px;height:19px;flex:none}
@@ -220,7 +220,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v79";
+var APP_VERSION="v80";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
