@@ -220,7 +220,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v80";
+var APP_VERSION="v81";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1070,6 +1070,7 @@ function structTable(rows){
   return '<div class="card"><table class="mini">'+rows.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("")+"</table></div>";
 }
 
+var _lastTab=null;
 function render(keepScroll){
   if(state.tab!=="cuenta"&&visibleTabs().indexOf(state.tab)<0)state.tab="hoy";
   renderHdr();renderNav();
@@ -1229,7 +1230,8 @@ function render(keepScroll){
   }
   v.className=state.tab;
   v.innerHTML=h;
-  if(!keepScroll)window.scrollTo(0,0);
+  if(!keepScroll&&_lastTab!==state.tab)window.scrollTo(0,0);
+  _lastTab=state.tab;
 }
 
 /* ---------- dashboard ---------- */
