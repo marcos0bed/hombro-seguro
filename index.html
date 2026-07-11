@@ -52,6 +52,9 @@ header{padding:calc(18px + env(safe-area-inset-top,0px)) 2px 10px}
 .dmv span{padding:2px 6px}
 button.wkhead{display:flex;justify-content:space-between;align-items:center;width:100%;font-family:var(--disp);font-weight:600;font-size:15px;letter-spacing:.01em;color:inherit;cursor:pointer;text-align:left}
 .wkhead .chev{color:var(--mut);font-size:13px;margin-left:10px}
+.nsw{display:inline-flex;gap:4px;margin-left:2px}
+.nsb{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--mut);font-size:15px;line-height:1}
+.nsb:disabled{opacity:.3}
 .jtab{width:100%;margin-top:12px;font-size:13px;border-collapse:collapse}
 .jtab td{padding:7px 0;border-top:1px solid var(--line);vertical-align:top;line-height:1.45}
 .jtab .jd{color:var(--mut);font-family:var(--mono);font-size:11px;white-space:nowrap;padding-right:12px;width:1%}
@@ -220,7 +223,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v82";
+var APP_VERSION="v83";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -474,7 +477,8 @@ function buildLog(sid){
   orderedIdx(sid,s.items).forEach(function(i){
     var it=s.items[i];
     if(!it.sets)return;
-    var arr=st[i]||[],c=0;for(var j=0;j<it.sets;j++)if(arr[j])c++;
+    var NSb=nSets(sid,i,it);
+    var arr=st[i]||[],c=0;for(var j=0;j<NSb;j++)if(arr[j])c++;
     if(!c)return;
     var w=parseFloat(String(S("w:"+sid+":"+i,"")).replace(",", "."));
     var rp=String(S("r:"+TODAY+":"+sid+":"+i,"")).trim();
@@ -492,7 +496,7 @@ function buildLog(sid){
     if(!tot){var rm=repsMid(T(it.reps));tot=rm>0?rm*c:0}
     total+=c;
     if(w>0&&tot>0)vol+=tot*w;
-    entries.push({n:T(it.n),m:muscleOf(sid,i,it),sets:c,reps:rp||null,target:it.sets+"×"+T(it.reps),weight:w>0?w:null});
+    entries.push({n:T(it.n),m:muscleOf(sid,i,it),sets:c,reps:rp||null,target:nSets(sid,i,it)+"×"+T(it.reps),weight:w>0?w:null});
   });
   if(!entries.length)return null;
   var nt=String(S("note:"+TODAY+":"+sid,"")).trim();
@@ -906,10 +910,12 @@ function isDone(sid){
   });
 }
 
+function nSets(sid,i,it){var v=S("nsets:"+sid+":"+i,null);return (v!=null&&+v>0)?+v:(it.sets||0)}
 function exCard(sid,i,it,pos,tot){
   var st=S(setsKey(sid),{});var arr=st[i]||[];
+  var NS=nSets(sid,i,it);
   var pills="";
-  for(var j=0;j<it.sets;j++){
+  for(var j=0;j<NS;j++){
     pills+='<button class="pill'+(arr[j]?" on":"")+'" data-act="pill" data-sid="'+sid+'" data-i="'+i+'" data-j="'+j+'" aria-label="Set '+(j+1)+'">'+(j+1)+"</button>";
   }
   var w=S("w:"+sid+":"+i,"");
@@ -926,9 +932,9 @@ function exCard(sid,i,it,pos,tot){
     mv='<span class="mv"><button data-act="mvup" data-sid="'+sid+'" data-i="'+i+'" aria-label="'+u("upA")+'"'+(pos===0?" disabled":"")+'>▲</button>'+
        '<button data-act="mvdn" data-sid="'+sid+'" data-i="'+i+'" aria-label="'+u("dnA")+'"'+(pos===tot-1?" disabled":"")+">▼</button></span>";
   }
-  return '<div class="card"><div class="exhead"><h3>'+esc(T(it.n))+'</h3><span style="display:flex;align-items:center;gap:8px"><span class="dose">'+(it.sets?it.sets+"×":"")+esc(T(it.reps))+"</span>"+mv+"</span></div>"+
+  return '<div class="card"><div class="exhead"><h3>'+esc(T(it.n))+'</h3><span style="display:flex;align-items:center;gap:8px"><span class="dose">'+(it.sets?NS+"×":"")+esc(T(it.reps))+"</span>"+mv+"</span></div>"+
     (chips?'<div class="chips">'+chips+"</div>":"")+
-    (it.sets?'<div class="setrow">'+pills+'<span class="w-wrap"><input class="w-in" style="width:62px" data-key="r:'+TODAY+":"+sid+":"+i+'" inputmode="numeric" placeholder="'+u("repsPh")+'" value="'+esc(String(S("r:"+TODAY+":"+sid+":"+i,""))||estReps(T(it.reps)))+'" aria-label="Reps">×<input class="w-in" data-key="w:'+sid+":"+i+'" inputmode="decimal" placeholder="—" value="'+esc(String(w))+'" aria-label="Weight">'+u("kg")+"</span></div>":"")+
+    (it.sets?'<div class="setrow">'+pills+(it.sets?'<span class="nsw"><button class="nsb" data-act="setminus" data-sid="'+sid+'" data-i="'+i+'"'+(NS<=1?" disabled":"")+' aria-label="-1 set">−</button><button class="nsb" data-act="setplus" data-sid="'+sid+'" data-i="'+i+'"'+(NS>=10?" disabled":"")+' aria-label="+1 set">+</button></span>':"")+'<span class="w-wrap"><input class="w-in" style="width:62px" data-key="r:'+TODAY+":"+sid+":"+i+'" inputmode="numeric" placeholder="'+u("repsPh")+'" value="'+esc(String(S("r:"+TODAY+":"+sid+":"+i,""))||estReps(T(it.reps)))+'" aria-label="Reps">×<input class="w-in" data-key="w:'+sid+":"+i+'" inputmode="decimal" placeholder="—" value="'+esc(String(w))+'" aria-label="Weight">'+u("kg")+"</span></div>":"")+
     foot+'<div class="how">'+esc(T(it.how)||"")+"</div></div>";
 }
 
@@ -2052,6 +2058,14 @@ document.addEventListener("click",function(e){
     arr[j]=!arr[j];st[i]=arr;W(setsKey(sid),st);
     b.classList.toggle("on",arr[j]);
     if(arr[j]){haptic(1);askNotif();restStart(60,sid,i);}
+    return;
+  }
+  if(act==="setminus"||act==="setplus"){
+    var sidN=b.dataset.sid,iN=+b.dataset.i;
+    var sN=getSession(sidN);if(!sN||!sN.items||!sN.items[iN])return;
+    var cur=nSets(sidN,iN,sN.items[iN]);
+    var nx=Math.max(1,Math.min(10,cur+(act==="setplus"?1:-1)));
+    if(nx!==cur){W("nsets:"+sidN+":"+iN,nx);render(true)}
     return;
   }
   if(act==="mvup"||act==="mvdn"){
