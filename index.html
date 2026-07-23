@@ -223,7 +223,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v84";
+var APP_VERSION="v85";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -693,9 +693,9 @@ lowerA:{title:"Lower A + Core",sub:B("Sentadilla SSB + bisagra de cadera","SSB s
   {n:B("Pallof press en polea","Cable Pallof press"),sets:3,reps:B("10-12 /lado","10-12 /side"),chips:["Core",B("Altura pecho","Chest height")],yt:"pallof press cable",
    how:B("Polea a la altura del pecho, perpendicular a ella. Empuja las manos al frente y resiste el giro del tronco. Anti-rotación con los brazos por debajo del hombro: totalmente seguro.",
         "Cable at chest height, stand perpendicular. Press your hands straight out and resist the twist. Anti-rotation with arms below shoulder height: completely safe.")},
-  {n:B("Plancha frontal","Front plank"),sets:3,reps:"30-45 s",chips:["Core"],yt:"plank technique",
-   how:B("Sobre antebrazos, cuerpo en línea. Si el apoyo molesta al hombro, eleva las manos en un banco.",
-        "On forearms, body in one line. If the support bothers the shoulder, elevate your hands on a bench.")}
+  {n:B("Dead bug","Dead bug"),sets:3,reps:B("8-10 /lado","8-10 /side"),chips:["Core"],yt:"dead bug exercise technique",
+   how:B("Tumbado boca arriba, extiende el brazo y la pierna contrarios a la vez, lumbar pegada al suelo. El brazo sube vertical sin ningún apoyo de peso: sustituye a la plancha, que en tu caso ha irritado el hombro al cargarlo sobre el antebrazo.",
+        "Lying on your back, extend the opposite arm and leg together, lower back pinned to the floor. The arm rises straight up with zero weight-bearing: it replaces the plank, which has irritated your shoulder by loading it through the forearm.")}
 ]},
 upperB:{title:"Upper B",sub:B("Floor press + remo con mancuerna + carries","Floor press + dumbbell rows + carries"),type:"gym",items:[
   WARMUP,
@@ -754,7 +754,7 @@ hotelB:{title:B("Hotel · Full-body B","Hotel · Full-body B"),sub:B("Con gimnas
   {n:B("Zancadas con mancuernas","Dumbbell lunges"),sets:3,reps:B("10 /pierna","10 /leg"),chips:[],yt:"dumbbell lunges technique",how:B("Alternas o caminando, mancuernas a los lados.","Alternating or walking, dumbbells at your sides.")},
   {n:B("Press inclinado (o floor press)","Incline press (or floor press)"),sets:3,reps:"10",chips:[B("Agarre neutro","Neutral grip")],yt:"incline dumbbell press neutral grip",how:B("Si hay banco inclinado, a 30°. Si no, al suelo.","If there's an incline bench, 30°. If not, hit the floor.")},
   {n:B("Jalón o remo con goma","Band pulldown or row"),sets:3,reps:"12",chips:[B("Tracción","Pulling")],yt:"kneeling resistance band lat pulldown",how:B("Con el anclaje de puerta si no hay poleas.","Use the door anchor if there are no cables.")},
-  {n:B("Core: plancha + pallof con goma","Core: plank + band Pallof"),sets:3,reps:"30-45 s",chips:[],yt:"pallof press band",how:B("Plancha frontal + pallof con la goma anclada.","Front plank + Pallof press with the anchored band.")},
+  {n:B("Core: dead bug + pallof con goma","Core: dead bug + band Pallof"),sets:3,reps:B("8-10 /lado + 30-45 s","8-10 /side + 30-45 s"),chips:[],yt:"pallof press band",how:B("Dead bug (sin apoyo de antebrazo, más amable con tu hombro que la plancha) + pallof con la goma anclada.","Dead bug (no forearm loading, gentler on your shoulder than the plank) + band Pallof press with the anchored band.")},
   {n:B("Manguito con gomas","Cuff work with bands"),sets:0,reps:"12 min",chips:[B("No negociable","Non-negotiable")],yt:"",link:"manguito",how:B("Pestaña Manguito.","Cuff tab.")}
 ]},
 gomasA:{title:B("Gomas · Full-body A","Bands · Full-body A"),sub:B("Sin gimnasio — habitación + anclaje de puerta","No gym — hotel room + door anchor"),type:"gym",items:[
@@ -811,9 +811,9 @@ gomasB:{title:B("Gomas · Full-body B","Bands · Full-body B"),sub:B("Sin gimnas
   {n:B("Curl con goma","Band curl"),sets:3,reps:"12-15",chips:[],yt:"resistance band bicep curl",
    how:B("Pisando la goma, agarre neutro o supino.",
         "Standing on the band, neutral or supinated grip.")},
-  {n:B("Plancha frontal + lateral","Front + side plank"),sets:3,reps:"30-45 s",chips:["Core"],yt:"plank side plank technique",
-   how:B("Frontal 3×30-45 s + lateral 2×20-30 s por lado, sobre antebrazo.",
-        "Front 3×30-45 s + side 2×20-30 s per side, on the forearm.")}
+  {n:B("Dead bug","Dead bug"),sets:3,reps:B("8-10 /lado","8-10 /side"),chips:["Core"],yt:"dead bug exercise technique",
+   how:B("Tumbado boca arriba, extiende el brazo y la pierna contrarios a la vez, lumbar pegada al suelo. Sin apoyo de antebrazo: no repite el gesto que te irritó el hombro con la plancha.",
+        "Lying on your back, extend the opposite arm and leg together, lower back pinned to the floor. No forearm loading: it doesn't repeat the move that irritated your shoulder with the plank.")}
 ]},
 manguito:{title:B("Manguito y escápula","Rotator cuff & scapula"),sub:B("3-5 días/semana · ~15 min","3-5 days/week · ~15 min"),type:"gym",items:[
   {n:B("Rotación externa, codo pegado","External rotation, elbow at side"),sets:3,reps:"15",chips:[B("El más rentable","Best value exercise")],yt:"shoulder external rotation band elbow at side",
