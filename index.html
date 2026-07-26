@@ -230,7 +230,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v90";
+var APP_VERSION="v91";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1397,6 +1397,16 @@ function labsView(L){
     h+='<p class="note" style="margin-top:8px">📋 <b>'+T(B("Pide:","Ask for:"))+"</b> "+
        L.ask.map(function(a){return esc(T(a))}).join(" · ")+"</p>";
   h+="</div>";
+  /* Antes de la próxima extracción: confusores que el laboratorio no conoce
+     (enfermedad reciente, suplementos, medicación). ✅ = ya resuelto. */
+  if(L.pre&&L.pre.length&&L.next){
+    h+='<div class="card"><h3>🧾 '+T(B("Antes de la extracción","Before the draw"))+"</h3>"+
+       L.pre.map(function(a,i){
+         return '<button class="lrow" data-act="xtoggle" data-x="lpre'+i+'"><span>'+(a.i||"•")+"</span>"+
+           '<span class="lt"'+(a.ok?' style="color:var(--mut)"':"")+">"+esc(T(a.t))+'</span><span class="lchev">›</span></button>'+
+           '<div class="how" id="lpre'+i+'">'+esc(T(a.d))+"</div>";
+       }).join("")+"</div>";
+  }
   /* Alertas: titular corto siempre visible, el contexto (medicación, tendencia)
      se despliega al tocar — así la tarjeta no es un muro de texto. */
   if(L.alerts&&L.alerts.length){
@@ -1436,6 +1446,25 @@ function labsView(L){
     }).join("");
     h+='<div class="card"><h3>'+(cat.i?cat.i+" ":"")+esc(T(cat.t))+'</h3><table class="mini labs">'+trs+"</table></div>";
   });
+  /* Cómo vivías los 90 días antes de cada extracción. Es DESCRIPTIVO: con una o dos
+     analíticas solapadas no hay base para correlacionar nada, y la nota lo dice. */
+  if(L.ctx&&L.ctx.length&&L.win){
+    var trs2=L.ctx.slice().reverse().map(function(c){
+      var cel=L.win.filter(function(w){return c.m[w.f]!=null}).map(function(w){
+        return '<span style="white-space:nowrap">'+esc(T(w.t))+" <b>"+
+          (LANG==="es"?String(c.m[w.f]).replace(".",","):c.m[w.f])+"</b>"+
+          (w.u?'<span style="font-size:10px;color:var(--mut)">'+w.u+"</span>":"")+"</span>";
+      }).join(" · ");
+      return "<tr><td>"+lfd(c.d)+"</td><td style='font-size:13px'>"+cel+
+        '<div style="font-size:10px;color:var(--mut);margin-top:3px">'+c.n+" "+T(B("días con datos","days of data"))+
+        (c.trav?" · "+c.trav+" "+T(B("de viaje","travelling")):"")+"</div></td></tr>";
+    }).join("");
+    h+='<div class="card"><h3>📅 '+T(B("Los 90 días antes de cada analítica","The 90 days before each panel"))+
+       '</h3><table class="mini labs">'+trs2+"</table>"+
+       '<p class="note" style="font-size:11px;margin-top:8px">'+
+       T(B("Descriptivo, no predictivo: solo hay datos diarios desde abril de 2026, así que de momento esto sirve para poner cada analítica en su contexto, no para sacar correlaciones.",
+           "Descriptive, not predictive: daily data only goes back to April 2026, so for now this puts each panel in context rather than yielding correlations."))+"</p></div>";
+  }
   h+='<div class="card"><p class="note" style="font-size:12px">'+
      T(B("Toca cualquier fila con › para ver la serie completa. Rangos orientativos: la lectura clínica, con tu médico.",
          "Tap any row with › for the full series. Ranges are indicative: clinical reading belongs with your doctor."))+"</p></div>";
