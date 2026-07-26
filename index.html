@@ -223,7 +223,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v87";
+var APP_VERSION="v88";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -561,7 +561,7 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   statsExercises:"Cargas por ejercicio · último peso vs máximo",
   noLogs:"Aún no hay sesiones guardadas. Al terminar una sesión de pesas, pulsa «Guardar sesión» al final.",
   totalLbl:"sesiones guardadas",kgLbl:"kg",
-  entreno:"Entreno",balanceT:"Balance",
+  entreno:"Entreno",balanceT:"Balance",labsT:"Analíticas",
   lastWeight:"Último peso",bodyFat:"Grasa corporal",
   chart90:"Peso y grasa",macros14:"Macros",
   weeklyT:"Resumen semanal",
@@ -615,7 +615,7 @@ en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   statsExercises:"Exercise loads · latest vs max",
   noLogs:"No workouts saved yet. When you finish a lifting session, tap “Save workout” at the end.",
   totalLbl:"workouts saved",kgLbl:"kg",
-  entreno:"Training",balanceT:"Balance",
+  entreno:"Training",balanceT:"Balance",labsT:"Labs",
   lastWeight:"Latest weight",bodyFat:"Body fat",
   chart90:"Weight & body fat",macros14:"Macros",
   weeklyT:"Weekly summary",
@@ -1174,9 +1174,12 @@ function render(keepScroll){
     else if(!sbUser){h+='<div class="card"><p class="note">'+u("needLoginStats")+'</p><button class="abtn" data-act="acct" style="margin-top:12px">'+u("signin")+"</button></div>";}
     else{
       loadLastUp();
-      h+='<div class="seg"><button data-act="pview" data-pv="train"'+(state.pview!=="balance"?' class="sel"':"")+'>'+u("entreno")+"</button>"+
-         '<button data-act="pview" data-pv="balance"'+(state.pview==="balance"?' class="sel"':"")+'>'+u("balanceT")+"</button></div>";
-      if(state.pview!=="balance"){
+      var LB=S("labs",null);
+      h+='<div class="seg"><button data-act="pview" data-pv="train"'+(state.pview!=="balance"&&state.pview!=="labs"?' class="sel"':"")+'>'+u("entreno")+"</button>"+
+         '<button data-act="pview" data-pv="balance"'+(state.pview==="balance"?' class="sel"':"")+'>'+u("balanceT")+"</button>"+
+         (LB?'<button data-act="pview" data-pv="labs"'+(state.pview==="labs"?' class="sel"':"")+'>'+u("labsT")+"</button>":"")+"</div>";
+      if(state.pview==="labs"&&LB){h+=labsView(LB);}
+      else if(state.pview!=="balance"){
         if(LOGS.data===null){loadLogs();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
         else if(!LOGS.data.length){h+='<div class="card"><p class="note">'+u("noLogs")+"</p></div>";}
         else h+=statsView();
@@ -1364,6 +1367,57 @@ progreso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-widt
 viaje:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="2.5"/><path d="M9 8V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V8M9.5 12v4M14.5 12v4"/></svg>',
 manguito:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-2.9 7.4-7 9-4.1-1.6-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
 reglas:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 5.5l1 1L6.8 4.6M4 11.5l1 1 1.8-1.9M4 17.5l1 1 1.8-1.9"/></svg>'};
+/* ---------- analíticas (kv "labs", subida desde el backend con labs_push.py) ----------
+   Sub-vista de Progreso, solo visible para cuentas con la clave. Los rangos son
+   orientativos del laboratorio: el color naranja marca "fuera de rango", la
+   interpretación (medicación, tendencia) viaja en las alertas del propio dato. */
+function labsView(L){
+  function lfd(iso){return iso?iso.slice(8,10)+"/"+iso.slice(5,7)+"/"+iso.slice(2,4):""}
+  function fN(x){var s=String(x);return LANG==="es"?s.replace(".",","):s}
+  function fRef(ref){
+    if(!ref)return "—";
+    var lo=ref[0],hi=ref[1];
+    if(lo==null)return "<"+fN(hi);
+    if(hi==null)return ">"+fN(lo);
+    return fN(lo)+"–"+fN(hi);
+  }
+  var h='<div class="card"><h3>'+u("labsT")+'</h3><p class="note">'+
+    T(B("Última analítica: ","Latest panel: "))+"<b>"+lfd(L.dates[L.dates.length-1])+"</b>"+
+    (L.next?" · "+T(B("próxima ≈ ","next ≈ "))+lfd(L.next):"")+"</p>";
+  if(L.ask&&L.ask.length)
+    h+='<p class="note" style="margin-top:6px"><b>'+T(B("Pide en la próxima:","Ask for next time:"))+"</b> "+
+       L.ask.map(function(a){return esc(T(a))}).join(" · ")+"</p>";
+  h+="</div>";
+  if(L.alerts&&L.alerts.length){
+    h+='<div class="card"><h3 style="color:var(--warn)">'+T(B("A vigilar","Watch list"))+"</h3>"+
+       '<ul style="margin:8px 0 0 18px;padding:0">'+
+       L.alerts.map(function(a){return '<li class="note" style="margin-bottom:8px">'+esc(T(a))+"</li>"}).join("")+"</ul></div>";
+  }
+  (L.cats||[]).forEach(function(cat){
+    var trs=(cat.params||[]).map(function(p){
+      var dsv=Object.keys(p.v).sort(),lastD=dsv[dsv.length-1],v=p.v[lastD];
+      var flag="";
+      if(p.ref){
+        if(p.ref[0]!=null&&v<p.ref[0])flag="↓";
+        else if(p.ref[1]!=null&&v>p.ref[1])flag="↑";
+      }
+      var vh=(flag?'<span style="color:var(--warn);font-weight:600">':"<b>")+fN(v)+(flag?" "+flag+"</span>":"</b>")+
+             (p.u?' <span style="font-size:10px;color:var(--mut)">'+p.u+"</span>":"")+
+             ' <span style="font-size:10px;color:var(--mut)">'+lfd(lastD)+"</span>";
+      var prev=dsv.slice(0,-1).slice(-3).reverse().map(function(d){
+        return fN(p.v[d])+' <span style="font-size:10px;color:var(--mut)">'+lfd(d).slice(0,5)+"</span>";
+      }).join(" · ")||"—";
+      return "<tr><td style='white-space:normal'>"+esc(p.n)+"</td><td>"+vh+"</td><td>"+fRef(p.ref)+"</td><td>"+prev+"</td></tr>";
+    }).join("");
+    h+='<div class="card"><h3>'+esc(T(cat.t))+'</h3><div style="overflow-x:auto"><table class="mini" style="min-width:430px"><tr><td>'+
+       T(B("Parámetro","Parameter"))+"</td><td>"+T(B("Último","Latest"))+"</td><td>Ref</td><td>"+T(B("Anteriores","Previous"))+"</td></tr>"+trs+"</table></div></div>";
+  });
+  h+='<div class="card"><p class="note">'+
+     T(B("Rangos orientativos del laboratorio. La interpretación clínica es de tu médico.",
+         "Reference ranges are indicative. Clinical interpretation belongs to your doctor."))+"</p></div>";
+  return h;
+}
+
 function visibleTabs(){
   var rt=getRT(),hide=(rt&&rt.hideTabs)||[];
   return ["hoy","semana","progreso","viaje","manguito","reglas"].filter(function(t){return hide.indexOf(t)<0});
