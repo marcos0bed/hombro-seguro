@@ -223,7 +223,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v85";
+var APP_VERSION="v86";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -907,9 +907,9 @@ function isDone(sid){
   var need=s.items.filter(function(it){return it.sets>0});
   if(!need.length)return false;
   return need.every(function(it){
-    var idx=s.items.indexOf(it);var arr=st[idx]||[];
-    var c=0;for(var j=0;j<it.sets;j++)if(arr[j])c++;
-    return c>=it.sets;
+    var idx=s.items.indexOf(it);var arr=st[idx]||[];var ns=nSets(sid,idx,it);
+    var c=0;for(var j=0;j<ns;j++)if(arr[j])c++;
+    return c>=ns;
   });
 }
 
@@ -1920,16 +1920,16 @@ function wakeOff(){try{if(wakeL){wakeL.release();wakeL=null}}catch(e){}}
 function nextSetMsg(sid,lastI){
   var s=getSession(sid);if(!s||!s.items)return "";
   var st=S(setsKey(sid),{});
-  var it=s.items[lastI],arr=st[lastI]||[];
-  if(it)for(var j=0;j<it.sets;j++)
-    if(!arr[j])return T(it.n)+" · "+u("serieLbl")+" "+(j+1)+"/"+it.sets;
+  var it=s.items[lastI],arr=st[lastI]||[],ns=it?nSets(sid,lastI,it):0;
+  if(it)for(var j=0;j<ns;j++)
+    if(!arr[j])return T(it.n)+" · "+u("serieLbl")+" "+(j+1)+"/"+ns;
   var ord=orderedIdx(sid,s.items),pos=ord.indexOf(lastI);
   for(var k=pos+1;k<ord.length;k++){
-    var oi=ord[k],it2=s.items[oi];
-    if(!it2.sets)continue;
+    var oi=ord[k],it2=s.items[oi],ns2=nSets(sid,oi,it2);
+    if(!ns2)continue;
     var a2=st[oi]||[];
-    for(var j2=0;j2<it2.sets;j2++)
-      if(!a2[j2])return u("nextLbl")+" "+T(it2.n)+" · "+u("serieLbl")+" "+(j2+1)+"/"+it2.sets;
+    for(var j2=0;j2<ns2;j2++)
+      if(!a2[j2])return u("nextLbl")+" "+T(it2.n)+" · "+u("serieLbl")+" "+(j2+1)+"/"+ns2;
   }
   return u("sessDone");
 }
@@ -2068,7 +2068,14 @@ document.addEventListener("click",function(e){
     var sN=getSession(sidN);if(!sN||!sN.items||!sN.items[iN])return;
     var cur=nSets(sidN,iN,sN.items[iN]);
     var nx=Math.max(1,Math.min(10,cur+(act==="setplus"?1:-1)));
-    if(nx!==cur){W("nsets:"+sidN+":"+iN,nx);render(true)}
+    if(nx!==cur){
+      W("nsets:"+sidN+":"+iN,nx);render(true);
+      if(!rest.done&&rest.sid===sidN&&rest.i===iN){
+        var lab=document.getElementById("tlab"),nxm=nextSetMsg(sidN,iN);
+        if(lab)lab.textContent=nxm?(nxm.length>34?nxm.slice(0,33)+"…":nxm):u("rest");
+        schedulePush(Math.max(1,Math.round((rest.endAt-Date.now())/1000)),nxm||u("rest"));
+      }
+    }
     return;
   }
   if(act==="mvup"||act==="mvdn"){
