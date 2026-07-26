@@ -230,7 +230,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v92";
+var APP_VERSION="v93";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -661,9 +661,9 @@ upperA:{title:"Upper A",sub:B("Empuje inclinado + tracción en polea","Incline p
   {n:B("Press inclinado mancuernas 30°","Incline dumbbell press 30°"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("Codos pegados","Elbows tucked")],yt:"incline dumbbell press neutral grip",
    how:B("Banco a 30°, palmas enfrentadas (mancuernas paralelas a tu cuerpo). Baja controlado con los codos a menos de 45° del tronco, hasta que lleguen a la altura del torso — sin buscar estiramiento profundo. Arriba, no juntes las mancuernas sobre la cara. Para colocarte: mancuernas en los muslos y súbelas con impulso de rodillas, nunca con los brazos estirados. Si HOY hay molestia ≥1/10 o chasquidos al calentar: cambia a floor press esta sesión y anótalo en la nota del workout — el suelo corta el rango justo donde empieza la zona de riesgo.",
         "Bench at 30°, palms facing each other (dumbbells parallel to your body). Lower under control with elbows under 45° from your torso, until they reach torso level — don't chase a deep stretch. At the top, don't bring the dumbbells together over your face. To get set: dumbbells on your thighs, kick them up with your knees — never swing them back with straight arms. If TODAY brings any ≥1/10 discomfort or clicking during warm-up: switch to floor press for this session and log it in the workout note — the floor cuts the range right where the risk zone starts.")},
-  {n:B("Press de pecho en máquina, agarre convergente","Chest press machine, converging grip"),sets:3,reps:"10-12",chips:[B("Agarre neutro","Neutral grip"),B("Rango controlado","Controlled range")],yt:"chest press machine neutral grip technique",
-   how:B("Ajusta el asiento para que los agarres queden por DEBAJO de la línea del hombro (agarres altos = espacio subacromial cerrado). Agarres girados hacia dentro para que las manos terminen paralelas. Empuja hasta casi la extensión sin bloquear el codo, y en la vuelta no dejes que los brazos se vayan muy atrás — para el recorrido justo donde notes tensión delante del hombro. Regla de autorregulación: este es el SEGUNDO empuje del día y el prescindible — si el inclinado dejó cualquier aviso (≥1/10, pesadez, chasquido), baja peso o sáltalo directamente. Con la calcificación residual en la zona de conflicto, acumular empuje con el hombro ya avisado es el error a evitar.",
-        "Set the seat so the handles sit BELOW shoulder line (high handles = closed subacromial space). Handles angled inward so your hands finish parallel. Press to near lock-out without locking the elbow, and on the way back don't let the arms travel far behind you — stop right where you feel tension at the front of the shoulder. Auto-regulation rule: this is the SECOND press of the day and the expendable one — if the incline press left any warning (≥1/10, heaviness, clicking), drop weight or skip it outright. With the residual calcification in the conflict zone, stacking pressing volume on an already-warned shoulder is the one mistake to avoid.")},
+  {n:B("Floor press pesado con mancuernas","Heavy dumbbell floor press"),sets:3,reps:"8-10",chips:[B("Agarre neutro","Neutral grip"),B("Camino a la banca","Road back to bench")],yt:"dumbbell floor press neutral grip",
+   how:B("Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas, codos pegados. Mismo patrón que la banca, pero el suelo corta el recorrido justo donde empieza la zona de riesgo — por eso este es el press que SÍ puedes cargar progresivamente. AQUÍ es donde recuperas la masa y dureza del pecho mientras la banca sigue vetada: aplica la regla de progresión (2 sesiones limpias → +1-2 reps → +2,5-5 % y vuelta al mínimo) sin miedo, el rango protegido lo permite. Pausa de 1 s con los tríceps en el suelo. Entra y sal de la posición con el truco de las rodillas. Regla de autorregulación: es el SEGUNDO empuje del día — si el inclinado dejó cualquier aviso (≥1/10, pesadez, chasquido), baja peso o sáltalo. Cuando el equipo médico autorice, la vuelta será por este orden: floor press → press plano con mancuernas → banca con barra.",
+        "Lying on the floor, knees bent, palms facing, elbows tucked. Same pattern as the bench press, but the floor cuts the range right where the risk zone starts — which is why THIS is the press you can load progressively. This is where you rebuild chest mass and density while the bench stays off-limits: apply the progression rule (2 clean sessions → +1-2 reps → +2.5-5% and back to minimum) without fear, the protected range allows it. 1 s pause with triceps on the floor. Get in and out with the knee-kick trick. Auto-regulation rule: it's the SECOND press of the day — if the incline left any warning (≥1/10, heaviness, clicking), drop weight or skip. When your medical team clears you, the way back runs in this order: floor press → flat dumbbell press → barbell bench.")},
   {n:B("Cruces en polea baja","Low-to-high cable flys"),sets:3,reps:"12-15",chips:[B("Rango controlado","Controlled range")],yt:"low to high cable chest fly",
    how:B("Poleas a la altura de la rodilla o menos, un pie adelantado. Codos ligeramente flexionados y fijos: lleva las manos adelante-arriba-adentro hasta que se ENCUENTREN a la altura del esternón — sin cruzarlas ni pasar de la línea media (cruzar el brazo sobre el pecho comprime la articulación acromioclavicular, que ya muestra desgaste en tus ecos), y nunca más arriba. Vuelve controlado sin dejar que las manos pasen mucho por detrás del cuerpo. Si notas tirón delante del hombro, acorta la vuelta.",
         "Pulleys at knee height or lower, one foot forward. Elbows slightly bent and locked in: bring your hands forward-up-inward until they MEET at sternum height — no crossing past the midline (crossing the arm over the chest compresses the acromioclavicular joint, which already shows wear on your scans), and never higher. Return under control without letting the hands drift far behind your body. If you feel a pull at the front of the shoulder, shorten the return.")},
@@ -1033,12 +1033,15 @@ es:{grips:'<div class="card lcard"><h3>Glosario de agarres</h3><ul>'+
   "<li>Press militar y todo press overhead.</li><li>Banca plana con barra.</li><li>Aperturas/flys con mancuernas.</li>"+
   "<li>Fondos / dips.</li><li>Elevaciones laterales con carga (es el gesto exacto del conflicto subacromial).</li>"+
   "<li>Aducción horizontal forzada con carga (cruzar el brazo sobre el pecho): comprime la acromioclavicular, que ya muestra cambios degenerativos en las ecos de 2026. En cruces de polea o goma, las manos se encuentran en la línea media — no la cruzan.</li>"+
+  "<li>Contractora / pec-deck (los brazos de mariposa de tu multiestación): fija el brazo a ~90° de abducción y fuerza la aducción horizontal — junta los dos gestos anteriores en uno. Esos brazos, sin usar esta fase.</li>"+
   "<li>Upright row / remo al mentón (el peor gesto posible para este cuadro).</li><li>Extensiones de tríceps overhead.</li>"+
   "<li>Dead hang, incluso con pies apoyados (la barra queda como anclaje de gomas).</li>"+
   "<li>Sentadilla trasera convencional (rack position = rotación externa + abducción); low-bar en particular. Con la SSB no hay motivo para asumirlo.</li>"+
   "<li>Ab-wheel y core colgado de barra.</li><li>Flexiones profundas (las inclinadas con codos pegados sí valen).</li></ul></div>",
  exit:'<div class="card lcard"><h3>Salida de fase — llevar a la revisión</h3><ul>'+
-  "<li>¿Qué <b>techo de carga</b> me autorizas para press?</li>"+
+  "<li>¿Qué <b>techo de carga</b> me autorizas para press? Y en concreto: ¿qué criterios (dolor, rango, fuerza, imagen) me pones para volver a la <b>banca plana</b>, y en qué plazo realista?</li>"+
+  "<li><b>Ondas de choque</b>: rehabilitación y traumatología me habéis dicho cosas opuestas (parar por riesgo para el tendón vs. seguir porque funcionan). ¿En qué dato se apoya cada postura? ¿Cambia algo que la calcificación haya pasado de ~2 cm a 6-7 mm?</li>"+
+  "<li>La calcificación residual: ¿es candidata a <b>lavado percutáneo ecoguiado (barbotaje)</b>? ¿Con qué criterio sí o no?</li>"+
   "<li>¿Aval para dead hang adaptado, elevaciones en rango cómodo y sentadilla trasera?</li>"+
   "<li>Orden de reintroducción del trabajo pesado: tracción (remo, jalón) → press inclinado → banca plana lo último.</li>"+
   "<li>El bloque de manguito se queda para siempre (prehab): es lo que sostiene todo lo demás.</li></ul></div>",
@@ -1057,12 +1060,15 @@ en:{grips:'<div class="card lcard"><h3>Grip glossary</h3><ul>'+
   "<li>Military press and all overhead pressing.</li><li>Flat barbell bench press.</li><li>Dumbbell flys.</li>"+
   "<li>Dips.</li><li>Loaded lateral raises (the exact impingement movement).</li>"+
   "<li>Loaded forced horizontal adduction (crossing the arm over the chest): it compresses the AC joint, which already shows degenerative changes on the 2026 scans. In cable or band flys, hands meet at the midline — they don't cross it.</li>"+
+  "<li>Pec-deck (the butterfly arms on your multigym): it pins the arm at ~90° abduction and forces horizontal adduction — both risky gestures combined into one. Those arms stay unused this phase.</li>"+
   "<li>Upright rows (the single worst movement for this condition).</li><li>Overhead triceps extensions.</li>"+
   "<li>Dead hangs, even with feet supported (the bar stays as a band anchor).</li>"+
   "<li>Conventional back squat (rack position = external rotation + abduction); low-bar especially. With an SSB there's no reason to take that risk.</li>"+
   "<li>Ab-wheel and hanging core work.</li><li>Deep push-ups (incline push-ups with tucked elbows are fine).</li></ul></div>",
  exit:'<div class="card lcard"><h3>Phase exit — bring to your review</h3><ul>'+
-  "<li>What <b>pressing load ceiling</b> do you authorize?</li>"+
+  "<li>What <b>pressing load ceiling</b> do you authorize? Specifically: what criteria (pain, range, strength, imaging) do you set for returning to the <b>flat bench press</b>, and on what realistic timeline?</li>"+
+  "<li><b>Shock waves</b>: rehab and traumatology have told me opposite things (stop for tendon risk vs. continue because they work). What data supports each position? Does the calcification shrinking from ~2 cm to 6-7 mm change anything?</li>"+
+  "<li>The residual calcification: is it a candidate for <b>ultrasound-guided percutaneous lavage (barbotage)</b>? By what criteria yes or no?</li>"+
   "<li>Green light for adapted dead hangs, lateral raises in a comfortable range, and back squats?</li>"+
   "<li>Reintroduction order for heavy work: pulling (rows, pulldowns) → incline press → flat bench last.</li>"+
   "<li>The cuff block stays forever (prehab): it's what holds everything else up.</li></ul></div>",
