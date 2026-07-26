@@ -230,7 +230,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v89";
+var APP_VERSION="v90";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1389,7 +1389,7 @@ function labsView(L){
     if(hi==null)return "&gt;"+fN(lo);
     return fN(lo)+"–"+fN(hi);
   }
-  var last=L.dates[L.dates.length-1];
+  var last=L.dates[L.dates.length-1],LBN=0;
   var h='<div class="card"><h3>🧪 '+u("labsT")+'</h3>'+
     '<p class="note"><b>'+lfd(last)+"</b>"+
     (L.next?' · <span style="color:var(--mut)">'+T(B("próxima","next"))+" ≈ "+lfd(L.next)+"</span>":"")+"</p>";
@@ -1419,15 +1419,26 @@ function labsView(L){
         var pv=p.v[pd],ar=v>pv?"↑":(v<pv?"↓":"→");
         sub=ar+" "+fN(pv)+" · "+lfm(pd);
       }else sub=lfd(lastD);
-      return "<tr><td>"+esc(p.n)+"</td><td>"+vh+
-             '<div style="font-size:10px;color:var(--mut);font-weight:400">'+sub+"</div></td>"+
-             '<td style="font-size:12px;color:var(--mut)">'+fRef(p.ref)+"</td></tr>";
+      /* Con 3+ analíticas la fila se despliega con la serie completa: la tabla
+         se mantiene estrecha sin perder el histórico. */
+      var more=dsv.length>2,id="lp"+(LBN++),det="";
+      if(more){
+        det='<tr><td colspan="3" style="padding:0;border-top:none"><div class="how" id="'+id+'">'+
+            dsv.slice().reverse().map(function(d){
+              var dv=p.v[d],o=p.ref&&((p.ref[0]!=null&&dv<p.ref[0])||(p.ref[1]!=null&&dv>p.ref[1]));
+              return '<span style="white-space:nowrap">'+lfd(d)+" <b"+(o?' style="color:var(--warn)"':"")+">"+fN(dv)+"</b></span>";
+            }).join(" · ")+(p.u?' <span style="color:var(--mut)">'+p.u+"</span>":"")+"</div></td></tr>";
+      }
+      return "<tr"+(more?' data-act="xtoggle" data-x="'+id+'"':"")+"><td>"+esc(p.n)+"</td><td>"+vh+
+             '<div style="font-size:10px;color:var(--mut);font-weight:400">'+sub+
+             (more?' <span style="font-size:12px">›</span>':"")+"</div></td>"+
+             '<td style="font-size:12px;color:var(--mut)">'+fRef(p.ref)+"</td></tr>"+det;
     }).join("");
     h+='<div class="card"><h3>'+(cat.i?cat.i+" ":"")+esc(T(cat.t))+'</h3><table class="mini labs">'+trs+"</table></div>";
   });
   h+='<div class="card"><p class="note" style="font-size:12px">'+
-     T(B("Rangos orientativos. La lectura clínica, con tu médico.",
-         "Indicative ranges. Clinical reading belongs with your doctor."))+"</p></div>";
+     T(B("Toca cualquier fila con › para ver la serie completa. Rangos orientativos: la lectura clínica, con tu médico.",
+         "Tap any row with › for the full series. Ranges are indicative: clinical reading belongs with your doctor."))+"</p></div>";
   return h;
 }
 
