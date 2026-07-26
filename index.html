@@ -223,7 +223,7 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 
 <script>
 "use strict";
-var APP_VERSION="v86";
+var APP_VERSION="v87";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -654,6 +654,9 @@ upperA:{title:"Upper A",sub:B("Empuje inclinado + tracción en polea","Incline p
   {n:B("Press inclinado mancuernas 30°","Incline dumbbell press 30°"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("Codos pegados","Elbows tucked")],yt:"incline dumbbell press neutral grip",
    how:B("Banco a 30°, palmas enfrentadas (mancuernas paralelas a tu cuerpo). Baja controlado con los codos a menos de 45° del tronco, hasta que lleguen a la altura del torso — sin buscar estiramiento profundo. Arriba, no juntes las mancuernas sobre la cara. Para colocarte: mancuernas en los muslos y súbelas con impulso de rodillas, nunca con los brazos estirados.",
         "Bench at 30°, palms facing each other (dumbbells parallel to your body). Lower under control with elbows under 45° from your torso, until they reach torso level — don't chase a deep stretch. At the top, don't bring the dumbbells together over your face. To get set: dumbbells on your thighs, kick them up with your knees — never swing them back with straight arms.")},
+  {n:B("Press de pecho en máquina, agarre convergente","Chest press machine, converging grip"),sets:3,reps:"10-12",chips:[B("Agarre neutro","Neutral grip"),B("Rango controlado","Controlled range")],yt:"chest press machine neutral grip technique",
+   how:B("Asiento a media altura, agarres girados hacia dentro para que las manos terminen paralelas (no en cruz). Empuja hasta casi la extensión sin bloquear el codo del todo, y en la vuelta no dejes que los brazos se vayan muy atrás — para el recorrido justo donde notes tensión en la parte delantera del hombro, sin buscar estiramiento profundo. El respaldo fijo protege más que un banco libre: es tu segundo press de la sesión, en un ángulo distinto al inclinado.",
+        "Seat at mid height, handles angled inward so your hands finish parallel, not crossed. Press to near lock-out without fully extending the elbow, and on the way back don't let the arms travel far behind you — stop the range right where you feel tension at the front of the shoulder, don't chase a deep stretch. The fixed backrest protects more than a free bench: it's your second press of the session, at a different angle from the incline.")},
   {n:B("Cruces en polea baja","Low-to-high cable flys"),sets:3,reps:"12-15",chips:[B("Rango controlado","Controlled range")],yt:"low to high cable chest fly",
    how:B("Poleas a la altura de la rodilla o menos, un pie adelantado. Codos ligeramente flexionados y fijos: lleva las manos adelante-arriba-adentro hasta cruzar a la altura del esternón, nunca más arriba. Vuelve controlado sin dejar que las manos pasen mucho por detrás del cuerpo. Si notas tirón delante del hombro, acorta la vuelta.",
         "Pulleys at knee height or lower, one foot forward. Elbows slightly bent and locked in: bring your hands forward-up-inward until they cross at sternum height, never higher. Return under control without letting the hands drift far behind your body. If you feel a pull at the front of the shoulder, shorten the return.")},
@@ -844,7 +847,7 @@ var MUSC={chest:B("Pecho","Chest"),back:B("Espalda","Back"),shoulders:B("Hombros
   biceps:B("Bíceps","Biceps"),triceps:B("Tríceps","Triceps"),legs:B("Pierna","Legs"),
   core:B("Core","Core"),cuff:B("Manguito","Cuff"),cardio:B("Cardio","Cardio")};
 var MGROUPS={
-  upperA:[null,"chest","chest","back","back","triceps","biceps","cuff"],
+  upperA:[null,"chest","chest","chest","back","back","triceps","biceps","cuff"],
   lowerA:[null,"legs","legs","legs","legs","legs","core","core"],
   upperB:[null,"chest","chest","back","back","triceps","biceps","core","cuff"],
   activo:["cuff","core","core"],
