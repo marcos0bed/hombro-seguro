@@ -301,7 +301,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v114";
+var APP_VERSION="v115";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1328,7 +1328,7 @@ function render(keepScroll){
     h+=macroCard();
     h+=weekPaceCard();
     h+=daybriefCard();
-    h+=hrDayCard();
+    h+=stressDayCard();
     h+=achCard();
     h+=habCard();
     h+=doneTodayBox();
@@ -1995,28 +1995,41 @@ function ensureGoal(){
 }
 
 /* FC a lo largo del día: curva intradía grande con eje horario (aprox.) */
-function hrDayCard(){
+/* Estrés a lo largo del día (Garmin). Sustituye a la curva de FC: la FC ya
+   aparece como FC en reposo en la rejilla, mientras que el estrés dice algo que
+   ningún otro dato de la app cuenta — cuándo se carga el sistema nervioso. Las
+   bandas de color son las de Garmin: reposo, bajo, medio y alto. */
+function stressDayCard(){
   if(!cloudOn())return "";
   if((state.dayRange||1)!==1)return "";
   var r=rowFor(selDay());
-  if(!r||!Array.isArray(r.hr_curve)||r.hr_curve.length<2)return "";
-  var vs=r.hr_curve.map(Number);
-  var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs);
-  var av=Math.round(vs.reduce(function(a,b){return a+b},0)/vs.length);
-  var W=320,H=56,P=4;
-  var pts=vs.map(function(v,i){
-    var x=P+(W-2*P)*i/(vs.length-1);
-    var y=(H-13)-(H-24)*((v-mn)/((mx-mn)||1));
-    return x.toFixed(1)+","+y.toFixed(1)}).join(" ");
+  if(!r||!Array.isArray(r.stress_curve)||r.stress_curve.length<2)return "";
+  var vs=r.stress_curve.map(Number);
+  var av=r.stress_avg!=null?r.stress_avg:Math.round(vs.reduce(function(a,b){return a+b},0)/vs.length);
+  var mx=Math.max.apply(null,vs);
+  var W=320,H=60,P=4,TOP=5,BASE=H-13;
+  function yy(v){return BASE-(BASE-TOP)*Math.min(100,v)/100}
+  /* Bandas de Garmin: 0-25 reposo · 26-50 bajo · 51-75 medio · 76-100 alto */
   var svg='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin-top:4px" role="img">';
+  [[0,25,"#46C08A"],[25,50,"#A8C97F"],[50,75,"#E8963E"],[75,100,"#E5484D"]].forEach(function(b){
+    svg+='<rect x="'+P+'" y="'+yy(b[1]).toFixed(1)+'" width="'+(W-2*P)+'" height="'+(yy(b[0])-yy(b[1])).toFixed(1)+
+         '" fill="'+b[2]+'" opacity=".07"/>';
+  });
   [0,6,12,18,24].forEach(function(hh){
     var x=(P+(W-2*P)*hh/24).toFixed(1);
-    svg+='<line x1="'+x+'" y1="4" x2="'+x+'" y2="'+(H-11)+'" stroke="#2B3442" stroke-width="0.5"/>'+
+    svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#2B3442" stroke-width="0.5"/>'+
          '<text x="'+x+'" y="'+(H-2)+'" fill="#8E99A8" font-size="7" font-family="monospace" text-anchor="middle">'+hh+"h</text>";
   });
-  svg+='<polyline fill="none" stroke="#E5484D" stroke-width="1.3" stroke-linejoin="round" opacity=".95" points="'+pts+'"/></svg>';
-  return '<div class="card" style="padding:9px 12px"><div class="exhead"><div class="tlab">❤️ '+T(B("FC del día","HR through the day"))+'</div>'+
-    '<span class="note" style="font-size:10.5px;color:var(--mut)">min '+mn+" · "+T(B("media","avg"))+" "+av+" · max "+mx+"</span></div>"+svg+"</div>";
+  var pts=vs.map(function(v,i2){
+    return (P+(W-2*P)*i2/(vs.length-1)).toFixed(1)+","+yy(v).toFixed(1)}).join(" ");
+  svg+='<polyline fill="none" stroke="#C88BD8" stroke-width="1.3" stroke-linejoin="round" points="'+pts+'"/>'+
+       '<line x1="'+P+'" y1="'+yy(av).toFixed(1)+'" x2="'+(W-P)+'" y2="'+yy(av).toFixed(1)+
+       '" stroke="#C88BD8" stroke-width="0.7" stroke-dasharray="3 3" opacity=".55"/></svg>';
+  var Q={CALM:B("En calma","Calm"),BALANCED:B("Equilibrado","Balanced"),
+         STRESSFUL:B("Con estrés","Stressful"),VERY_STRESSFUL:B("Muy estresado","Very stressful")};
+  var q=r.stress_q&&Q[r.stress_q]?T(Q[r.stress_q]):(r.stress_q||"");
+  return '<div class="card" style="padding:9px 12px"><div class="exhead"><div class="tlab">🧠 '+T(B("Estrés del día","Stress through the day"))+'</div>'+
+    '<span class="note" style="font-size:10.5px;color:var(--mut)">'+T(B("media","avg"))+" "+av+" · max "+mx+(q?" · "+esc(q):"")+"</span></div>"+svg+"</div>";
 }
 
 /* Journal: impresiones del día (kv journal:<día>, sincronizado; lo lee el parte semanal) */
