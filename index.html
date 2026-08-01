@@ -239,7 +239,6 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .bchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#c6cdd6;background:var(--surface2);border-radius:7px;padding:3px 8px;white-space:nowrap}
 .bchip i{width:9px;height:9px;border-radius:3px;flex:none}
 .bchip b{font-family:var(--mono);font-size:11.5px;color:var(--text)}
-.bsex button{font-size:14px;padding:3px 8px;line-height:1}
 
 .rxdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:2px 0 10px}
 .rxdays button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--disp);font-weight:700;font-size:13px;color:var(--mut);min-width:0}
@@ -288,7 +287,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v106";
+var APP_VERSION="v107";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1641,14 +1640,51 @@ f:{front:[
  ["legs",'M39.6 166c-3.4 3.8-4.6 12.6-3.9 23.2.7 8.7 3.3 13.6 6.1 12.6 2.9-1 3.8-8.7 3.4-18.4-.4-9.7-2.3-16.5-5.6-17.4z',1],
  ["_",'M38.8 204c-1.9 0-3.4 1.7-3.4 4.4v4.2c0 2.1 1.5 3.2 4.4 3.2h6.8c2.1 0 2.8-1.8 1.7-3.7l-3.6-8.1z',1]
 ]}};
-/* Trazos de definición: separan vientres musculares para que la figura lea
-   como un cuerpo entrenado y no como una silueta plana. No llevan color de
-   calor, van siempre encima. */
-var BODYDET={
-m:{front:'M50 60V97M44.6 69h10.8M44.2 78h11.6M44.6 87h10.8M35.8 41.6c1.6 4.6 2 10 1.4 15.6M28.4 43.6c1.4 3.8 1.8 8.6 1.2 13.4M41 118c-1 11 0 22 1.6 32M39.4 172c-.8 8.4-.4 16.8.8 23.4',
-  back:'M50 33V96M41.6 54c-1 8.6-.4 17 2 24.6M35.8 41.6c1.6 4.6 2 10 1.4 15.6M42.4 126v34M40.4 174v22'},
-f:{front:'M50 58V91M45.4 67h9.2M45 76h10M45.4 85h9.2M37.8 42c1.4 4 1.8 8.6 1.2 13.4M30.6 43c1.2 3.4 1.6 7.6 1 11.8M40.2 114c-.8 10.4 0 20.8 1.4 30M39.6 170c-.8 8-.4 16 .8 22.2',
-  back:'M50 32V91M43.4 52c-.8 7.8-.2 15.4 2 22.4M30.6 43c1.2 3.4 1.6 7.6 1 11.8M42 124v33M40.4 172v21'}};
+/* ---------- figura anatómica del mapa de calor ----------
+   Una sola figura neutra (sin género). Cada región se define como una lista de
+   puntos del lado DERECHO y se suaviza por código (Catmull-Rom → bezier); el
+   lado izquierdo es su reflejo, así la simetría es exacta por construcción y
+   retocar un músculo es mover un punto, no reescribir una curva a mano. */
+function smoothPath(pts){
+  var n=pts.length,d="M"+pts[0][0]+" "+pts[0][1];
+  for(var i=0;i<n;i++){
+    var p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
+    d+="C"+(p1[0]+(p2[0]-p0[0])/6).toFixed(1)+" "+(p1[1]+(p2[1]-p0[1])/6).toFixed(1)+
+       " "+(p2[0]-(p3[0]-p1[0])/6).toFixed(1)+" "+(p2[1]-(p3[1]-p1[1])/6).toFixed(1)+
+       " "+p2[0].toFixed(1)+" "+p2[1].toFixed(1);
+  }
+  return d+"Z";
+}
+function mirrorPts(pts){return pts.map(function(p){return [120-p[0],p[1]]})}
+/* Contorno: media silueta de la cabeza a la entrepierna; el resto es su reflejo. */
+var OUTLINE=[[60,10],[68,12],[72,21],[72,32],[68,42],[64,46],[64,56],[77,59],[86,67],[90,81],
+ [92,103],[94,129],[96,155],[98,175],[99,185],[95,192],[90,189],[88,175],[86,153],[84,127],
+ [82,101],[79,87],[76,109],[75,129],[78,147],[79,161],[75,185],[71,225],[69,251],[67,275],
+ [73,291],[63,293],[63,275],[64,249],[65,223],[65,189],[60,175]];
+var BODY={
+front:[
+ ["back",[[61,55],[69,58],[78,62],[81,67],[73,65],[65,62],[61,59]],1],
+ ["shoulders",[[79,63],[87,69],[90,81],[89,93],[84,95],[80,87],[78,73]],1],
+ ["chest",[[61,68],[73,68],[80,74],[81,84],[75,90],[64,90],[61,84]],1],
+ ["biceps",[[83,96],[89,98],[91,114],[90,130],[85,132],[82,120],[81,104]],1],
+ ["biceps",[[85,136],[91,138],[95,156],[97,174],[92,176],[88,160],[85,146]],1],
+ ["core",[[54,92],[66,92],[68,114],[67,134],[60,140],[53,134],[52,114]],0],
+ ["core",[[68,96],[75,100],[76,120],[73,134],[69,130],[68,112]],1],
+ ["legs",[[64,168],[75,172],[78,200],[75,224],[68,224],[64,200]],1],
+ ["legs",[[65,232],[71,234],[71,256],[68,272],[65,270],[64,250]],1]
+],
+back:[
+ ["back",[[60,54],[70,58],[81,66],[75,78],[66,94],[60,100],[54,94],[45,78],[39,66],[50,58]],0],
+ ["shoulders",[[79,63],[87,69],[90,81],[89,93],[84,95],[80,87],[78,73]],1],
+ ["back",[[62,76],[75,82],[81,98],[77,116],[66,120],[62,108]],1],
+ ["cuff",[[70,67],[78,71],[78,80],[70,81],[67,74]],1],
+ ["back",[[54,116],[66,116],[68,134],[60,142],[52,134]],0],
+ ["triceps",[[83,94],[90,98],[92,116],[90,132],[85,132],[82,114]],1],
+ ["triceps",[[85,136],[91,138],[95,156],[97,174],[92,176],[88,160],[85,146]],1],
+ ["legs",[[61,146],[74,150],[78,164],[73,176],[62,174]],1],
+ ["legs",[[64,180],[75,182],[77,208],[73,226],[66,224],[64,202]],1],
+ ["legs",[[64,232],[73,236],[73,258],[69,274],[64,272],[63,250]],1]
+]};
 var HEAT=[[0,[34,42,53]],[.35,[61,70,87]],[.7,[122,90,37]],[1,[240,166,60]]];
 function heatColor(t){
   if(!(t>0))return "rgb(34,42,53)";
@@ -1661,25 +1697,21 @@ function heatColor(t){
   }
   return "rgb(240,166,60)";
 }
-function bodyFig(sex,which,mus,mmax,titulo){
-  var partes=(BODY[sex]||BODY.m)[which]||[];
-  var g=partes.map(function(p){
-    var clave=p[0],d=p[1],esp=p[2];
-    var col=clave==="_"?"#2F3949":heatColor(mmax?((mus[clave]||0)/mmax):0);
-    return '<g fill="'+col+'"><path d="'+d+'"/>'+
-      (esp?'<g transform="translate(100,0) scale(-1,1)"><path d="'+d+'"/></g>':"")+"</g>";
+function bodyFig(which,mus,mmax,titulo){
+  var contorno=smoothPath(OUTLINE.concat(mirrorPts(OUTLINE.slice().reverse())));
+  var g='<path d="'+contorno+'" fill="#14181f" stroke="#9aa4b2" stroke-width="1.4" stroke-linejoin="round"/>';
+  g+=(BODY[which]||[]).map(function(p){
+    var col=heatColor(mmax?((mus[p[0]]||0)/mmax):0);
+    var d=smoothPath(p[1])+(p[2]?smoothPath(mirrorPts(p[1])):"");
+    return '<path d="'+d+'" fill="'+col+'" stroke="#0d1117" stroke-width=".9"/>';
   }).join("");
-  var det=((BODYDET[sex]||BODYDET.m)[which]||"");
-  if(det)g+='<g fill="none" stroke="rgba(10,13,18,.42)" stroke-width="1.1" stroke-linecap="round"><path d="'+det+'"/>'+
-    '<g transform="translate(100,0) scale(-1,1)"><path d="'+det+'"/></g></g>';
-  return '<figure class="bfig"><svg viewBox="0 0 100 226" role="img" aria-label="'+esc(titulo)+'">'+g+"</svg>"+
+  return '<figure class="bfig"><svg viewBox="0 0 120 300" role="img" aria-label="'+esc(titulo)+'">'+g+"</svg>"+
     "<figcaption>"+esc(titulo)+"</figcaption></figure>";
 }
 function bodyMapView(){
   if(LOGS.data===null){loadLogs();return '<div class="card"><p class="note">'+u("loading")+"</p></div>"}
   if(!LOGS.data.length)return '<div class="card"><p class="note">'+u("noLogs")+"</p></div>";
   var rng=state.musRange||30;
-  var sex=S("bodySex",((S("goal",{})||{}).sex)||"m")==="f"?"f":"m";
   var mus=muscleSets(rng);
   var enCuerpo=["chest","back","shoulders","biceps","triceps","legs","core","cuff"];
   var mmax=0;enCuerpo.forEach(function(k){if((mus[k]||0)>mmax)mmax=mus[k]});
@@ -1693,11 +1725,8 @@ function bodyMapView(){
     .map(function(k){return esc(T(MUSC[k]||{es:k,en:k}))});
   var grad="linear-gradient(90deg,"+HEAT.map(function(s){
     return "rgb("+s[1].join(",")+") "+Math.round(s[0]*100)+"%"}).join(",")+")";
-  var sexSel='<span class="rng bsex">'+[["m","♂"],["f","♀"]].map(function(o){
-    return '<button data-act="bodysex" data-s="'+o[0]+'"'+(sex===o[0]?' class="sel"':"")+' aria-label="'+
-      esc(T(o[0]==="m"?B("Figura masculina","Male figure"):B("Figura femenina","Female figure")))+'">'+o[1]+"</button>"}).join("")+"</span>";
-  return '<div class="card"><div class="exhead"><h3>'+T(B("Mapa de carga","Load map"))+'</h3><span style="display:flex;gap:6px;align-items:center">'+sexSel+rangeSel(rng,"musrange")+"</span></div>"+
-    '<div class="bmap">'+bodyFig(sex,"front",mus,mmax,T(B("Frente","Front")))+bodyFig(sex,"back",mus,mmax,T(B("Espalda","Back")))+"</div>"+
+  return '<div class="card"><div class="exhead"><h3>'+T(B("Mapa de carga","Load map"))+'</h3>'+rangeSel(rng,"musrange")+"</div>"+
+    '<div class="bmap">'+bodyFig("front",mus,mmax,T(B("Frente","Front")))+bodyFig("back",mus,mmax,T(B("Espalda","Back")))+"</div>"+
     '<div class="bleg"><span>'+T(B("menos","less"))+'</span><i style="background:'+grad+'"></i><span>'+T(B("más","more"))+" ("+mmax+")</span></div>"+
     '<div class="bchips">'+chips+"</div>"+
     (sinTocar.length?'<p class="note" style="font-size:12.5px;color:var(--mut);margin-top:10px">'+
@@ -2713,7 +2742,6 @@ document.addEventListener("click",function(e){
   if(act==="dayrange"){state.dayRange=+b.dataset.r;render(true);return}
   if(act==="balrange"){state.balRange=+b.dataset.r;render(true);return}
   if(act==="macrange"){state.macRange=+b.dataset.r;render(true);return}
-  if(act==="bodysex"){W("bodySex",b.dataset.s);render(true);return}
   if(act==="musrange"){state.musRange=+b.dataset.r;render(true);return}
   if(act==="rest-add"){
     rest.endAt+=30000;restTick();
