@@ -229,6 +229,10 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
 .foldh .chev{color:var(--mut);font-size:12px}
+.strow{display:flex;align-items:baseline;gap:7px;min-width:0;overflow:hidden}
+.strow .snum{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:0;text-transform:none;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sview{flex:none}
+.sview button{font-size:10.5px;padding:2px 7px}
 .wkrow{display:grid;grid-template-columns:auto auto 1fr;gap:4px 8px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}
 .wkrow:first-of-type{border-top:none;padding-top:0}
 .wki{font-size:14px;grid-row:span 2}
@@ -301,7 +305,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v116";
+var APP_VERSION="v117";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1997,39 +2001,71 @@ function ensureGoal(){
 /* FC a lo largo del día: curva intradía grande con eje horario (aprox.) */
 /* Estrés a lo largo del día (Garmin). Sustituye a la curva de FC: la FC ya
    aparece como FC en reposo en la rejilla, mientras que el estrés dice algo que
-   ningún otro dato de la app cuenta — cuándo se carga el sistema nervioso. Las
-   bandas de color son las de Garmin: reposo, bajo, medio y alto. */
+   ningún otro dato de la app cuenta — cuándo se carga el sistema nervioso.
+   La curva son 48 cubos de MEDIA HORA en hora local, con null en los tramos que
+   el reloj no pudo medir. Dos vistas: línea del día, o barra por media hora. */
+var SBANDAS=[[0,25,"#46C08A"],[25,50,"#A8C97F"],[50,75,"#E8963E"],[75,101,"#E5484D"]];
+function sColor(v){
+  for(var i=0;i<SBANDAS.length;i++)if(v<SBANDAS[i][1])return SBANDAS[i][2];
+  return "#E5484D";
+}
 function stressDayCard(){
   if(!cloudOn())return "";
   if((state.dayRange||1)!==1)return "";
   var r=rowFor(selDay());
-  if(!r||!Array.isArray(r.stress_curve)||r.stress_curve.length<2)return "";
-  var vs=r.stress_curve.map(Number);
-  var av=r.stress_avg!=null?r.stress_avg:Math.round(vs.reduce(function(a,b){return a+b},0)/vs.length);
-  var mx=Math.max.apply(null,vs);
-  var W=320,H=60,P=4,TOP=5,BASE=H-13;
+  if(!r||!Array.isArray(r.stress_curve))return "";
+  var vs=r.stress_curve.map(function(v){return v==null?null:+v});
+  var hay=vs.filter(function(v){return v!=null});
+  if(hay.length<2)return "";
+  var av=r.stress_avg!=null?r.stress_avg:Math.round(hay.reduce(function(a,b){return a+b},0)/hay.length);
+  var mx=Math.max.apply(null,hay);
+  var media=state.sView==="30";
+  var W=320,H=media?66:60,P=4,TOP=5,BASE=H-13,N=vs.length;
   function yy(v){return BASE-(BASE-TOP)*Math.min(100,v)/100}
-  /* Bandas de Garmin: 0-25 reposo · 26-50 bajo · 51-75 medio · 76-100 alto */
   var svg='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin-top:4px" role="img">';
-  [[0,25,"#46C08A"],[25,50,"#A8C97F"],[50,75,"#E8963E"],[75,100,"#E5484D"]].forEach(function(b){
-    svg+='<rect x="'+P+'" y="'+yy(b[1]).toFixed(1)+'" width="'+(W-2*P)+'" height="'+(yy(b[0])-yy(b[1])).toFixed(1)+
-         '" fill="'+b[2]+'" opacity=".07"/>';
+  SBANDAS.forEach(function(b){
+    svg+='<rect x="'+P+'" y="'+yy(Math.min(100,b[1])).toFixed(1)+'" width="'+(W-2*P)+
+         '" height="'+(yy(b[0])-yy(Math.min(100,b[1]))).toFixed(1)+'" fill="'+b[2]+'" opacity=".07"/>';
   });
+  if(media){
+    /* Una barra por media hora, con su color de banda. Los huecos se dejan vacíos
+       en vez de rellenarlos: no medir no es estrés bajo. */
+    var an=(W-2*P)/N;
+    vs.forEach(function(v,k){
+      if(v==null)return;
+      var x=P+an*k, h=BASE-yy(v);
+      svg+='<rect x="'+(x+0.35).toFixed(1)+'" y="'+yy(v).toFixed(1)+'" width="'+(an-0.7).toFixed(1)+
+           '" height="'+Math.max(0.8,h).toFixed(1)+'" fill="'+sColor(v)+'" opacity=".9"><title>'+
+           pad(Math.floor(k/2))+":"+(k%2?"30":"00")+" · "+v+"</title></rect>";
+    });
+  }else{
+    /* Línea, partiéndola donde falten datos para no inventar continuidad. */
+    var seg=[],cur=[];
+    vs.forEach(function(v,k){
+      if(v==null){if(cur.length>1)seg.push(cur);cur=[];return}
+      cur.push((P+(W-2*P)*k/(N-1)).toFixed(1)+","+yy(v).toFixed(1));
+    });
+    if(cur.length>1)seg.push(cur);
+    seg.forEach(function(g){
+      svg+='<polyline fill="none" stroke="#C88BD8" stroke-width="1.3" stroke-linejoin="round" points="'+g.join(" ")+'"/>';
+    });
+    svg+='<line x1="'+P+'" y1="'+yy(av).toFixed(1)+'" x2="'+(W-P)+'" y2="'+yy(av).toFixed(1)+
+         '" stroke="#C88BD8" stroke-width="0.7" stroke-dasharray="3 3" opacity=".55"/>';
+  }
   [0,6,12,18,24].forEach(function(hh){
     var x=(P+(W-2*P)*hh/24).toFixed(1);
-    svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#2B3442" stroke-width="0.5"/>'+
+    svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#2B3442" stroke-width="0.5" opacity=".8"/>'+
          '<text x="'+x+'" y="'+(H-2)+'" fill="#8E99A8" font-size="7" font-family="monospace" text-anchor="middle">'+hh+"h</text>";
   });
-  var pts=vs.map(function(v,i2){
-    return (P+(W-2*P)*i2/(vs.length-1)).toFixed(1)+","+yy(v).toFixed(1)}).join(" ");
-  svg+='<polyline fill="none" stroke="#C88BD8" stroke-width="1.3" stroke-linejoin="round" points="'+pts+'"/>'+
-       '<line x1="'+P+'" y1="'+yy(av).toFixed(1)+'" x2="'+(W-P)+'" y2="'+yy(av).toFixed(1)+
-       '" stroke="#C88BD8" stroke-width="0.7" stroke-dasharray="3 3" opacity=".55"/></svg>';
-  var Q={CALM:B("En calma","Calm"),BALANCED:B("Equilibrado","Balanced"),
-         STRESSFUL:B("Con estrés","Stressful"),VERY_STRESSFUL:B("Muy estresado","Very stressful")};
-  var q=r.stress_q&&Q[r.stress_q]?T(Q[r.stress_q]):(r.stress_q||"");
-  return '<div class="card" style="padding:9px 12px"><div class="exhead"><div class="tlab">🧠 '+T(B("Estrés del día","Stress through the day"))+'</div>'+
-    '<span class="note" style="font-size:10.5px;color:var(--mut)">'+T(B("media","avg"))+" "+av+" · max "+mx+(q?" · "+esc(q):"")+"</span></div>"+svg+"</div>";
+  svg+="</svg>";
+  var Q={CALM:B("Calma","Calm"),BALANCED:B("Equilibrado","Balanced"),
+         STRESSFUL:B("Estrés","Stressful"),VERY_STRESSFUL:B("Mucho estrés","Very stressful")};
+  var q=r.stress_q&&Q[r.stress_q]?T(Q[r.stress_q]):"";
+  var sel='<span class="rng sview">'+[["","24 h"],["30","30\u2032"]].map(function(o){
+    return '<button data-act="sview" data-v="'+o[0]+'"'+(((state.sView||"")===o[0])?' class="sel"':"")+'>'+o[1]+"</button>"}).join("")+"</span>";
+  return '<div class="card" style="padding:9px 12px"><div class="exhead"><div class="tlab strow">🧠 '+
+    T(B("Estrés","Stress"))+' <span class="snum">'+av+" · "+T(B("máx","max"))+" "+mx+(q?" · "+esc(q):"")+"</span></div>"+
+    sel+"</div>"+svg+"</div>";
 }
 
 /* Journal: impresiones del día (kv journal:<día>, sincronizado; lo lee el parte semanal) */
@@ -2797,6 +2833,7 @@ document.addEventListener("click",function(e){
   if(act==="dayrange"){state.dayRange=+b.dataset.r;render(true);return}
   if(act==="balrange"){state.balRange=+b.dataset.r;render(true);return}
   if(act==="macrange"){state.macRange=+b.dataset.r;render(true);return}
+  if(act==="sview"){state.sView=b.dataset.v;render(true);return}
   if(act==="musrange"){state.musRange=+b.dataset.r;render(true);return}
   if(act==="rest-add"){
     rest.endAt+=30000;restTick();
