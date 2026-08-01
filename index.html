@@ -262,7 +262,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v98";
+var APP_VERSION="v99";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2426,6 +2426,34 @@ document.addEventListener("change",function(e){
   W(inp.dataset.key,inp.value.trim());
   if(inp.dataset.key.indexOf("journal:")===0)render(true);
 });
+/* ---------- iOS: recolocar los elementos fijos tras cerrar el teclado ----------
+   En iOS el teclado encoge el viewport visual. Al cerrarse, los elementos con
+   position:fixed (la nav y el sheet del temporizador) pueden quedarse anclados a
+   esa altura reducida: aparecen a media pantalla, con contenido por debajo.
+   Se dispara al perder el foco un campo, al cambiar el viewport visual y al
+   girar. Un scroll de 1 px y un toque al transform obligan a WebKit a
+   recomponer la capa; si el bug no está presente, no se nota nada. */
+var _relayT=null;
+function relayoutFixed(){
+  if(_relayT)return;
+  _relayT=setTimeout(function(){
+    _relayT=null;
+    try{
+      var y=window.scrollY||window.pageYOffset||0;
+      window.scrollTo(0,y+1);window.scrollTo(0,y);
+      [document.querySelector("nav"),document.getElementById("sheet")].forEach(function(el){
+        if(!el)return;
+        el.style.transform="translateZ(0)";
+        void el.offsetHeight;          // fuerza reflujo antes de devolverlo al CSS
+        el.style.transform="";
+      });
+    }catch(e){}
+  },150);
+}
+document.addEventListener("focusout",relayoutFixed,true);
+window.addEventListener("orientationchange",relayoutFixed);
+if(window.visualViewport)window.visualViewport.addEventListener("resize",relayoutFixed);
+
 /* ---------- migración única a la rutina v96 ----------
    La semana pasó a sids nuevos (lowA/upA/lowB/upB) para que un peso guardado no
    acabara en un ejercicio distinto al cambiar el orden. Pero la mayoría de los
