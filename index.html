@@ -221,7 +221,11 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .rxdays button.done{border-color:rgba(70,192,138,.45);color:var(--ok)}
 .rxdays button.sel{border-color:var(--acc);color:var(--acc);background:rgba(240,166,60,.12)}
 .rxdays button.sel .rxi{filter:none}
-.rxnow{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:0 -14px 10px;padding:9px 14px 10px;background:rgba(18,21,26,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.rxnow{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:0 -14px 10px;padding:9px 14px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
+/* Con viewport-fit=cover el lienzo llega hasta arriba del todo: sin esta banda
+   opaca sobre el área segura, el contenido se ve pasar entre la barra de estado
+   y la barra pegada, y esta parece un panel suelto flotando. */
+#view.rutina::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:35;pointer-events:none}
 .rxnow .rxl{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left}
 .rxnow .rxn{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rxnow .rxc{font-family:var(--mono);font-size:12px;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -258,7 +262,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v94";
+var APP_VERSION="v95";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
