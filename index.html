@@ -239,6 +239,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .bchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#c6cdd6;background:var(--surface2);border-radius:7px;padding:3px 8px;white-space:nowrap}
 .bchip i{width:9px;height:9px;border-radius:3px;flex:none}
 .bchip b{font-family:var(--mono);font-size:11.5px;color:var(--text)}
+.bsex button{font-size:14px;padding:3px 8px;line-height:1}
 
 .rxdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:2px 0 10px}
 .rxdays button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--disp);font-weight:700;font-size:13px;color:var(--mut);min-width:0}
@@ -287,7 +288,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v105";
+var APP_VERSION="v106";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1576,26 +1577,78 @@ function muscleSets(rng){
    barras no contaba. Las partes sin músculo asignado ("_": cabeza, antebrazos,
    cadera) van siempre en color base. */
 var BODY={
-front:[
- ["_",'<ellipse cx="55" cy="20" rx="12" ry="14"/><rect x="49" y="31" width="12" height="9" rx="4"/>'],
- ["shoulders",'<ellipse cx="30" cy="52" rx="11" ry="9"/><ellipse cx="80" cy="52" rx="11" ry="9"/>'],
- ["chest",'<rect x="39" y="44" width="15" height="26" rx="6"/><rect x="56" y="44" width="15" height="26" rx="6"/>'],
- ["biceps",'<rect x="20" y="60" width="12" height="34" rx="6"/><rect x="78" y="60" width="12" height="34" rx="6"/>'],
- ["_",'<rect x="18" y="96" width="11" height="30" rx="5"/><rect x="81" y="96" width="11" height="30" rx="5"/>'],
- ["core",'<rect x="43" y="72" width="24" height="46" rx="8"/>'],
- ["_",'<rect x="38" y="118" width="34" height="12" rx="5"/>'],
- ["legs",'<rect x="38" y="130" width="15" height="56" rx="7"/><rect x="57" y="130" width="15" height="56" rx="7"/><rect x="40" y="190" width="12" height="42" rx="6"/><rect x="58" y="190" width="12" height="42" rx="6"/>']
-],
-back:[
- ["_",'<ellipse cx="55" cy="20" rx="12" ry="14"/><rect x="49" y="31" width="12" height="9" rx="4"/>'],
- ["shoulders",'<ellipse cx="30" cy="52" rx="11" ry="9"/><ellipse cx="80" cy="52" rx="11" ry="9"/>'],
- ["back",'<rect x="43" y="40" width="24" height="16" rx="6"/><rect x="36" y="55" width="38" height="34" rx="10"/><rect x="44" y="88" width="22" height="28" rx="7"/>'],
- ["cuff",'<circle cx="38" cy="50" r="5"/><circle cx="72" cy="50" r="5"/>'],
- ["triceps",'<rect x="20" y="60" width="12" height="34" rx="6"/><rect x="78" y="60" width="12" height="34" rx="6"/>'],
- ["_",'<rect x="18" y="96" width="11" height="30" rx="5"/><rect x="81" y="96" width="11" height="30" rx="5"/>'],
- ["_",'<rect x="38" y="116" width="34" height="10" rx="4"/>'],
- ["legs",'<ellipse cx="46" cy="127" rx="11" ry="10"/><ellipse cx="64" cy="127" rx="11" ry="10"/><rect x="38" y="134" width="15" height="52" rx="7"/><rect x="57" y="134" width="15" height="52" rx="7"/><rect x="40" y="190" width="12" height="42" rx="6"/><rect x="58" y="190" width="12" height="42" rx="6"/>']
-]};
+m:{front:[
+ ["_",'M44.6 26h10.8v6.2c0 2.1-2.4 3.2-5.4 3.2s-5.4-1.1-5.4-3.2z',0],
+ ["_",'M50 3.6c5.4 0 9.7 4.5 9.7 10.1S55.4 27 50 27s-9.7-5.6-9.7-13.3S44.6 3.6 50 3.6z',0],
+ ["back",'M43.2 30.6c-3.6 1.8-7.4 4.6-10.4 8 5.8-2 11.6-3 17.2-3v-5.4c-2.4-.2-4.7 0-6.8.4z',1],
+ ["shoulders",'M33.2 37.8c-6 1.2-10.2 7-10.7 14.2-.3 5.2 2 8.4 5.6 7.9 3.5-.5 6-4.6 6.9-10.7.8-5.2.5-9.9-1.8-11.4z',1],
+ ["chest",'M35.4 40.4c5.6-1.6 10.6-1.8 13.6-1v18.2c-3 2.1-8.1 1.6-11.6-1.5-3.1-2.7-4-9.2-2-15.7z',1],
+ ["biceps",'M27.1 57.8c-3.6 2.1-5.7 9.2-5.2 17.3.4 6.1 2.6 9.7 5.6 9.2 3-.5 4.6-5.1 4.2-12.2-.4-7.1-1.6-13.2-4.6-14.3z',1],
+ ["_",'M23.6 85c-3.1 3.1-4.6 11.2-4.1 19.4.4 7.1 2.5 10.2 5 9.2 2.5-1 3.6-8.1 3.2-16.2-.4-7.1-1.6-11.4-4.1-12.4z',1],
+ ["_",'M22.1 115.6c2.3 0 4.1 2.4 4.1 6.1s-1.8 6.6-4.1 6.6-4.1-2.9-4.1-6.6 1.8-6.1 4.1-6.1z',1],
+ ["core",'M43.4 58.8c2.6-1 10.6-1 13.2 0v29.4c0 7-2.7 11-6.6 11s-6.6-4-6.6-11z',0],
+ ["core",'M40.2 61.8c2-1 3 0 3 4v20.4c0 4-1.5 6-3.5 4-2-2-2-24.4.5-28.4z',1],
+ ["_",'M40.2 98.8c4-2 15.6-2 19.6 0l1 11.2c-5 3-16 3-21 0z',0],
+ ["legs",'M40.6 110.2c-4.6 2.9-6.7 14-6 27.2.6 12.1 3.9 20.1 8.4 19.6 4-.5 5.6-8.5 5.4-20.6-.2-14.1-3.4-24.2-7.8-26.2z',1],
+ ["_",'M42.6 156.4c3.3 0 6 2.4 6 5.4s-2.7 5.4-6 5.4-6-2.4-6-5.4 2.7-5.4 6-5.4z',1],
+ ["legs",'M39.6 166.2c-3.6 4-4.9 13.1-4.1 24.2.7 9.1 3.4 14.2 6.4 13.2 3-1 4-9.1 3.6-19.2-.4-10.1-2.4-17.2-5.9-18.2z',1],
+ ["_",'M38.4 206c-2 0-3.6 1.8-3.6 4.6v4.4c0 2.2 1.6 3.4 4.6 3.4h7.2c2.2 0 2.9-1.9 1.8-3.9l-3.8-8.5z',1]
+],back:[
+ ["_",'M44.6 26h10.8v6.2c0 2.1-2.4 3.2-5.4 3.2s-5.4-1.1-5.4-3.2z',0],
+ ["_",'M50 3.6c5.4 0 9.7 4.5 9.7 10.1S55.4 27 50 27s-9.7-5.6-9.7-13.3S44.6 3.6 50 3.6z',0],
+ ["back",'M50 29.4c-6.4.8-12.8 4.2-17.6 9.4 7 3 12.4 7.4 17.6 13.6 5.2-6.2 10.6-10.6 17.6-13.6-4.8-5.2-11.2-8.6-17.6-9.4z',0],
+ ["shoulders",'M33.2 37.8c-6 1.2-10.2 7-10.7 14.2-.3 5.2 2 8.4 5.6 7.9 3.5-.5 6-4.6 6.9-10.7.8-5.2.5-9.9-1.8-11.4z',1],
+ ["back",'M35.2 44.4c-3.2 6.2-3.8 16.4-2 26 1.9 9.9 8.1 15.6 13.6 15.6h3.2V53.6c-4.4-4.6-10.4-8-14.8-9.2z',1],
+ ["cuff",'M37.4 42.4c2.7 0 4.9 2.5 4.9 5.6s-2.2 5.6-4.9 5.6-4.9-2.5-4.9-5.6 2.2-5.6 4.9-5.6z',1],
+ ["back",'M43.2 84c3-1 10.6-1 13.6 0v13.8c-3 2-10.6 2-13.6 0z',0],
+ ["triceps",'M27.1 57.8c-3.6 2.1-5.7 9.2-5.2 17.3.4 6.1 2.6 9.7 5.6 9.2 3-.5 4.6-5.1 4.2-12.2-.4-7.1-1.6-13.2-4.6-14.3z',1],
+ ["_",'M23.6 85c-3.1 3.1-4.6 11.2-4.1 19.4.4 7.1 2.5 10.2 5 9.2 2.5-1 3.6-8.1 3.2-16.2-.4-7.1-1.6-11.4-4.1-12.4z',1],
+ ["_",'M22.1 115.6c2.3 0 4.1 2.4 4.1 6.1s-1.8 6.6-4.1 6.6-4.1-2.9-4.1-6.6 1.8-6.1 4.1-6.1z',1],
+ ["legs",'M40.4 98.6c-4.8 2.1-6.6 8.6-4.9 15.2 1.7 6.4 6.7 9.4 11.3 7.2 3.4-1.6 4.2-7.6 3-14.6-1.2-6.6-5-9.4-9.4-7.8z',1],
+ ["legs",'M40.6 120.6c-4.4 4.2-6 15.2-5.3 28.2.6 11.1 3.9 18.1 8.2 17.6 4-.5 5.6-9.5 5.4-21.6-.2-14.1-3.9-23.2-8.3-24.2z',1],
+ ["legs",'M39.6 168.2c-3.6 4-4.9 13.1-4.1 24.2.7 9.1 3.4 14.2 6.4 13.2 3-1 4-9.1 3.6-19.2-.4-10.1-2.4-17.2-5.9-18.2z',1],
+ ["_",'M38.4 208c-2 0-3.6 1.8-3.6 4.6v4.4c0 2.2 1.6 3.4 4.6 3.4h7.2c2.2 0 2.9-1.9 1.8-3.9l-3.8-8.5z',1]
+]},
+f:{front:[
+ ["_",'M45.2 26h9.6v5.8c0 2-2.2 3-4.8 3s-4.8-1-4.8-3z',0],
+ ["_",'M50 4.4c4.9 0 8.8 4.2 8.8 9.4S54.9 26.6 50 26.6s-8.8-5.2-8.8-12.8S45.1 4.4 50 4.4z',0],
+ ["back",'M44 30.2c-3.2 1.6-6.6 4.2-9.2 7.4 5.2-1.9 10.4-2.8 15.2-2.8v-5c-2.1-.2-4.1 0-6 .4z',1],
+ ["shoulders",'M35.4 37.4c-5.2 1.2-8.8 6.6-9.2 13.2-.3 4.8 1.8 7.8 4.9 7.3 3.1-.5 5.3-4.3 6.1-10 .7-4.8.4-9.1-1.8-10.5z',1],
+ ["chest",'M37.6 41c4.9-1.5 9.3-1.6 12-.8v14.8c-2 3.4-6.6 4.2-9.8 1.6-3-2.4-4-9.6-2.2-15.6z',1],
+ ["biceps",'M29.6 56.8c-3.1 2-4.9 8.4-4.5 15.8.4 5.6 2.3 8.9 4.9 8.4 2.6-.5 4-4.7 3.6-11.2-.3-6.5-1.4-12-4-13z',1],
+ ["_",'M26.6 82.6c-2.7 2.9-4 10.2-3.6 17.7.4 6.5 2.2 9.3 4.4 8.4 2.2-.9 3.1-7.4 2.8-14.8-.4-6.5-1.4-10.4-3.6-11.3z',1],
+ ["_",'M25.3 110.6c2 0 3.6 2.2 3.6 5.6s-1.6 6-3.6 6-3.6-2.6-3.6-6 1.6-5.6 3.6-5.6z',1],
+ ["core",'M44.6 56.8c2.4-.9 8.4-.9 10.8 0v26c0 6.4-2.4 10-5.4 10s-5.4-3.6-5.4-10z',0],
+ ["core",'M42 59.6c1.8-.9 2.6 0 2.6 3.6v18.4c0 3.6-1.3 5.4-3.1 3.6-1.8-1.8-1.8-22 .5-25.6z',1],
+ ["_",'M38.6 92.6c5-2.4 17.8-2.4 22.8 0l1.8 13.4c-6 3.6-20.4 3.6-26.4 0z',0],
+ ["legs",'M39.4 106.4c-4.8 3.2-6.8 14.8-6 28.6.7 12.6 4.1 20.9 8.8 20.4 4.2-.5 5.8-8.9 5.6-21.4-.2-14.7-3.8-25.6-8.4-27.6z',1],
+ ["_",'M42.2 155c3.1 0 5.6 2.2 5.6 5s-2.5 5-5.6 5-5.6-2.2-5.6-5 2.5-5 5.6-5z',1],
+ ["legs",'M39.6 164c-3.4 3.8-4.6 12.6-3.9 23.2.7 8.7 3.3 13.6 6.1 12.6 2.9-1 3.8-8.7 3.4-18.4-.4-9.7-2.3-16.5-5.6-17.4z',1],
+ ["_",'M38.8 202c-1.9 0-3.4 1.7-3.4 4.4v4.2c0 2.1 1.5 3.2 4.4 3.2h6.8c2.1 0 2.8-1.8 1.7-3.7l-3.6-8.1z',1]
+],back:[
+ ["_",'M45.2 26h9.6v5.8c0 2-2.2 3-4.8 3s-4.8-1-4.8-3z',0],
+ ["_",'M50 4.4c4.9 0 8.8 4.2 8.8 9.4S54.9 26.6 50 26.6s-8.8-5.2-8.8-12.8S45.1 4.4 50 4.4z',0],
+ ["back",'M50 29c-5.6.8-11.2 3.8-15.4 8.4 6.2 2.7 11 6.6 15.4 12.2 4.4-5.6 9.2-9.5 15.4-12.2-4.2-4.6-9.8-7.6-15.4-8.4z',0],
+ ["shoulders",'M35.4 37.4c-5.2 1.2-8.8 6.6-9.2 13.2-.3 4.8 1.8 7.8 4.9 7.3 3.1-.5 5.3-4.3 6.1-10 .7-4.8.4-9.1-1.8-10.5z',1],
+ ["back",'M37.2 43.4c-2.9 5.7-3.4 15-1.8 23.8 1.7 9 7.3 14.2 12.3 14.2h2.3V52c-4-4.2-8.8-7.5-12.8-8.6z',1],
+ ["cuff",'M39.2 41.8c2.5 0 4.5 2.3 4.5 5.1s-2 5.1-4.5 5.1-4.5-2.3-4.5-5.1 2-5.1 4.5-5.1z',1],
+ ["back",'M44.6 79.6c2.7-.9 8.1-.9 10.8 0v12.4c-2.7 1.8-8.1 1.8-10.8 0z',0],
+ ["triceps",'M29.6 56.8c-3.1 2-4.9 8.4-4.5 15.8.4 5.6 2.3 8.9 4.9 8.4 2.6-.5 4-4.7 3.6-11.2-.3-6.5-1.4-12-4-13z',1],
+ ["_",'M26.6 82.6c-2.7 2.9-4 10.2-3.6 17.7.4 6.5 2.2 9.3 4.4 8.4 2.2-.9 3.1-7.4 2.8-14.8-.4-6.5-1.4-10.4-3.6-11.3z',1],
+ ["_",'M25.3 110.6c2 0 3.6 2.2 3.6 5.6s-1.6 6-3.6 6-3.6-2.6-3.6-6 1.6-5.6 3.6-5.6z',1],
+ ["legs",'M39 93.4c-5.2 2.4-7.2 9.8-5.3 17.3 1.9 7.3 7.4 10.7 12.4 8.2 3.7-1.8 4.6-8.7 3.3-16.6-1.3-7.5-5.5-10.7-10.4-8.9z',1],
+ ["legs",'M39.6 118c-4.4 4.4-6 15.8-5.3 29.2.6 11.5 4 18.8 8.4 18.3 4.1-.5 5.7-9.9 5.5-22.4-.2-14.6-4.1-24.1-8.6-25.1z',1],
+ ["legs",'M39.6 166c-3.4 3.8-4.6 12.6-3.9 23.2.7 8.7 3.3 13.6 6.1 12.6 2.9-1 3.8-8.7 3.4-18.4-.4-9.7-2.3-16.5-5.6-17.4z',1],
+ ["_",'M38.8 204c-1.9 0-3.4 1.7-3.4 4.4v4.2c0 2.1 1.5 3.2 4.4 3.2h6.8c2.1 0 2.8-1.8 1.7-3.7l-3.6-8.1z',1]
+]}};
+/* Trazos de definición: separan vientres musculares para que la figura lea
+   como un cuerpo entrenado y no como una silueta plana. No llevan color de
+   calor, van siempre encima. */
+var BODYDET={
+m:{front:'M50 60V97M44.6 69h10.8M44.2 78h11.6M44.6 87h10.8M35.8 41.6c1.6 4.6 2 10 1.4 15.6M28.4 43.6c1.4 3.8 1.8 8.6 1.2 13.4M41 118c-1 11 0 22 1.6 32M39.4 172c-.8 8.4-.4 16.8.8 23.4',
+  back:'M50 33V96M41.6 54c-1 8.6-.4 17 2 24.6M35.8 41.6c1.6 4.6 2 10 1.4 15.6M42.4 126v34M40.4 174v22'},
+f:{front:'M50 58V91M45.4 67h9.2M45 76h10M45.4 85h9.2M37.8 42c1.4 4 1.8 8.6 1.2 13.4M30.6 43c1.2 3.4 1.6 7.6 1 11.8M40.2 114c-.8 10.4 0 20.8 1.4 30M39.6 170c-.8 8-.4 16 .8 22.2',
+  back:'M50 32V91M43.4 52c-.8 7.8-.2 15.4 2 22.4M30.6 43c1.2 3.4 1.6 7.6 1 11.8M42 124v33M40.4 172v21'}};
 var HEAT=[[0,[34,42,53]],[.35,[61,70,87]],[.7,[122,90,37]],[1,[240,166,60]]];
 function heatColor(t){
   if(!(t>0))return "rgb(34,42,53)";
@@ -1608,19 +1661,25 @@ function heatColor(t){
   }
   return "rgb(240,166,60)";
 }
-function bodyFig(which,mus,mmax,titulo){
-  var g=BODY[which].map(function(p){
-    var key=p[0];
-    var col=key==="_"?"#2B3442":heatColor(mmax?((mus[key]||0)/mmax):0);
-    return '<g fill="'+col+'">'+p[1]+"</g>";
+function bodyFig(sex,which,mus,mmax,titulo){
+  var partes=(BODY[sex]||BODY.m)[which]||[];
+  var g=partes.map(function(p){
+    var clave=p[0],d=p[1],esp=p[2];
+    var col=clave==="_"?"#2F3949":heatColor(mmax?((mus[clave]||0)/mmax):0);
+    return '<g fill="'+col+'"><path d="'+d+'"/>'+
+      (esp?'<g transform="translate(100,0) scale(-1,1)"><path d="'+d+'"/></g>':"")+"</g>";
   }).join("");
-  return '<figure class="bfig"><svg viewBox="0 0 110 240" aria-label="'+esc(titulo)+'">'+g+"</svg>"+
-    '<figcaption>'+esc(titulo)+"</figcaption></figure>";
+  var det=((BODYDET[sex]||BODYDET.m)[which]||"");
+  if(det)g+='<g fill="none" stroke="rgba(10,13,18,.42)" stroke-width="1.1" stroke-linecap="round"><path d="'+det+'"/>'+
+    '<g transform="translate(100,0) scale(-1,1)"><path d="'+det+'"/></g></g>';
+  return '<figure class="bfig"><svg viewBox="0 0 100 226" role="img" aria-label="'+esc(titulo)+'">'+g+"</svg>"+
+    "<figcaption>"+esc(titulo)+"</figcaption></figure>";
 }
 function bodyMapView(){
   if(LOGS.data===null){loadLogs();return '<div class="card"><p class="note">'+u("loading")+"</p></div>"}
   if(!LOGS.data.length)return '<div class="card"><p class="note">'+u("noLogs")+"</p></div>";
   var rng=state.musRange||30;
+  var sex=S("bodySex",((S("goal",{})||{}).sex)||"m")==="f"?"f":"m";
   var mus=muscleSets(rng);
   var enCuerpo=["chest","back","shoulders","biceps","triceps","legs","core","cuff"];
   var mmax=0;enCuerpo.forEach(function(k){if((mus[k]||0)>mmax)mmax=mus[k]});
@@ -1634,8 +1693,11 @@ function bodyMapView(){
     .map(function(k){return esc(T(MUSC[k]||{es:k,en:k}))});
   var grad="linear-gradient(90deg,"+HEAT.map(function(s){
     return "rgb("+s[1].join(",")+") "+Math.round(s[0]*100)+"%"}).join(",")+")";
-  return '<div class="card"><div class="exhead"><h3>'+T(B("Mapa de carga","Load map"))+"</h3>"+rangeSel(rng,"musrange")+"</div>"+
-    '<div class="bmap">'+bodyFig("front",mus,mmax,T(B("Frente","Front")))+bodyFig("back",mus,mmax,T(B("Espalda","Back")))+"</div>"+
+  var sexSel='<span class="rng bsex">'+[["m","♂"],["f","♀"]].map(function(o){
+    return '<button data-act="bodysex" data-s="'+o[0]+'"'+(sex===o[0]?' class="sel"':"")+' aria-label="'+
+      esc(T(o[0]==="m"?B("Figura masculina","Male figure"):B("Figura femenina","Female figure")))+'">'+o[1]+"</button>"}).join("")+"</span>";
+  return '<div class="card"><div class="exhead"><h3>'+T(B("Mapa de carga","Load map"))+'</h3><span style="display:flex;gap:6px;align-items:center">'+sexSel+rangeSel(rng,"musrange")+"</span></div>"+
+    '<div class="bmap">'+bodyFig(sex,"front",mus,mmax,T(B("Frente","Front")))+bodyFig(sex,"back",mus,mmax,T(B("Espalda","Back")))+"</div>"+
     '<div class="bleg"><span>'+T(B("menos","less"))+'</span><i style="background:'+grad+'"></i><span>'+T(B("más","more"))+" ("+mmax+")</span></div>"+
     '<div class="bchips">'+chips+"</div>"+
     (sinTocar.length?'<p class="note" style="font-size:12.5px;color:var(--mut);margin-top:10px">'+
@@ -2651,6 +2713,7 @@ document.addEventListener("click",function(e){
   if(act==="dayrange"){state.dayRange=+b.dataset.r;render(true);return}
   if(act==="balrange"){state.balRange=+b.dataset.r;render(true);return}
   if(act==="macrange"){state.macRange=+b.dataset.r;render(true);return}
+  if(act==="bodysex"){W("bodySex",b.dataset.s);render(true);return}
   if(act==="musrange"){state.musRange=+b.dataset.r;render(true);return}
   if(act==="rest-add"){
     rest.endAt+=30000;restTick();
