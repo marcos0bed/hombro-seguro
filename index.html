@@ -275,7 +275,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v102";
+var APP_VERSION="v103";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -710,11 +710,11 @@ var RUNEASY={n:B("Carrera fácil","Easy run"),sets:0,reps:"30 min",chips:[B("Rit
        "The second half of the double day. Conversational pace, no target pace or heart rate: the long run is tomorrow and today isn't a race. Treadmill or outdoors, and you can split it from the lifting by as many hours as you like (morning and evening is fine). If you're short on time or the body asks for it, swap it for a 30 min walk: today's goal is easy leg turnover, not mileage.")};
 
 var EX={
-descanso:{title:B("Descanso","Rest day"),sub:B("El día que hace que funcione el resto de la semana","The day that makes the rest of the week work"),type:"rest",
+descanso:{title:B("Descanso","Rest day"),sub:B("El día que hace que funcione el resto de la semana","The day that makes the rest of the week work"),load:"soft",type:"rest",
   note:B("Descanso completo, justo después de la tirada larga: es cuando las piernas más lo necesitan. Si te apetece moverte, camina — nada más. Lo único que sí merece la pena son 10 minutos de movilidad: sleeper stretch SUAVE (3×30 s, tumbado sobre el lado derecho, hombro y codo a 90°, empujando la muñeca hacia el suelo hasta notar tensión y NUNCA dolor), rotaciones torácicas sentado y 90/90 de cadera. La cápsula posterior es lo que se acorta con los años en tu hombro, y una cápsula rígida empuja la cabeza del húmero justo contra la zona donde vive tu calcificación residual. Es mantenimiento de por vida, igual que el manguito.",
         "Full rest, right after the long run: that's when your legs need it most. If you feel like moving, take a walk — nothing more. The one thing worth doing is 10 minutes of mobility: GENTLE sleeper stretch (3×30 s, lying on your right side, shoulder and elbow at 90°, pushing the wrist toward the floor until you feel tension and NEVER pain), seated thoracic rotations and 90/90 hip work. The posterior capsule is what tightens over the years in your shoulder, and a stiff capsule pushes the humeral head straight into the zone where your residual calcification lives. Lifelong maintenance, just like the cuff work.")},
 
-lowA:{title:B("Lower A · Fuerza","Lower A · Strength"),sub:B("Sentadilla SSB + bisagra de cadera","SSB squat + hip hinge"),type:"gym",items:[
+lowA:{title:B("Lower A · Fuerza","Lower A · Strength"),sub:B("Sentadilla SSB + bisagra de cadera","SSB squat + hip hinge"),load:"hard",type:"gym",items:[
   LOWWARM,
   {n:B("Sentadilla con safety squat bar","Safety squat bar squat"),sets:4,reps:"5-6",chips:["SSB",B("Sin restricción de hombro","No shoulder restriction")],yt:"safety bar squat technique",
    how:B("El ejercicio pesado de la semana. Manos en los agarres frontales, por debajo del hombro y en neutro: el hombro no participa, y por eso puedes cargar de verdad aquí. La barra recta queda fuera precisamente por lo contrario — la posición de rack es rotación externa + abducción, el gesto que evitas. La SSB tiende a empujarte hacia delante: torso erguido y empuja los agarres ligeramente hacia ARRIBA, no tires de ellos hacia abajo. Rango de 5-6 reps con 2-3 min de descanso: fuerza, no bombeo. Aplica la progresión de siempre (2 sesiones limpias → +2,5-5 %).",
@@ -733,7 +733,7 @@ lowA:{title:B("Lower A · Fuerza","Lower A · Strength"),sub:B("Sentadilla SSB +
         "Cable at chest height, standing perpendicular to it. Press your hands straight out and resist the twist. Anti-rotation with arms below shoulder height: completely safe. It replaces any hanging bar core work, which is off the table.")}
 ]},
 
-upA:{title:"Upper A",sub:B("Empuje inclinado + tracción horizontal","Incline press + horizontal pulling"),type:"gym",items:[
+upA:{title:"Upper A",sub:B("Empuje inclinado + tracción horizontal","Incline press + horizontal pulling"),load:"soft",type:"gym",items:[
   WARMUP,
   {n:B("Press inclinado mancuernas 30°","Incline dumbbell press 30°"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("Codos pegados","Elbows tucked")],yt:"incline dumbbell press neutral grip",
    how:B("Banco a 30°, palmas enfrentadas. Baja controlado con los codos a menos de 45° del tronco, hasta que lleguen a la altura del torso — sin buscar estiramiento profundo. Arriba, no juntes las mancuernas sobre la cara. Para colocarte: mancuernas en los muslos y súbelas con impulso de rodillas, nunca con los brazos estirados. Si HOY hay molestia ≥1/10 o chasquidos al calentar: cambia a floor press esta sesión y anótalo en la nota.",
@@ -753,7 +753,7 @@ upA:{title:"Upper A",sub:B("Empuje inclinado + tracción horizontal","Incline pr
   CUFFREF
 ]},
 
-lowB:{title:B("Lower B · Volumen","Lower B · Volume"),sub:B("Glúteo, unilateral y máquinas","Glutes, unilateral and machines"),type:"gym",items:[
+lowB:{title:B("Lower B · Volumen","Lower B · Volume"),sub:B("Glúteo, unilateral y máquinas","Glutes, unilateral and machines"),load:"hard",type:"gym",items:[
   LOWWARM,
   {n:B("Hip thrust con barra","Barbell hip thrust"),sets:4,reps:"8-12",chips:[B("Pad en cadera","Pad on hips"),B("Glúteo","Glutes")],yt:"barbell hip thrust technique",
    how:B("Espalda alta apoyada en el banco, pad en la cadera. Sube con glúteo hasta la extensión completa, sin arquear la lumbar, barbilla ligeramente recogida. Pausa de 1 s arriba. El glúteo es el motor de la zancada al correr y no se entrena solo con sentadilla.",
@@ -775,7 +775,7 @@ lowB:{title:B("Lower B · Volumen","Lower B · Volume"),sub:B("Glúteo, unilater
         "Lying on your back, extend the opposite arm and leg together, lower back pinned to the floor. The arm rises straight up with no weight-bearing: it replaces the plank, which has irritated your shoulder by loading it through the forearm.")}
 ]},
 
-upB:{title:"Upper B",sub:B("Floor press + tracción vertical · día doble","Floor press + vertical pulling · double day"),type:"gym",items:[
+upB:{title:"Upper B",sub:B("Floor press + tracción vertical · día doble","Floor press + vertical pulling · double day"),load:"soft",type:"gym",items:[
   WARMUP,
   {n:B("Floor press con mancuernas","Dumbbell floor press"),sets:4,reps:"6-10",chips:[B("Agarre neutro","Neutral grip"),B("Tu press progresable","Your progressable press")],yt:"dumbbell floor press neutral grip",
    how:B("Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas, codos pegados. Baja hasta que los tríceps tocan el suelo y ahí paras (pausa de 1 s). El suelo corta el recorrido justo donde empieza la zona de riesgo — por eso ESTE es el press que sí puedes cargar progresivamente mientras la banca sigue vetada. Aquí es donde recuperas masa y dureza de pecho: aplica la progresión sin miedo, el rango protegido lo permite. Entra y sal de la posición con el truco de las rodillas. Cuando el equipo médico autorice, la vuelta será: floor press → press plano con mancuernas → banca con barra.",
@@ -810,10 +810,10 @@ activo:{title:B("Descanso activo","Active recovery"),sub:B("Isométricos + movil
    how:B("90/90 de cadera, dorsiflexión de tobillo contra pared.",
         "90/90 hip work, ankle dorsiflexion against the wall.")}
 ]},
-run1:{title:B("HIIT o rodaje","Intervals or easy run"),sub:B("La sesión intensa de carrera de la semana","The week's hard running session"),type:"run",km:"5-8 km",
+run1:{title:B("HIIT o rodaje","Intervals or easy run"),sub:B("La sesión intensa de carrera de la semana","The week's hard running session"),load:"hard",type:"run",km:"5-8 km",
   note:B("El único hueco de la semana donde el HIIT no le roba recuperación a nada: dos días después del pesado de piernas y tres antes de la tirada larga. Formato: 6-10×400 m, 30/30 o cuestas cortas, en cinta o en calle. Que sea CORRIENDO — nada de circuitos con burpees, battle ropes o thrusters: eso es tren superior encubierto con gestos overhead. El braceo de los sprints no es problema para el hombro. Si vienes justo de recuperación o aún arrastras el catarro, cámbialo por rodaje fácil sin pensarlo.",
         "The one slot in the week where intervals don't steal recovery from anything else: two days after the heavy leg session and three before the long run. Format: 6-10×400 m, 30/30s or short hills, treadmill or road. Keep it RUNNING — no circuits with burpees, battle ropes or thrusters: that's upper body in disguise with overhead movements. The arm swing of sprinting is no problem for the shoulder. If you're short on recovery or still shaking off a cold, swap it for an easy run without hesitating.")},
-runLong:{title:B("Tirada larga","Long run"),sub:B("La salida de referencia de la semana","The reference run of the week"),type:"run",km:"10-12 km",
+runLong:{title:B("Tirada larga","Long run"),sub:B("La salida de referencia de la semana","The reference run of the week"),load:"long",type:"run",km:"10-12 km",
   note:B("Ritmo sostenible, brazos relajados. Es la base del 10K, no una carrera. Llegas con el viernes de pierna a dos días de distancia y el sábado sólo de tren superior y rodaje suave: las piernas deberían estar frescas. Mañana lunes descansas.",
         "Sustainable pace, relaxed arms. It's your 10K base, not a race. You arrive with Friday's leg day two days back and Saturday only upper body plus an easy jog: the legs should be fresh. Tomorrow, Monday, you rest.")},
 
@@ -1946,6 +1946,31 @@ function runplanCard(){
    sin tocar nada. El backend puede sobrescribirlo con goal.macros. */
 var MACROS={prot:160,soft:{carb:60,fat:75},hard:{carb:110,fat:80},long:{carb:130,fat:80}};
 var DAYLOAD={descanso:"soft",lowA:"hard",upA:"soft",run1:"hard",lowB:"hard",upB:"soft",runLong:"long"};
+/* Carga del día, en orden de autoridad. Pensado para que al CAMBIAR DE RUTINA
+   no haya que tocar nada aquí:
+     1) goal.macros.byDay[sid]  — lo que diga el backend, manda
+     2) session.load            — la propia rutina lo declara (lo natural)
+     3) DAYLOAD[sid]            — la rutina integrada actual, por compatibilidad
+     4) deducción               — descanso→suave, carrera→duro (larga→recarga),
+                                  y una sesión de pesas cuenta como dura si más
+                                  de la mitad de sus series son de pierna, que
+                                  es el bloque de mayor demanda glucolítica. */
+function loadOf(sid){
+  var G=S("goal",{})||{},cfg=(G&&G.macros)||{};
+  if(cfg.byDay&&cfg.byDay[sid])return cfg.byDay[sid];
+  var s=sid&&getSession(sid);
+  if(s&&s.load)return s.load;
+  if(DAYLOAD[sid])return DAYLOAD[sid];
+  if(!s)return "soft";
+  if(s.type==="rest")return "soft";
+  if(s.type==="run")return /larga|long/i.test(String(T(s.title)||""))?"long":"hard";
+  var legs=0,tot=0;
+  (s.items||[]).forEach(function(it,i){
+    var n=it.sets?nSets(sid,i,it):0;if(!n)return;
+    tot+=n;if(muscleOf(sid,i,it)==="legs")legs+=n;
+  });
+  return (tot&&legs/tot>=.5)?"hard":"soft";
+}
 function macroGoal(day){
   var G=S("goal",{})||{};
   /* Los valores por defecto son los del plan integrado. Quien tenga rutina
@@ -1955,8 +1980,7 @@ function macroGoal(day){
   if(!cfg)return null;
   var d=new Date(day+"T12:00:00"),idx=(d.getDay()+6)%7;
   var w=getWeek()[idx],sid=w&&w.sid;
-  var kind=(cfg.byDay&&cfg.byDay[sid])||DAYLOAD[sid];
-  if(!kind){var s=sid&&getSession(sid);kind=(s&&s.type==="run")?"hard":"soft"}
+  var kind=loadOf(sid);
   var k=cfg[kind]||cfg.soft||MACROS.soft;
   return {prot:cfg.prot||MACROS.prot,carb:k.carb,fat:k.fat,kind:kind,sid:sid};
 }
