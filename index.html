@@ -262,7 +262,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v95";
+var APP_VERSION="v96";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -689,103 +689,120 @@ var CUFFREF={n:B("Bloque de manguito","Cuff block"),sets:0,reps:"~12 min",chips:
   how:B("Rotación externa 3×15 + rotación interna 3×12 + pull-aparts 3×20. Lo tienes en la pestaña Manguito con sus fichas y el cronómetro.",
        "External rotation 3×15 + internal rotation 3×12 + pull-aparts 3×20. It lives in the Cuff tab with full cards and the timer.")};
 
+var LOWWARM={n:B("Calentamiento","Warm-up"),sets:0,reps:"5-8 min",chips:[B("Obligatorio","Mandatory")],yt:"hip ankle mobility squat warm up",
+  how:B("Cardio suave 5 min en la cinta + movilidad de cadera y tobillo (90/90, dorsiflexión de tobillo contra la pared) + 2 series de aproximación del primer ejercicio con poco peso. En pierna el calentamiento no es opcional: entras directo a rangos pesados.",
+       "Easy cardio 5 min on the treadmill + hip and ankle mobility (90/90, wall ankle dorsiflexion) + 2 light ramp-up sets of the first exercise. On leg days the warm-up isn't optional: you go straight into heavy ranges.")};
+var RUNEASY={n:B("Carrera fácil","Easy run"),sets:0,reps:"30 min",chips:[B("Ritmo cómodo","Conversational pace")],yt:"",
+  how:B("La segunda mitad del día doble. Ritmo de conversación, sin buscar ritmo ni pulsaciones: mañana toca la tirada larga y hoy no se compite. Puedes hacerla en la cinta o fuera, y separarla de las pesas las horas que quieras (mañana y tarde vale). Si vienes justo de tiempo o el cuerpo pide, cámbiala por 30 min de caminata: el objetivo de hoy es mover piernas suave, no sumar kilómetros.",
+       "The second half of the double day. Conversational pace, no target pace or heart rate: the long run is tomorrow and today isn't a race. Treadmill or outdoors, and you can split it from the lifting by as many hours as you like (morning and evening is fine). If you're short on time or the body asks for it, swap it for a 30 min walk: today's goal is easy leg turnover, not mileage.")};
+
 var EX={
-upperA:{title:"Upper A",sub:B("Empuje inclinado + tracción en polea","Incline press + cable pulling"),type:"gym",items:[
+descanso:{title:B("Descanso","Rest day"),sub:B("El día que hace que funcione el resto de la semana","The day that makes the rest of the week work"),type:"rest",
+  note:B("Descanso completo, justo después de la tirada larga: es cuando las piernas más lo necesitan. Si te apetece moverte, camina — nada más. Lo único que sí merece la pena son 10 minutos de movilidad: sleeper stretch SUAVE (3×30 s, tumbado sobre el lado derecho, hombro y codo a 90°, empujando la muñeca hacia el suelo hasta notar tensión y NUNCA dolor), rotaciones torácicas sentado y 90/90 de cadera. La cápsula posterior es lo que se acorta con los años en tu hombro, y una cápsula rígida empuja la cabeza del húmero justo contra la zona donde vive tu calcificación residual. Es mantenimiento de por vida, igual que el manguito.",
+        "Full rest, right after the long run: that's when your legs need it most. If you feel like moving, take a walk — nothing more. The one thing worth doing is 10 minutes of mobility: GENTLE sleeper stretch (3×30 s, lying on your right side, shoulder and elbow at 90°, pushing the wrist toward the floor until you feel tension and NEVER pain), seated thoracic rotations and 90/90 hip work. The posterior capsule is what tightens over the years in your shoulder, and a stiff capsule pushes the humeral head straight into the zone where your residual calcification lives. Lifelong maintenance, just like the cuff work.")},
+
+lowA:{title:B("Lower A · Fuerza","Lower A · Strength"),sub:B("Sentadilla SSB + bisagra de cadera","SSB squat + hip hinge"),type:"gym",items:[
+  LOWWARM,
+  {n:B("Sentadilla con safety squat bar","Safety squat bar squat"),sets:4,reps:"5-6",chips:["SSB",B("Sin restricción de hombro","No shoulder restriction")],yt:"safety bar squat technique",
+   how:B("El ejercicio pesado de la semana. Manos en los agarres frontales, por debajo del hombro y en neutro: el hombro no participa, y por eso puedes cargar de verdad aquí. La barra recta queda fuera precisamente por lo contrario — la posición de rack es rotación externa + abducción, el gesto que evitas. La SSB tiende a empujarte hacia delante: torso erguido y empuja los agarres ligeramente hacia ARRIBA, no tires de ellos hacia abajo. Rango de 5-6 reps con 2-3 min de descanso: fuerza, no bombeo. Aplica la progresión de siempre (2 sesiones limpias → +2,5-5 %).",
+        "The heavy lift of the week. Hands on the front handles, below shoulder height and neutral: the shoulder sits this one out, which is exactly why you can load it properly. The straight bar is excluded for the opposite reason — the rack position is external rotation + abduction, the gesture you're avoiding. The SSB tends to tip you forward: stay upright and push the handles slightly UP, don't pull them down. 5-6 rep range with 2-3 min rest: strength, not pump. Apply the usual progression (2 clean sessions → +2.5-5%).")},
+  {n:B("Peso muerto rumano","Romanian deadlift"),sets:3,reps:"6-8",chips:[B("Bisagra","Hinge"),B("Cadena posterior","Posterior chain")],yt:"romanian deadlift technique",
+   how:B("Bisagra de cadera con rodillas semiflexionadas, barra pegada a las piernas, espalda neutra. Baja hasta notar el estiramiento en el isquio, no más. La carga cuelga del brazo en neutro: cero implicación del hombro. Es el mejor constructor de cadena posterior que tienes, y la cadena posterior es lo que sostiene la carrera.",
+        "Hip hinge with soft knees, bar close to the legs, neutral spine. Lower until you feel the hamstring stretch, no further. The load hangs from a neutral arm: zero shoulder involvement. It's the best posterior-chain builder you have, and the posterior chain is what holds your running together.")},
+  {n:B("Zancada búlgara con mancuernas","Bulgarian split squat, dumbbells"),sets:3,reps:B("8 /pierna","8 /leg"),chips:[B("Unilateral","Unilateral")],yt:"bulgarian split squat dumbbell",
+   how:B("Pie trasero en el banco, mancuernas colgando a los lados (agarre naturalmente neutro, sin nada por encima del hombro). Baja vertical y empuja con el talón delantero. El trabajo a una pierna corrige asimetrías que en la sentadilla se esconden — y las asimetrías de cadera son las que acaban dando la lata al correr.",
+        "Rear foot on the bench, dumbbells hanging at your sides (naturally neutral grip, nothing above shoulder height). Drop straight down and drive through the front heel. Single-leg work exposes the asymmetries that a bilateral squat hides — and hip asymmetries are what eventually bite you when running.")},
+  {n:B("Curl femoral en máquina","Machine leg curl"),sets:3,reps:"10-12",chips:[B("Isquios","Hamstrings")],yt:"lying leg curl technique",
+   how:B("Aísla el isquio en su función de flexión de rodilla, que el peso muerto rumano no cubre (ahí trabajan como extensores de cadera). Bajada lenta de 2-3 s. Cero carga axial y cero hombro: es trabajo gratis al final de un día pesado.",
+        "Isolates the hamstring in knee flexion, which the Romanian deadlift doesn't cover (there they work as hip extensors). Slow 2-3 s lowering. Zero axial load and zero shoulder: free work at the end of a heavy day.")},
+  {n:B("Pallof press en polea","Cable Pallof press"),sets:2,reps:B("10 /lado","10 /side"),chips:["Core",B("Altura pecho","Chest height")],yt:"pallof press cable",
+   how:B("Polea a la altura del pecho, de pie perpendicular a ella. Empuja las manos al frente y resiste el giro del tronco. Anti-rotación con los brazos por debajo del hombro: completamente seguro. Sustituye a cualquier core colgado de barra, que está vetado.",
+        "Cable at chest height, standing perpendicular to it. Press your hands straight out and resist the twist. Anti-rotation with arms below shoulder height: completely safe. It replaces any hanging bar core work, which is off the table.")}
+]},
+
+upA:{title:"Upper A",sub:B("Empuje inclinado + tracción horizontal","Incline press + horizontal pulling"),type:"gym",items:[
   WARMUP,
   {n:B("Press inclinado mancuernas 30°","Incline dumbbell press 30°"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("Codos pegados","Elbows tucked")],yt:"incline dumbbell press neutral grip",
-   how:B("Banco a 30°, palmas enfrentadas (mancuernas paralelas a tu cuerpo). Baja controlado con los codos a menos de 45° del tronco, hasta que lleguen a la altura del torso — sin buscar estiramiento profundo. Arriba, no juntes las mancuernas sobre la cara. Para colocarte: mancuernas en los muslos y súbelas con impulso de rodillas, nunca con los brazos estirados. Si HOY hay molestia ≥1/10 o chasquidos al calentar: cambia a floor press esta sesión y anótalo en la nota del workout — el suelo corta el rango justo donde empieza la zona de riesgo.",
-        "Bench at 30°, palms facing each other (dumbbells parallel to your body). Lower under control with elbows under 45° from your torso, until they reach torso level — don't chase a deep stretch. At the top, don't bring the dumbbells together over your face. To get set: dumbbells on your thighs, kick them up with your knees — never swing them back with straight arms. If TODAY brings any ≥1/10 discomfort or clicking during warm-up: switch to floor press for this session and log it in the workout note — the floor cuts the range right where the risk zone starts.")},
-  {n:B("Floor press pesado con mancuernas","Heavy dumbbell floor press"),sets:3,reps:"8-10",chips:[B("Agarre neutro","Neutral grip"),B("Camino a la banca","Road back to bench")],yt:"dumbbell floor press neutral grip",
-   how:B("Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas, codos pegados. Mismo patrón que la banca, pero el suelo corta el recorrido justo donde empieza la zona de riesgo — por eso este es el press que SÍ puedes cargar progresivamente. AQUÍ es donde recuperas la masa y dureza del pecho mientras la banca sigue vetada: aplica la regla de progresión (2 sesiones limpias → +1-2 reps → +2,5-5 % y vuelta al mínimo) sin miedo, el rango protegido lo permite. Pausa de 1 s con los tríceps en el suelo. Entra y sal de la posición con el truco de las rodillas. Regla de autorregulación: es el SEGUNDO empuje del día — si el inclinado dejó cualquier aviso (≥1/10, pesadez, chasquido), baja peso o sáltalo. Cuando el equipo médico autorice, la vuelta será por este orden: floor press → press plano con mancuernas → banca con barra.",
-        "Lying on the floor, knees bent, palms facing, elbows tucked. Same pattern as the bench press, but the floor cuts the range right where the risk zone starts — which is why THIS is the press you can load progressively. This is where you rebuild chest mass and density while the bench stays off-limits: apply the progression rule (2 clean sessions → +1-2 reps → +2.5-5% and back to minimum) without fear, the protected range allows it. 1 s pause with triceps on the floor. Get in and out with the knee-kick trick. Auto-regulation rule: it's the SECOND press of the day — if the incline left any warning (≥1/10, heaviness, clicking), drop weight or skip. When your medical team clears you, the way back runs in this order: floor press → flat dumbbell press → barbell bench.")},
-  {n:B("Cruces en polea baja","Low-to-high cable flys"),sets:3,reps:"12-15",chips:[B("Rango controlado","Controlled range")],yt:"low to high cable chest fly",
-   how:B("Poleas a la altura de la rodilla o menos, un pie adelantado. Codos ligeramente flexionados y fijos: lleva las manos adelante-arriba-adentro hasta que se ENCUENTREN a la altura del esternón — sin cruzarlas ni pasar de la línea media (cruzar el brazo sobre el pecho comprime la articulación acromioclavicular, que ya muestra desgaste en tus ecos), y nunca más arriba. Vuelve controlado sin dejar que las manos pasen mucho por detrás del cuerpo. Si notas tirón delante del hombro, acorta la vuelta.",
-        "Pulleys at knee height or lower, one foot forward. Elbows slightly bent and locked in: bring your hands forward-up-inward until they MEET at sternum height — no crossing past the midline (crossing the arm over the chest compresses the acromioclavicular joint, which already shows wear on your scans), and never higher. Return under control without letting the hands drift far behind your body. If you feel a pull at the front of the shoulder, shorten the return.")},
-  {n:B("Jalón al pecho, agarre neutro estrecho","Lat pulldown, close neutral grip"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("Tracción","Pulling")],yt:"neutral grip lat pulldown",
-   how:B("Maneral de asas paralelas, separación de hombros o menos. Tira hacia la parte alta del pecho llevando los codos abajo y atrás, pecho alto, sin balanceo. El brazo arriba está en tracción: descomprime el hombro (por eso esto sí y el press militar no). Si molesta en el estiramiento superior, acorta el rango.",
-        "Parallel-handle attachment, shoulder width or narrower. Pull to the upper chest driving the elbows down and back, chest up, no swinging. The arm overhead is under traction: it decompresses the shoulder (which is why this is allowed and overhead press is not). If the top stretch bothers you, shorten the range.")},
+   how:B("Banco a 30°, palmas enfrentadas. Baja controlado con los codos a menos de 45° del tronco, hasta que lleguen a la altura del torso — sin buscar estiramiento profundo. Arriba, no juntes las mancuernas sobre la cara. Para colocarte: mancuernas en los muslos y súbelas con impulso de rodillas, nunca con los brazos estirados. Si HOY hay molestia ≥1/10 o chasquidos al calentar: cambia a floor press esta sesión y anótalo en la nota.",
+        "Bench at 30°, palms facing each other. Lower under control with elbows under 45° from your torso, until they reach torso level — don't chase a deep stretch. At the top, don't bring the dumbbells together over your face. To get set: dumbbells on your thighs, kick them up with your knees — never swing them back with straight arms. If TODAY brings any ≥1/10 discomfort or clicking during warm-up: switch to floor press for this session and note it.")},
   {n:B("Remo en polea sentado","Seated cable row"),sets:4,reps:"8-12",chips:[B("Codos pegados","Elbows tucked")],yt:"seated cable row neutral grip",
-   how:B("Maneral triángulo, rodillas semiflexionadas. Tira hacia el abdomen con los codos pegados al cuerpo, junta las escápulas al final y vuelve controlado sin encorvarte. La tracción es el bloque más amable con tu hombro: por eso lleva una serie más.",
-        "V-handle, knees slightly bent. Pull to your abdomen with elbows tucked, squeeze the shoulder blades at the end, return under control without rounding. Pulling is the friendliest block for your shoulder — that's why it gets one extra set.")},
+   how:B("Maneral triángulo, rodillas semiflexionadas. Tira hacia el abdomen con los codos pegados al cuerpo, junta las escápulas al final y vuelve controlado sin encorvarte. La tracción es el bloque más amable con tu hombro: por eso lleva una serie más que el empuje.",
+        "V-handle, knees slightly bent. Pull to your abdomen with elbows tucked, squeeze the shoulder blades at the end, return under control without rounding. Pulling is the friendliest block for your shoulder — that's why it gets one more set than pressing.")},
+  {n:B("Cruces en polea baja","Low-to-high cable flys"),sets:3,reps:"12-15",chips:[B("Rango controlado","Controlled range")],yt:"low to high cable chest fly",
+   how:B("Poleas a la altura de la rodilla o menos, un pie adelantado. Codos ligeramente flexionados y fijos: lleva las manos adelante-arriba-adentro hasta que se ENCUENTREN a la altura del esternón — sin cruzarlas ni pasar de la línea media, y nunca más arriba. Cruzar el brazo sobre el pecho comprime la acromioclavicular, que ya muestra desgaste en tus ecos. Si notas tirón delante del hombro, acorta la vuelta.",
+        "Pulleys at knee height or lower, one foot forward. Elbows slightly bent and locked: bring your hands forward-up-inward until they MEET at sternum height — no crossing past the midline, and never higher. Crossing the arm over the chest compresses the AC joint, which already shows wear on your scans. If you feel a pull at the front of the shoulder, shorten the return.")},
   {n:B("Tríceps en polea (cuerda)","Triceps rope pushdown"),sets:3,reps:"10-15",chips:[B("Codos fijos","Elbows pinned")],yt:"triceps rope pushdown technique",
-   how:B("De pie, codos pegados a los costados: son la bisagra y no se mueven. Extiende hacia abajo separando la cuerda al final. Prohibido todo tríceps por encima de la cabeza y los fondos.",
-        "Standing, elbows pinned to your sides: they're the hinge and don't move. Extend down, splitting the rope at the bottom. All overhead triceps work and dips are off the table.")},
+   how:B("De pie, codos pegados a los costados: son la bisagra y no se mueven. Extiende hacia abajo separando la cuerda al final. Todo tríceps por encima de la cabeza y los fondos siguen fuera.",
+        "Standing, elbows pinned to your sides: they're the hinge and don't move. Extend down, splitting the rope at the bottom. All overhead triceps work and dips remain off the table.")},
   {n:B("Curl con barra","Barbell curl"),sets:3,reps:"8-12",chips:[B("Libre","Unrestricted")],yt:"barbell curl technique",
-   how:B("Curl clásico de pie, sin balanceo. Sin restricciones por el hombro.",
-        "Classic standing curl, no swinging. No shoulder restrictions here.")},
+   how:B("Curl clásico de pie, sin balanceo. Sin restricciones por el hombro: aquí puedes ir a por ello.",
+        "Classic standing curl, no swinging. No shoulder restrictions here: you can go after it.")},
   CUFFREF
 ]},
-lowerA:{title:"Lower A + Core",sub:B("Sentadilla SSB + bisagra de cadera","SSB squat + hip hinge"),type:"gym",items:[
-  {n:B("Calentamiento","Warm-up"),sets:0,reps:"5-8 min",chips:[],yt:"hip ankle mobility squat warm up",
-   how:B("Cardio 5 min + movilidad de cadera y tobillo + 2 series de aproximación de sentadilla con poco peso.",
-        "Cardio 5 min + hip and ankle mobility + 2 light ramp-up squat sets.")},
-  {n:B("Sentadilla con safety squat bar","Safety squat bar squat"),sets:4,reps:"6-10",chips:["SSB",B("Sin restricción de hombro","No shoulder restriction")],yt:"safety bar squat technique",
-   how:B("Tu barra de dos agarres frontales: manos por debajo del hombro, en neutro, sin rotación externa — el hombro no participa. La SSB tiende a empujarte hacia adelante: torso erguido y empuja los agarres ligeramente hacia ARRIBA, no tires de ellos hacia abajo. Aquí sí puedes progresar hacia el rango pesado (6 reps) con las reglas generales.",
-        "Your bar with the two front handles: hands below shoulder height, neutral, zero external rotation — the shoulder sits this one out. The SSB tends to tip you forward: stay upright and push the handles slightly UP, don't pull them down. This is where you're allowed to work toward the heavy end (6 reps) under the general rules.")},
-  {n:B("Peso muerto rumano con barra","Barbell Romanian deadlift"),sets:3,reps:"8-10",chips:[B("Bisagra","Hinge")],yt:"romanian deadlift technique",
-   how:B("Bisagra de cadera con rodillas semiflexionadas, barra pegada a las piernas, espalda neutra. La carga cuelga del brazo en neutro: cero problema de hombro. Alterna con deadlift convencional semana sí / semana no si te apetece.",
-        "Hip hinge with soft knees, bar close to the legs, neutral spine. The load hangs from a neutral arm: zero shoulder issue. Alternate with conventional deadlift every other week if you like.")},
-  {n:B("Zancada búlgara con mancuernas","Bulgarian split squat, dumbbells"),sets:3,reps:B("8-10 /pierna","8-10 /leg"),chips:[B("Agarre neutro natural","Naturally neutral grip")],yt:"bulgarian split squat dumbbell",
-   how:B("Pie trasero en el banco, mancuernas colgando a los lados. Baja vertical, empuja con el talón delantero.",
-        "Rear foot on the bench, dumbbells hanging at your sides. Drop straight down, drive through the front heel.")},
-  {n:B("Hip thrust con barra","Barbell hip thrust"),sets:3,reps:"8-12",chips:[B("Pad en cadera","Pad on hips")],yt:"barbell hip thrust technique",
-   how:B("Espalda alta apoyada en el banco, pad en la cadera. Sube con glúteo hasta la extensión completa, sin arquear la lumbar. Barbilla ligeramente recogida.",
-        "Upper back on the bench, pad on the hips. Drive up with the glutes to full extension without arching the lower back. Chin slightly tucked.")},
-  {n:B("Elevación de talones","Standing calf raise"),sets:3,reps:"12-15",chips:[],yt:"standing calf raise dumbbell",
-   how:B("De pie con mancuernas o barra. Pausa de 1 segundo arriba, bajada lenta.",
-        "Standing with dumbbells or bar. 1-second pause at the top, slow lowering.")},
-  {n:B("Pallof press en polea","Cable Pallof press"),sets:3,reps:B("10-12 /lado","10-12 /side"),chips:["Core",B("Altura pecho","Chest height")],yt:"pallof press cable",
-   how:B("Polea a la altura del pecho, perpendicular a ella. Empuja las manos al frente y resiste el giro del tronco. Anti-rotación con los brazos por debajo del hombro: totalmente seguro.",
-        "Cable at chest height, stand perpendicular. Press your hands straight out and resist the twist. Anti-rotation with arms below shoulder height: completely safe.")},
-  {n:B("Dead bug","Dead bug"),sets:3,reps:B("8-10 /lado","8-10 /side"),chips:["Core"],yt:"dead bug exercise technique",
-   how:B("Tumbado boca arriba, extiende el brazo y la pierna contrarios a la vez, lumbar pegada al suelo. El brazo sube vertical sin ningún apoyo de peso: sustituye a la plancha, que en tu caso ha irritado el hombro al cargarlo sobre el antebrazo.",
-        "Lying on your back, extend the opposite arm and leg together, lower back pinned to the floor. The arm rises straight up with zero weight-bearing: it replaces the plank, which has irritated your shoulder by loading it through the forearm.")}
+
+lowB:{title:B("Lower B · Volumen","Lower B · Volume"),sub:B("Glúteo, unilateral y máquinas","Glutes, unilateral and machines"),type:"gym",items:[
+  LOWWARM,
+  {n:B("Hip thrust con barra","Barbell hip thrust"),sets:4,reps:"8-12",chips:[B("Pad en cadera","Pad on hips"),B("Glúteo","Glutes")],yt:"barbell hip thrust technique",
+   how:B("Espalda alta apoyada en el banco, pad en la cadera. Sube con glúteo hasta la extensión completa, sin arquear la lumbar, barbilla ligeramente recogida. Pausa de 1 s arriba. El glúteo es el motor de la zancada al correr y no se entrena solo con sentadilla.",
+        "Upper back on the bench, pad on the hips. Drive up with the glutes to full extension without arching the lower back, chin slightly tucked. 1 s pause at the top. The glutes are the engine of your running stride and squats alone don't train them.")},
+  {n:B("Zancadas caminando con mancuernas","Walking lunges, dumbbells"),sets:3,reps:B("10 /pierna","10 /leg"),chips:[B("Unilateral","Unilateral")],yt:"dumbbell walking lunge technique",
+   how:B("Mancuernas colgando a los lados, paso largo, rodilla trasera casi al suelo, torso erguido. Si no tienes recorrido, hazlas alternas en el sitio. Variante de zancada distinta a la búlgara del martes para que la pierna reciba dos estímulos parecidos pero no idénticos.",
+        "Dumbbells hanging at your sides, long stride, rear knee nearly touching the floor, torso upright. If you're short on space, do them alternating in place. A different lunge pattern from Tuesday's Bulgarian so the legs get two similar but not identical stimuli.")},
+  {n:B("Extensión de cuádriceps","Leg extension"),sets:3,reps:"12-15",chips:[B("Cuádriceps","Quads")],yt:"leg extension technique",
+   how:B("Pausa de 1 s arriba con la rodilla extendida y bajada controlada. Aísla el cuádriceps sin carga axial ni participación del hombro, así que puedes llevarlo cerca del fallo sin coste de recuperación para el resto de la semana.",
+        "1 s pause at the top with the knee extended, controlled lowering. Isolates the quads with no axial load and no shoulder involvement, so you can take it close to failure without a recovery cost for the rest of the week.")},
+  {n:B("Curl femoral en máquina","Machine leg curl"),sets:3,reps:"12-15",chips:[B("Isquios","Hamstrings")],yt:"lying leg curl technique",
+   how:B("Mismo ejercicio que el martes pero en rango alto de repeticiones. Isquios fuertes son la mejor protección que tienes para la rodilla en la tirada larga.",
+        "Same exercise as Tuesday but in a high rep range. Strong hamstrings are the best knee protection you have on the long run.")},
+  {n:B("Elevación de talones","Standing calf raise"),sets:3,reps:"12-15",chips:[B("Gemelo","Calves")],yt:"standing calf raise dumbbell",
+   how:B("De pie con mancuernas. Pausa de 1 s arriba, bajada lenta y estiramiento completo abajo. El gemelo y el sóleo absorben cada zancada: entrenarlos es prevención de tendinopatía de Aquiles, no estética.",
+        "Standing with dumbbells. 1 s pause at the top, slow lowering and a full stretch at the bottom. Calves and soleus absorb every stride: training them is Achilles tendinopathy prevention, not aesthetics.")},
+  {n:B("Dead bug","Dead bug"),sets:2,reps:B("10 /lado","10 /side"),chips:["Core"],yt:"dead bug exercise technique",
+   how:B("Tumbado boca arriba, extiende el brazo y la pierna contrarios a la vez, lumbar pegada al suelo. El brazo sube vertical sin soportar peso: sustituye a la plancha, que en tu caso ha irritado el hombro al cargarlo sobre el antebrazo.",
+        "Lying on your back, extend the opposite arm and leg together, lower back pinned to the floor. The arm rises straight up with no weight-bearing: it replaces the plank, which has irritated your shoulder by loading it through the forearm.")}
 ]},
-upperB:{title:"Upper B",sub:B("Floor press + remo con mancuerna + carries","Floor press + dumbbell rows + carries"),type:"gym",items:[
+
+upB:{title:"Upper B",sub:B("Floor press + tracción vertical · día doble","Floor press + vertical pulling · double day"),type:"gym",items:[
   WARMUP,
-  {n:B("Floor press con mancuernas","Dumbbell floor press"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("A prueba de errores","Error-proof")],yt:"dumbbell floor press neutral grip",
-   how:B("Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas. Baja hasta que los tríceps tocan el suelo y ahí paras (pausa 1 s opcional): el suelo corta el rango justo donde empieza la zona de riesgo. Codos pegados. Entra y sal de la posición con el truco de las rodillas.",
-        "Lying on the floor, knees bent, palms facing each other. Lower until the triceps touch the floor and stop there (optional 1 s pause): the floor cuts the range exactly where the risk zone starts. Elbows tucked. Get in and out of position with the knee-kick trick.")},
-  {n:B("Cruces con goma anclada baja (o polea)","Low-anchored band flys (or cable)"),sets:3,reps:"12-15",chips:[B("Rango controlado","Controlled range")],yt:"low resistance band chest fly",
-   how:B("Goma anclada a la altura de la rodilla. Sube hacia arriba-adentro hasta que las manos se encuentren, sin cruzar la línea media (protege la acromioclavicular) y sin pasar del pecho. Misma lógica que los cruces en polea del lunes.",
-        "Band anchored at knee height. Bring the hands upward-inward until they meet — no crossing the midline (protects the AC joint) and never above the chest. Same logic as Monday's cable flys.")},
-  {n:B("Pull-over en polea de pie","Standing cable pullover"),sets:3,reps:"10-12",chips:[B("Tracción","Pulling"),B("Brazos casi rectos","Arms nearly straight")],yt:"straight arm cable pulldown",
-   how:B("De pie frente a la polea alta, brazos casi rectos: lleva la barra desde la altura de los hombros hasta los muslos con los dorsales. El brazo nunca sube por encima del hombro bajo carga. Si el jalón del lunes fue perfecto, puedes repetir jalón aquí.",
-        "Standing at the high pulley, arms nearly straight: sweep the bar from shoulder height to your thighs with the lats. The arm never goes above the shoulder under load. If Monday's pulldown felt perfect, you can repeat pulldowns here instead.")},
-  {n:B("Remo con mancuerna apoyado en banco","One-arm dumbbell row on bench"),sets:4,reps:B("8-12 /lado","8-12 /side"),chips:[B("Codos pegados","Elbows tucked")],yt:"one arm dumbbell row bench",
-   how:B("Rodilla y mano del mismo lado en el banco, espalda paralela al suelo. Rema llevando el codo pegado al costado hacia la cadera, no hacia afuera en cruz. El apoyo estabiliza y protege.",
-        "Same-side knee and hand on the bench, back parallel to the floor. Row the elbow tight along your side toward the hip, not flared out. The support stabilizes and protects.")},
-  {n:B("Tríceps en polea (barra recta o V)","Triceps pushdown (straight or V bar)"),sets:3,reps:"10-15",chips:[B("Codos fijos","Elbows pinned")],yt:"triceps pushdown bar",
-   how:B("Igual que la cuerda del lunes, variante de agarre. Codos fijos al costado, nada overhead.",
-        "Same as Monday's rope, different attachment. Elbows pinned at your sides, nothing overhead.")},
+  {n:B("Floor press con mancuernas","Dumbbell floor press"),sets:4,reps:"6-10",chips:[B("Agarre neutro","Neutral grip"),B("Tu press progresable","Your progressable press")],yt:"dumbbell floor press neutral grip",
+   how:B("Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas, codos pegados. Baja hasta que los tríceps tocan el suelo y ahí paras (pausa de 1 s). El suelo corta el recorrido justo donde empieza la zona de riesgo — por eso ESTE es el press que sí puedes cargar progresivamente mientras la banca sigue vetada. Aquí es donde recuperas masa y dureza de pecho: aplica la progresión sin miedo, el rango protegido lo permite. Entra y sal de la posición con el truco de las rodillas. Cuando el equipo médico autorice, la vuelta será: floor press → press plano con mancuernas → banca con barra.",
+        "Lying on the floor, knees bent, palms facing, elbows tucked. Lower until the triceps touch the floor and stop there (1 s pause). The floor cuts the range right where the risk zone starts — which is why THIS is the press you can load progressively while the bench stays off-limits. This is where you rebuild chest mass and density: apply the progression without fear, the protected range allows it. Get in and out with the knee-kick trick. When your medical team clears you, the way back runs: floor press → flat dumbbell press → barbell bench.")},
+  {n:B("Jalón al pecho, agarre neutro estrecho","Lat pulldown, close neutral grip"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("Tracción","Pulling")],yt:"neutral grip lat pulldown",
+   how:B("Maneral de asas paralelas, separación de hombros o menos. Tira hacia la parte alta del pecho llevando los codos abajo y atrás, pecho alto, sin balanceo. El brazo arriba está en TRACCIÓN: descomprime el hombro, y por eso esto sí y el press militar no. Si molesta en el estiramiento superior, acorta el rango. Nada de dead hang, ni con los pies apoyados.",
+        "Parallel-handle attachment, shoulder width or narrower. Pull to the upper chest driving the elbows down and back, chest up, no swinging. The arm overhead is under TRACTION: it decompresses the shoulder, which is why this is allowed and overhead press is not. If the top stretch bothers you, shorten the range. No dead hangs, not even with feet supported.")},
+  {n:B("Remo con mancuerna apoyado en banco","One-arm dumbbell row on bench"),sets:3,reps:B("8-12 /lado","8-12 /side"),chips:[B("Codos pegados","Elbows tucked")],yt:"one arm dumbbell row bench",
+   how:B("Rodilla y mano del mismo lado en el banco, espalda paralela al suelo. Rema llevando el codo pegado al costado hacia la cadera, no hacia afuera en cruz. El apoyo en el banco estabiliza el tronco y protege el hombro que trabaja.",
+        "Same-side knee and hand on the bench, back parallel to the floor. Row the elbow tight along your side toward the hip, not flared out. The bench support stabilizes the torso and protects the working shoulder.")},
+  {n:B("Face pull en polea (altura pecho)","Cable face pull (chest height)"),sets:3,reps:"15-20",chips:[B("Salud de manguito","Cuff health"),B("Ligero","Light")],yt:"cable face pull technique",
+   how:B("Polea a la altura del pecho (no de la cara), cuerda. Tira hacia ti separando las manos al final y rotando hacia afuera, escápulas juntas, cuello relajado, retorno lento. Peso ligero SIEMPRE: esto es salud de manguito y postura, no un ejercicio de fuerza. Es el antídoto directo de todo el empuje de la semana. Si el hombro avisa por encima de 1-2/10, baja el anclaje.",
+        "Cable at chest height (not face height), rope attachment. Pull toward you spreading the hands at the end with external rotation, shoulder blades squeezed, neck relaxed, slow return. ALWAYS light: this is cuff and posture health, not a strength lift. It's the direct antidote to all the pressing in your week. If the shoulder complains above 1-2/10, lower the anchor.")},
   {n:B("Curl martillo","Hammer curl"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip")],yt:"hammer curl technique",
-   how:B("Curl con palmas enfrentadas. Sin restricciones.",
-        "Curl with palms facing each other. No restrictions.")},
+   how:B("Curl con palmas enfrentadas. Sin restricciones por el hombro.",
+        "Curl with palms facing each other. No shoulder restrictions.")},
   {n:B("Farmer carry con mancuernas","Dumbbell farmer carry"),sets:3,reps:"30-40 m",chips:[B("Joya para tu hombro","A gem for your shoulder")],yt:"farmer carry technique",
-   how:B("Mancuernas pesadas colgando a los lados, camina erguido con las escápulas 'metidas en los bolsillos'. Trabajo isométrico de trapecio y manguito sin ningún gesto de riesgo: de lo mejor que puedes hacer por ese hombro ahora mismo. Si no hay espacio: 3×30-40 s de pie.",
-        "Heavy dumbbells hanging at your sides, walk tall with the shoulder blades 'tucked into your back pockets'. Isometric trap and cuff work with zero risky movement: among the best things you can do for that shoulder right now. No space? 3×30-40 s standing holds.")},
+   how:B("Mancuernas pesadas colgando a los lados, camina erguido con las escápulas 'metidas en los bolsillos'. Trabajo isométrico de trapecio y manguito sin ningún gesto de riesgo: de lo mejor que puedes hacer por ese hombro. Si no hay espacio, 3×30-40 s de pie sujetando.",
+        "Heavy dumbbells hanging at your sides, walk tall with the shoulder blades 'tucked into your back pockets'. Isometric trap and cuff work with zero risky movement: among the best things you can do for that shoulder. No space? 3×30-40 s standing holds.")},
+  RUNEASY,
   CUFFREF
 ]},
+
 activo:{title:B("Descanso activo","Active recovery"),sub:B("Isométricos + movilidad · 15-20 min en casa","Isometrics + mobility · 15-20 min at home"),type:"gym",items:[
   {n:B("Isométrico rotación externa en pared","Wall external-rotation isometric"),sets:5,reps:"30-45 s",chips:[B("50-60% esfuerzo","50-60% effort")],yt:"isometric shoulder external rotation wall",link:"manguito",
    how:B("Codo a 90° pegado al costado, dorso de la muñeca contra la pared o el marco de la puerta. Empuja como para rotar el brazo hacia afuera: nada se mueve. Esfuerzo claramente submáximo. Usa el cronómetro guiado de la pestaña Manguito.",
         "Elbow at 90° pinned to your side, back of the wrist against the wall or door frame. Push as if rotating the arm outward: nothing moves. Clearly submaximal effort. Use the guided timer in the Cuff tab.")},
   {n:B("Codman + movilidad torácica + cápsula posterior","Codman + thoracic mobility + posterior capsule"),sets:1,reps:"8 min",chips:[B("Sin dolor","Pain-free")],yt:"sleeper stretch posterior capsule",
-   how:B("Pendulares suaves, rotaciones torácicas sentado, gato-camello. Y añade el sleeper stretch SUAVE (3×30 s): tumbado sobre el lado derecho, hombro y codo a 90°, empuja la muñeca hacia el suelo con la otra mano hasta notar tensión, NUNCA dolor. Por qué: en tu cirugía se abrió la cápsula anterior para recuperar movilidad; con los años lo que se acorta en estos hombros es la cápsula POSTERIOR, y una cápsula posterior rígida empuja la cabeza del húmero arriba y adelante — justo contra la zona donde vive tu calcificación residual. Este estiramiento es mantenimiento de por vida, como el manguito.",
-        "Gentle pendulums, seated thoracic rotations, cat-camel. And add the GENTLE sleeper stretch (3×30 s): lying on your right side, shoulder and elbow at 90°, push the wrist toward the floor with the other hand until you feel tension, NEVER pain. Why: your surgery opened the anterior capsule to restore motion; over the years what tightens in these shoulders is the POSTERIOR capsule, and a stiff posterior capsule pushes the humeral head up and forward — straight into the zone where your residual calcification lives. This stretch is lifelong maintenance, like the cuff work.")},
+   how:B("Pendulares suaves, rotaciones torácicas sentado, gato-camello. Y añade el sleeper stretch SUAVE (3×30 s): tumbado sobre el lado derecho, hombro y codo a 90°, empuja la muñeca hacia el suelo con la otra mano hasta notar tensión, NUNCA dolor. Es mantenimiento de por vida, como el manguito.",
+        "Gentle pendulums, seated thoracic rotations, cat-camel. And add the GENTLE sleeper stretch (3×30 s): lying on your right side, shoulder and elbow at 90°, push the wrist toward the floor with the other hand until you feel tension, NEVER pain. Lifelong maintenance, like the cuff work.")},
   {n:B("Movilidad de cadera y tobillo","Hip and ankle mobility"),sets:1,reps:"5 min",chips:[],yt:"hip ankle mobility runners",
-   how:B("Prepara la tirada larga del domingo: 90/90 de cadera, dorsiflexión de tobillo contra pared.",
-        "Sets up Sunday's long run: 90/90 hip work, ankle dorsiflexion against the wall.")}
+   how:B("90/90 de cadera, dorsiflexión de tobillo contra pared.",
+        "90/90 hip work, ankle dorsiflexion against the wall.")}
 ]},
-run1:{title:B("Run corta o HIIT","Short run or HIIT"),sub:B("Primera sesión corta de la semana","First short session of the week"),type:"run",km:"5-8 km",
-  note:B("Rodaje fácil o HIIT de carrera (6-10×400 m, 30/30, cuestas cortas). Si toca HIIT, que sea CORRIENDO: nada de circuitos con burpees, battle ropes o thrusters — eso es tren superior encubierto con gestos overhead. El braceo de los sprints no es problema para el hombro.",
-        "Easy run or RUNNING intervals (6-10×400 m, 30/30s, short hills). If it's HIIT day, keep it RUNNING: no circuits with burpees, battle ropes or thrusters — that's upper-body work in disguise with overhead movements. The arm swing of sprinting is no problem for the shoulder.")},
-run2:{title:B("Run corta o HIIT","Short run or HIIT"),sub:B("Segunda sesión corta de la semana","Second short session of the week"),type:"run",km:"5-8 km",
-  note:B("La otra corta: alterna con la del martes — si aquella fue HIIT, hoy rodaje fácil (o al revés). Dos HIIT + tirada larga es demasiada intensidad acumulada.",
-        "The other short one: alternate with Tuesday's — if that was HIIT, today is an easy run (or the other way round). Two HIIT days + a long run is too much accumulated intensity.")},
+run1:{title:B("HIIT o rodaje","Intervals or easy run"),sub:B("La sesión intensa de carrera de la semana","The week's hard running session"),type:"run",km:"5-8 km",
+  note:B("El único hueco de la semana donde el HIIT no le roba recuperación a nada: dos días después del pesado de piernas y tres antes de la tirada larga. Formato: 6-10×400 m, 30/30 o cuestas cortas, en cinta o en calle. Que sea CORRIENDO — nada de circuitos con burpees, battle ropes o thrusters: eso es tren superior encubierto con gestos overhead. El braceo de los sprints no es problema para el hombro. Si vienes justo de recuperación o aún arrastras el catarro, cámbialo por rodaje fácil sin pensarlo.",
+        "The one slot in the week where intervals don't steal recovery from anything else: two days after the heavy leg session and three before the long run. Format: 6-10×400 m, 30/30s or short hills, treadmill or road. Keep it RUNNING — no circuits with burpees, battle ropes or thrusters: that's upper body in disguise with overhead movements. The arm swing of sprinting is no problem for the shoulder. If you're short on recovery or still shaking off a cold, swap it for an easy run without hesitating.")},
 runLong:{title:B("Tirada larga","Long run"),sub:B("La salida de referencia de la semana","The reference run of the week"),type:"run",km:"10-12 km",
-  note:B("Ritmo sostenible, brazos relajados. Es la base del 10K, no una carrera. Llegas con el sábado de descanso por delante: aprovéchalo.",
-        "Sustainable pace, relaxed arms. It's your 10K base, not a race. You arrive off an easy Saturday: make it count.")},
+  note:B("Ritmo sostenible, brazos relajados. Es la base del 10K, no una carrera. Llegas con el viernes de pierna a dos días de distancia y el sábado sólo de tren superior y rodaje suave: las piernas deberían estar frescas. Mañana lunes descansas.",
+        "Sustainable pace, relaxed arms. It's your 10K base, not a race. You arrive with Friday's leg day two days back and Saturday only upper body plus an easy jog: the legs should be fresh. Tomorrow, Monday, you rest.")},
 
 hotelA:{title:B("Hotel · Full-body A","Hotel · Full-body A"),sub:B("Con gimnasio de hotel","With a hotel gym"),type:"gym",items:[
   {n:B("Goblet squat","Goblet squat"),sets:3,reps:"10",chips:[B("Agarre neutro","Neutral grip")],yt:"goblet squat technique",how:B("Mancuerna vertical al pecho. Torso erguido, cero implicación del hombro.","Dumbbell held vertical at your chest. Torso upright, zero shoulder involvement.")},
@@ -873,12 +890,12 @@ manguito:{title:B("Manguito y escápula","Rotator cuff & scapula"),sub:B("3-5 d�
 };
 
 var WEEK=[
- {d:B("LUN","MON"),name:B("Lunes","Monday"),sid:"upperA"},
- {d:B("MAR","TUE"),name:B("Martes","Tuesday"),sid:"run1"},
- {d:B("MIÉ","WED"),name:B("Miércoles","Wednesday"),sid:"lowerA"},
- {d:B("JUE","THU"),name:B("Jueves","Thursday"),sid:"run2"},
- {d:B("VIE","FRI"),name:B("Viernes","Friday"),sid:"upperB"},
- {d:B("SÁB","SAT"),name:B("Sábado","Saturday"),sid:"activo"},
+ {d:B("LUN","MON"),name:B("Lunes","Monday"),sid:"descanso"},
+ {d:B("MAR","TUE"),name:B("Martes","Tuesday"),sid:"lowA"},
+ {d:B("MIÉ","WED"),name:B("Miércoles","Wednesday"),sid:"upA"},
+ {d:B("JUE","THU"),name:B("Jueves","Thursday"),sid:"run1"},
+ {d:B("VIE","FRI"),name:B("Viernes","Friday"),sid:"lowB"},
+ {d:B("SÁB","SAT"),name:B("Sábado","Saturday"),sid:"upB"},
  {d:B("DOM","SUN"),name:B("Domingo","Sunday"),sid:"runLong"}
 ];
 
@@ -888,9 +905,10 @@ var MUSC={chest:B("Pecho","Chest"),back:B("Espalda","Back"),shoulders:B("Hombros
   biceps:B("Bíceps","Biceps"),triceps:B("Tríceps","Triceps"),legs:B("Pierna","Legs"),
   core:B("Core","Core"),cuff:B("Manguito","Cuff"),cardio:B("Cardio","Cardio")};
 var MGROUPS={
-  upperA:[null,"chest","chest","chest","back","back","triceps","biceps","cuff"],
-  lowerA:[null,"legs","legs","legs","legs","legs","core","core"],
-  upperB:[null,"chest","chest","back","back","triceps","biceps","core","cuff"],
+  lowA:[null,"legs","legs","legs","legs","core"],
+  upA:[null,"chest","back","chest","triceps","biceps","cuff"],
+  lowB:[null,"legs","legs","legs","legs","legs","core"],
+  upB:[null,"chest","back","back","cuff","biceps","back","cardio","cuff"],
   activo:["cuff","core","core"],
   hotelA:["legs","chest","back","core","cuff"],
   hotelB:["legs","chest","back","core","cuff"],
