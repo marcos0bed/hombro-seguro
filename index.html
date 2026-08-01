@@ -225,7 +225,8 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .macb i.over{background:var(--bad)}
 .macv{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .macv span{color:var(--mut);font-size:11px}
-.macnote{font-family:var(--mono);font-size:11px;color:var(--mut);white-space:nowrap}
+.macnote{font-family:var(--mono);font-size:11px;color:var(--mut);white-space:nowrap;flex:none}
+.macd{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .rxdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:2px 0 10px}
 .rxdays button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--disp);font-weight:700;font-size:13px;color:var(--mut);min-width:0}
@@ -274,7 +275,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v100";
+var APP_VERSION="v101";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1952,7 +1953,7 @@ function macroGoal(day){
   var kind=(cfg.byDay&&cfg.byDay[sid])||DAYLOAD[sid];
   if(!kind){var s=sid&&getSession(sid);kind=(s&&s.type==="run")?"hard":"soft"}
   var k=cfg[kind]||cfg.soft||MACROS.soft;
-  return {prot:cfg.prot||MACROS.prot,carb:k.carb,fat:k.fat,kind:kind};
+  return {prot:cfg.prot||MACROS.prot,carb:k.carb,fat:k.fat,kind:kind,sid:sid};
 }
 function macroCard(){
   if(!cloudOn())return "";
@@ -1962,23 +1963,30 @@ function macroCard(){
   var g=macroGoal(day);
   var got={prot:+((r&&r.protein_g)||0),carb:+((r&&r.carbs_g)||0),fat:+((r&&r.fat_g)||0)};
   var kcalG=Math.round(g.prot*4+g.carb*4+g.fat*9);
-  var kindL={soft:B("Día suave","Easy day"),hard:B("Día duro","Hard day"),long:B("Tirada larga","Long run")}[g.kind];
+  /* La etiqueta dice QUÉ cambia (los carbohidratos) y POR QUÉ (la sesión del
+     día). "Día suave" no se entendía: no aclaraba si lo suave era el entreno
+     o la comida. La proteína no aparece aquí porque nunca varía. */
+  var kindL={soft:B("carbos bajos","low carbs"),hard:B("carbos altos","high carbs"),
+             long:B("recarga","refuel")}[g.kind];
+  var sS=getSession(g.sid);
+  var sIc=sS?(sS.type==="run"?"🏃":(sS.type==="rest"?"😴":"💪")):"";
+  var sN=sS?String(T(sS.title)).split("·")[0].trim():"";
   var defs=[
-    {l:B("Proteína","Protein"),got:got.prot,goal:g.prot,up:true},
-    {l:B("Carbos","Carbs"),got:got.carb,goal:g.carb,up:false},
-    {l:B("Grasa","Fat"),got:got.fat,goal:g.fat,up:false}
+    {i:"🥩",l:B("Proteína","Protein"),got:got.prot,goal:g.prot,up:true},
+    {i:"🍞",l:B("Carbos","Carbs"),got:got.carb,goal:g.carb,up:false},
+    {i:"🥑",l:B("Grasa","Fat"),got:got.fat,goal:g.fat,up:false}
   ];
   var cols=defs.map(function(m){
     var pct=m.goal>0?Math.min(100,Math.round(m.got/m.goal*100)):0;
     /* La proteína es un SUELO: verde al alcanzarla. Carbos y grasa son techo:
        rojo al pasarse claramente (>10%), que es cuando importa. */
     var cls=m.up?(m.got>=m.goal*.95?" ok":""):(m.got>m.goal*1.1?" over":"");
-    return '<div class="macg"><div class="macl">'+esc(T(m.l))+"</div>"+
+    return '<div class="macg"><div class="macl">'+m.i+" "+esc(T(m.l))+"</div>"+
       '<div class="macb"><i class="'+cls.trim()+'" style="width:'+pct+'%"></i></div>'+
       '<div class="macv">'+Math.round(m.got)+' <span>/'+m.goal+" g</span></div></div>";
   }).join("");
   return '<div class="card" style="padding:11px 13px"><div class="exhead" style="margin-bottom:9px">'+
-    '<div class="tlab">'+T(B("Macros","Macros"))+" · "+esc(T(kindL))+"</div>"+
+    '<div class="tlab macd">'+sIc+" "+esc(sN)+" · "+esc(T(kindL))+"</div>"+
     '<span class="macnote">'+kcalG+" kcal</span></div>"+
     '<div class="macrow">'+cols+"</div></div>";
 }
