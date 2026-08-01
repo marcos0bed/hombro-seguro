@@ -305,7 +305,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v117";
+var APP_VERSION="v118";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2002,8 +2002,13 @@ function ensureGoal(){
 /* Estrés a lo largo del día (Garmin). Sustituye a la curva de FC: la FC ya
    aparece como FC en reposo en la rejilla, mientras que el estrés dice algo que
    ningún otro dato de la app cuenta — cuándo se carga el sistema nervioso.
-   La curva son 48 cubos de MEDIA HORA en hora local, con null en los tramos que
-   el reloj no pudo medir. Dos vistas: línea del día, o barra por media hora. */
+   La curva son 48 cubos de MEDIA HORA en hora local. Un cubo puede valer:
+     · un número  -> estrés medio de esa franja
+     · -2         -> ESTABAS ENTRENANDO. Garmin no puede calcular estrés con
+                     movimiento: el cálculo se apoya en la variabilidad en reposo.
+                     El reloj está puesto y midiendo; es información, no un hueco.
+     · null       -> sin dato suficiente
+   Dos vistas: línea del día, o barra por media hora. */
 var SBANDAS=[[0,25,"#46C08A"],[25,50,"#A8C97F"],[50,75,"#E8963E"],[75,101,"#E5484D"]];
 function sColor(v){
   for(var i=0;i<SBANDAS.length;i++)if(v<SBANDAS[i][1])return SBANDAS[i][2];
@@ -2015,7 +2020,8 @@ function stressDayCard(){
   var r=rowFor(selDay());
   if(!r||!Array.isArray(r.stress_curve))return "";
   var vs=r.stress_curve.map(function(v){return v==null?null:+v});
-  var hay=vs.filter(function(v){return v!=null});
+  var hay=vs.filter(function(v){return v!=null&&v>=0});
+  var act=vs.filter(function(v){return v===-2}).length;
   if(hay.length<2)return "";
   var av=r.stress_avg!=null?r.stress_avg:Math.round(hay.reduce(function(a,b){return a+b},0)/hay.length);
   var mx=Math.max.apply(null,hay);
@@ -2033,16 +2039,32 @@ function stressDayCard(){
     var an=(W-2*P)/N;
     vs.forEach(function(v,k){
       if(v==null)return;
-      var x=P+an*k, h=BASE-yy(v);
+      var x=P+an*k, hh2=pad(Math.floor(k/2))+":"+(k%2?"30":"00");
+      if(v===-2){
+        /* Entrenando: no hay valor que pintar, pero SÍ hay que decir por qué.
+           Bloque completo tenue con el color de acento. */
+        svg+='<rect x="'+(x+0.35).toFixed(1)+'" y="'+TOP+'" width="'+(an-0.7).toFixed(1)+
+             '" height="'+(BASE-TOP).toFixed(1)+'" fill="var(--acc)" opacity=".2"/>'+
+             '<rect x="'+(x+0.35).toFixed(1)+'" y="'+(BASE-1.6)+'" width="'+(an-0.7).toFixed(1)+
+             '" height="1.6" fill="var(--acc)" opacity=".85"><title>'+hh2+" · "+T(B("entrenando","training"))+"</title></rect>";
+        return;
+      }
+      var h=BASE-yy(v);
       svg+='<rect x="'+(x+0.35).toFixed(1)+'" y="'+yy(v).toFixed(1)+'" width="'+(an-0.7).toFixed(1)+
            '" height="'+Math.max(0.8,h).toFixed(1)+'" fill="'+sColor(v)+'" opacity=".9"><title>'+
-           pad(Math.floor(k/2))+":"+(k%2?"30":"00")+" · "+v+"</title></rect>";
+           hh2+" · "+v+"</title></rect>";
     });
   }else{
     /* Línea, partiéndola donde falten datos para no inventar continuidad. */
+    var an2=(W-2*P)/N;
+    vs.forEach(function(v,k){
+      if(v!==-2)return;
+      svg+='<rect x="'+(P+an2*k).toFixed(1)+'" y="'+TOP+'" width="'+an2.toFixed(1)+
+           '" height="'+(BASE-TOP).toFixed(1)+'" fill="var(--acc)" opacity=".16"/>';
+    });
     var seg=[],cur=[];
     vs.forEach(function(v,k){
-      if(v==null){if(cur.length>1)seg.push(cur);cur=[];return}
+      if(v==null||v<0){if(cur.length>1)seg.push(cur);cur=[];return}
       cur.push((P+(W-2*P)*k/(N-1)).toFixed(1)+","+yy(v).toFixed(1));
     });
     if(cur.length>1)seg.push(cur);
@@ -2065,7 +2087,10 @@ function stressDayCard(){
     return '<button data-act="sview" data-v="'+o[0]+'"'+(((state.sView||"")===o[0])?' class="sel"':"")+'>'+o[1]+"</button>"}).join("")+"</span>";
   return '<div class="card" style="padding:9px 12px"><div class="exhead"><div class="tlab strow">🧠 '+
     T(B("Estrés","Stress"))+' <span class="snum">'+av+" · "+T(B("máx","max"))+" "+mx+(q?" · "+esc(q):"")+"</span></div>"+
-    sel+"</div>"+svg+"</div>";
+    sel+"</div>"+svg+
+    (act?'<p class="note" style="font-size:10.5px;color:var(--mut);margin-top:2px"><span style="color:var(--acc)">▮</span> '+
+      T(B("entrenando · Garmin no mide estrés con movimiento","training · Garmin can\'t measure stress while moving"))+"</p>":"")+
+    "</div>";
 }
 
 /* Journal: impresiones del día (kv journal:<día>, sincronizado; lo lee el parte semanal) */
