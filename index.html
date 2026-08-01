@@ -200,6 +200,9 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(18,21,26,.92);backdro
 nav button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 2px 7px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.03em;font-size:10px;font-weight:600;color:var(--mut);border-top:2px solid transparent;overflow:hidden;white-space:nowrap}
 nav button svg{width:19px;height:19px;flex:none}
 nav button.sel{color:var(--acc);border-top-color:var(--acc)}
+/* Con 7 pestañas las etiquetas no caben a 10px en pantallas de 375-390 px. */
+.nav-in.n7 button{font-size:9px;letter-spacing:.005em;padding-left:0;padding-right:0}
+.nav-in.n7 button svg{width:18px;height:18px}
 
 .backlink{display:inline-block;margin:10px 0 0;color:var(--mut);font-size:14px;text-decoration:underline;text-underline-offset:3px}
 table.mini{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
@@ -208,6 +211,31 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 table.mini.labs td{padding:7px 4px}
 table.mini.labs td:first-child{white-space:normal;line-height:1.2}
 table.mini.labs td:nth-child(2){white-space:nowrap}
+
+/* ---- pestaña Rutina: la sesión sola, en vivo ----
+   Mismos datos que en Hoy (comparten kv), pero sin el parte del día delante:
+   barra pegada arriba con la serie en curso y ejercicios terminados plegados. */
+.rxdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:2px 0 10px}
+.rxdays button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--disp);font-weight:700;font-size:13px;color:var(--mut);min-width:0}
+.rxdays button .rxi{font-size:11px;line-height:1;filter:grayscale(1) opacity(.55)}
+.rxdays button.done{border-color:rgba(70,192,138,.45);color:var(--ok)}
+.rxdays button.sel{border-color:var(--acc);color:var(--acc);background:rgba(240,166,60,.12)}
+.rxdays button.sel .rxi{filter:none}
+.rxnow{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:0 -14px 10px;padding:9px 14px 10px;background:rgba(18,21,26,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.rxnow .rxl{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left}
+.rxnow .rxn{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rxnow .rxc{font-family:var(--mono);font-size:12px;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}
+.rxbar{height:5px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:7px}
+.rxbar i{display:block;height:100%;background:var(--acc);border-radius:3px;transition:width .25s}
+.rxnow.fin .rxn,.rxnow.fin .rxc{color:var(--ok)}
+.rxnow.fin .rxbar i{background:var(--ok)}
+.rxdone{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface);border:1px solid rgba(70,192,138,.3);border-radius:var(--r);padding:11px 14px;margin:8px 0}
+.rxdone .rxv{color:var(--ok);font-size:14px}
+.rxdone .rxt{flex:1;min-width:0;font-size:14.5px;color:#c6cdd6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rxdone .rxk{font-family:var(--mono);font-size:12px;color:var(--mut);white-space:nowrap}
+.rxw{scroll-margin-top:calc(64px + env(safe-area-inset-top,0px))}
+.rxflash>.card{animation:rxfl 1.2s ease-out}
+@keyframes rxfl{0%,55%{border-color:var(--acc)}100%{border-color:var(--line)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -230,7 +258,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v93";
+var APP_VERSION="v94";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -534,7 +562,8 @@ var LANG=S("lang",((navigator.language||"es").slice(0,2)==="en")?"en":"es");
 function B(es,en){return{es:es,en:en}}
 function T(v){return (v&&typeof v==="object"&&("es" in v))?(v[LANG]||v.es):v}
 var UI={
-es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
+es:{hoy:"Hoy",rutina:"Rutina",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
+  rxJump:"Ir al ejercicio en curso",rxRe:"Volver a abrir el ejercicio",
   phaseB:"Fase de protección",phaseS:"Hasta revisión médica → preguntar techo de carga para press",
   strip:["Dolor máx 0-1/10","RPE 6-7","Nada overhead","2 limpias → subir"],
   subSemana:"Plan completo · fase de protección",subViaje:"La maleta siempre lleva las gomas",subManguito:"3-5 días/semana · el seguro de todo lo demás",subReglas:"Lo que protege al supraespinoso",
@@ -588,7 +617,8 @@ es:{hoy:"Hoy",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   ptrPull:"↓ Suelta para actualizar",ptrBusy:"↻ Actualizando…",
   dSteps:"Pasos",dSleep:"Sueño",dRhr:"FC reposo",
   doneT:"Hecho hoy",bodyT:"Tu cuerpo hoy",achT:"Logros del día",ach10k:"10k pasos",ach80:"Sueño 80+",achDef:"Déficit",habT:"Log del día"},
-en:{hoy:"Today",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
+en:{hoy:"Today",rutina:"Workout",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
+  rxJump:"Jump to the current exercise",rxRe:"Reopen this exercise",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
   subSemana:"Full plan · protection phase",subViaje:"The bands always travel with you",subManguito:"3-5 days/week · the insurance for everything else",subReglas:"What protects the supraspinatus",
@@ -904,7 +934,7 @@ function orderedIdx(sid,items){
    Usuarios con rutina propia no ven nada del hombro salvo que su rutina lo pida. */
 function shoulderUser(){var rt=getRT();return !rt||rt.shoulderCheck===true}
 
-var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas"),pview:"train",dayOff:0,dayRange:1};
+var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas"),pview:"train",dayOff:0,dayRange:1,rxSid:null,rxExp:{}};
 var todayIdx=(new Date().getDay()+6)%7;
 var TODAY=iso(new Date());
 
@@ -989,6 +1019,90 @@ function sessionView(sid){
   return h;
 }
 
+/* ---------- pestaña Rutina ----------
+   La misma sesión que en Hoy y sobre las mismas claves (series, pesos, dolor,
+   nota): lo único que cambia es el marco. Aquí no hay parte del día, journal ni
+   métricas — solo la sesión, con la serie en curso pegada arriba y los
+   ejercicios ya terminados plegados a una línea, de modo que la lista encoge
+   según avanzas y lo siguiente que toca queda siempre a la vista. */
+function rxIdx(){
+  var WK=getWeek();
+  if(state.rxSid){
+    var k=WK.findIndex(function(w){return w.sid===state.rxSid});
+    if(k>=0)return k;
+  }
+  return todayIdx;
+}
+function rxCount(sid){
+  var s=getSession(sid);if(!s||!s.items)return {done:0,total:0};
+  var st=S(setsKey(sid),{}),d=0,t=0;
+  s.items.forEach(function(it,i){
+    var ns=nSets(sid,i,it);if(!it.sets||!ns)return;
+    var arr=st[i]||[];t+=ns;
+    for(var j=0;j<ns;j++)if(arr[j])d++;
+  });
+  return {done:d,total:t};
+}
+function rxExDone(sid,i,it){
+  var ns=nSets(sid,i,it);if(!it.sets||!ns)return false;
+  var arr=S(setsKey(sid),{})[i]||[];
+  for(var j=0;j<ns;j++)if(!arr[j])return false;
+  return true;
+}
+/* Primera serie pendiente en el orden en que se ven los ejercicios. */
+function rxFocus(sid){
+  var s=getSession(sid);if(!s||!s.items)return null;
+  var st=S(setsKey(sid),{}),out=null;
+  orderedIdx(sid,s.items).some(function(i){
+    var it=s.items[i],ns=nSets(sid,i,it);
+    if(!it.sets||!ns)return false;
+    var arr=st[i]||[];
+    for(var j=0;j<ns;j++)if(!arr[j]){out={i:i,j:j,ns:ns,it:it};return true}
+    return false;
+  });
+  return out;
+}
+function rxDoneRow(sid,i,it){
+  var ns=nSets(sid,i,it),w=S("w:"+sid+":"+i,"");
+  var rp=String(S("r:"+TODAY+":"+sid+":"+i,"")).trim()||estReps(T(it.reps))||T(it.reps);
+  var det=ns+"×"+rp+(w?" · "+w+" "+u("kg"):"");
+  return '<button class="rxdone" data-act="rxopen" data-sid="'+sid+'" data-i="'+i+'" aria-label="'+u("rxRe")+'">'+
+    '<span class="rxv">✓</span><span class="rxt">'+esc(T(it.n))+'</span><span class="rxk">'+esc(det)+"</span></button>";
+}
+function rutinaView(){
+  var WK=getWeek(),idx=rxIdx(),sid=WK[idx].sid,s=getSession(sid),h="";
+  h+='<div class="rxdays">'+WK.map(function(w,i){
+      var ws=getSession(w.sid),ic=ws&&ws.type==="run"?"🏃":(ws&&ws.type==="rest"?"😴":"💪");
+      var cls=i===idx?"sel":(isDone(w.sid)?"done":"");
+      return '<button data-act="rxday" data-sid="'+w.sid+'"'+(cls?' class="'+cls+'"':"")+
+        ' aria-label="'+esc(T(w.name))+'"><span class="rxi">'+ic+"</span>"+esc(T(w.d))+"</button>";
+    }).join("")+"</div>";
+  if(!s)return h;
+  if(s.type!=="gym")return h+sessionView(sid);
+
+  var c=rxCount(sid),f=rxFocus(sid);
+  var pct=c.total?Math.round(c.done/c.total*100):0;
+  h+='<div class="rxnow'+(f?"":" fin")+'">'+
+     (f?'<button class="rxl" data-act="rxjump" data-i="'+f.i+'" aria-label="'+u("rxJump")+'">'+
+          '<span class="rxn">'+esc(T(f.it.n))+'</span>'+
+          '<span class="rxc">'+u("serieLbl")+" "+(f.j+1)+"/"+f.ns+" · "+c.done+"/"+c.total+"</span></button>"
+        :'<div class="rxl"><span class="rxn">'+u("sessDone")+'</span>'+
+          '<span class="rxc">'+c.done+"/"+c.total+"</span></div>")+
+     '<div class="rxbar"><i style="width:'+pct+'%"></i></div></div>';
+
+  var exp=state.rxExp||{};
+  orderedIdx(sid,s.items).forEach(function(oi,pos){
+    var it=s.items[oi];
+    if(rxExDone(sid,oi,it)&&!exp[sid+":"+oi])h+=rxDoneRow(sid,oi,it);
+    else h+='<div class="rxw" id="rx-'+oi+'">'+exCard(sid,oi,it,pos,s.items.length)+"</div>";
+  });
+  if(sid!=="manguito"&&sid!=="activo"&&shoulderUser())h+=painBlock();
+  var saved=S("savedlog:"+TODAY+":"+sid,false);
+  h+='<textarea class="note-in" rows="2" data-key="note:'+TODAY+":"+sid+'" placeholder="'+u("notePh")+'">'+esc(String(S("note:"+TODAY+":"+sid,"")))+"</textarea>";
+  h+='<button class="donebtn'+(saved?" on":"")+'" data-act="savelog" data-sid="'+sid+'">'+(saved?u("savedSession"):u("saveSession"))+"</button>";
+  return h;
+}
+
 function renderHdr(){
   var WK=getWeek();
   var idx=state.sid?WK.findIndex(function(w){return w.sid===state.sid}):todayIdx;
@@ -997,6 +1111,11 @@ function renderHdr(){
   var big,sub;
   var cx=clin();
   if(state.tab==="hoy"){big=T(w.name)+" · "+T(s.title);sub=T(s.sub)||""}
+  else if(state.tab==="rutina"){
+    /* En Rutina el titular es la sesión que se está haciendo, no la pestaña. */
+    var wr=WK[rxIdx()],sr=getSession(wr.sid);
+    big=T(sr.title);sub=T(wr.name)+(T(sr.sub)?" · "+T(sr.sub):"");
+  }
   else{big={semana:u("tSemana"),progreso:u("progreso"),viaje:u("tViaje"),manguito:u("tManguito"),reglas:u("tReglas"),cuenta:u("acct")}[state.tab];
        sub={semana:(cx&&cx.subSemana)||u("subSemana"),progreso:u("subProgreso"),viaje:u("subViaje"),manguito:u("subManguito"),reglas:u("subReglas"),cuenta:u("acctSub")}[state.tab]}
   if(state.tab==="progreso"&&LASTUP){
@@ -1140,6 +1259,9 @@ function render(keepScroll){
     }
     h+=briefCard();
     h+=journalCard();
+  }
+  else if(state.tab==="rutina"){
+    h+=rutinaView();
   }
   else if(state.tab==="cuenta"){
     if(!sb){
@@ -1377,6 +1499,7 @@ function muscleView(){
 
 var ICONS={
 hoy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/><circle cx="12" cy="15.5" r="1.7" fill="currentColor" stroke="none"/></svg>',
+rutina:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5v5M6.5 7v10M17.5 7v10M20.5 9.5v5M6.5 12h11"/></svg>',
 semana:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M4 10h16M9 3v4M15 3v4M8 14h2.5M13.5 14h2.5M8 17.5h2.5M13.5 17.5h2.5"/></svg>',
 progreso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20v-7M12 20V5M19 20v-10"/></svg>',
 viaje:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="2.5"/><path d="M9 8V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V8M9.5 12v4M14.5 12v4"/></svg>',
@@ -1481,7 +1604,7 @@ function labsView(L){
 
 function visibleTabs(){
   var rt=getRT(),hide=(rt&&rt.hideTabs)||[];
-  return ["hoy","semana","progreso","viaje","manguito","reglas"].filter(function(t){return hide.indexOf(t)<0});
+  return ["hoy","rutina","semana","progreso","viaje","manguito","reglas"].filter(function(t){return hide.indexOf(t)<0});
 }
 /* Gráfica de tendencias por carriles: cada serie en su banda (mismo eje temporal),
    con su etiqueta y último valor. Las series ruidosas se suavizan (media móvil). */
@@ -2017,6 +2140,7 @@ function renderNav(){
   var tabs=visibleTabs();
   var el=document.getElementById("navin");
   el.style.gridTemplateColumns="repeat("+tabs.length+",1fr)";
+  el.className="nav-in"+(tabs.length>=7?" n7":"");
   el.innerHTML=tabs.map(function(t){
     return '<button data-tab="'+t+'"'+(state.tab===t?' class="sel"':"")+">"+(ICONS[t]||"")+"<span>"+u(t)+"</span></button>"}).join("");
 }
@@ -2179,6 +2303,9 @@ document.addEventListener("click",function(e){
     arr[j]=!arr[j];st[i]=arr;W(setsKey(sid),st);
     b.classList.toggle("on",arr[j]);
     if(arr[j]){haptic(1);askNotif();restStart(60,sid,i);}
+    /* En Rutina el marcador de arriba y el plegado de ejercicios terminados
+       dependen de estas series: hay que repintar (sin mover el scroll). */
+    if(state.tab==="rutina")render(true);
     return;
   }
   if(act==="setminus"||act==="setplus"){
@@ -2220,6 +2347,21 @@ document.addEventListener("click",function(e){
     if(!cloudOn()){state.tab="cuenta";render();return}
     var row=buildLog(sidL);
     if(row)saveLog(row,sidL);
+    return;
+  }
+  if(act==="rxday"){state.rxSid=b.dataset.sid;render();return}
+  if(act==="rxopen"){
+    var kx=b.dataset.sid+":"+b.dataset.i;
+    state.rxExp=state.rxExp||{};
+    if(state.rxExp[kx])delete state.rxExp[kx];else state.rxExp[kx]=true;
+    render(true);return;
+  }
+  if(act==="rxjump"){
+    var elx=document.getElementById("rx-"+b.dataset.i);
+    if(elx){
+      elx.scrollIntoView({behavior:"smooth",block:"start"});
+      elx.classList.remove("rxflash");void elx.offsetWidth;elx.classList.add("rxflash");
+    }
     return;
   }
   if(act==="day"){state.sid=b.dataset.sid;state.tab="hoy";state.wkOpen=true;render();return}
