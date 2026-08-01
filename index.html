@@ -226,6 +226,9 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .macv{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .macv span{color:var(--mut);font-size:11px}
 .macwarn{margin-top:9px;font-size:12px;color:var(--warn);line-height:1.4;border-top:1px solid var(--line);padding-top:8px}
+.foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
+.foldr{display:flex;align-items:baseline;gap:9px;flex:none}
+.foldh .chev{color:var(--mut);font-size:12px}
 .wkrow{display:grid;grid-template-columns:auto auto 1fr;gap:4px 8px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}
 .wkrow:first-of-type{border-top:none;padding-top:0}
 .wki{font-size:14px;grid-row:span 2}
@@ -298,7 +301,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v113";
+var APP_VERSION="v114";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2056,12 +2059,27 @@ function daybriefCard(){
   var ayer=new Date();ayer.setDate(ayer.getDate()-1);
   if((b.week||"")<iso(ayer))return "";
   var txt=T(b.body)||"";if(!txt)return "";
-  return '<div class="card"><div class="exhead"><h3>☀️ '+T(B("Parte del día","Daily brief"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
+  return foldCard("daybrief","☀️ "+T(B("Parte del día","Daily brief")),b.week,txt,true);
+}
+
+/* Tarjeta plegable para los partes: son largos y estorban al llegar a la sesión.
+   El estado se guarda por tarjeta (kv "fold:<clave>") y se sincroniza, así que
+   si lo pliegas en el móvil sigue plegado en el iPad. Por defecto abiertos. */
+function foldCard(clave,titulo,fecha,txt,abiertoPorDefecto){
+  /* Ojo: S() devuelve el valor guardado tal cual, y un null guardado NO es lo
+     mismo que "sin guardar". Se normaliza para que ambos casos abran. */
+  var ab=S("fold:"+clave,null);
+  if(ab===null||ab===undefined)ab=abiertoPorDefecto!==false;
+  return '<div class="card"><button class="foldh" data-act="fold" data-k="'+clave+'" aria-expanded="'+(ab?"true":"false")+'">'+
+    "<h3>"+esc(titulo)+"</h3>"+
+    '<span class="foldr"><span class="note" style="color:var(--mut);font-size:11px">'+esc(fecha||"")+"</span>"+
+    '<span class="chev">'+(ab?"▾":"▸")+"</span></span></button>"+
+    (ab?richBody(txt):"")+"</div>";
 }
 function briefCard(){
   var b=S("brief",null);if(!b||!b.body)return "";
   var txt=T(b.body)||"";if(!txt)return "";
-  return '<div class="card"><div class="exhead"><h3>'+T(B("Parte semanal","Weekly brief"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
+  return foldCard("brief","📈 "+T(B("Parte semanal","Weekly brief")),b.week,txt,true);
 }
 /* Línea base (kv "baseline"): resumen del análisis de 90 días, visible en Cuenta */
 function baselineCard(){
@@ -2719,6 +2737,7 @@ document.addEventListener("click",function(e){
     return;
   }
   if(act==="day"){state.sid=b.dataset.sid;state.tab="hoy";state.wkOpen=true;render();return}
+  if(act==="fold"){var fk="fold:"+b.dataset.k;W(fk,!S(fk,true));render(true);return}
   if(act==="togglewk"){state.wkOpen=!state.wkOpen;render(true);return}
   if(act==="back"){state.sid=null;render();return}
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
