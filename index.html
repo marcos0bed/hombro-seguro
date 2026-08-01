@@ -215,6 +215,18 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 /* ---- pestaña Rutina: la sesión sola, en vivo ----
    Mismos datos que en Hoy (comparten kv), pero sin el parte del día delante:
    barra pegada arriba con la serie en curso y ejercicios terminados plegados. */
+/* Macros del día: una sola fila de 3 columnas bajo "Tu cuerpo hoy". */
+.macrow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.macg{min-width:0}
+.macl{font-family:var(--disp);text-transform:uppercase;font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.macb{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;margin:6px 0 5px}
+.macb i{display:block;height:100%;border-radius:3px;background:var(--acc);transition:width .3s}
+.macb i.ok{background:var(--ok)}
+.macb i.over{background:var(--bad)}
+.macv{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.macv span{color:var(--mut);font-size:11px}
+.macnote{font-family:var(--mono);font-size:11px;color:var(--mut);white-space:nowrap}
+
 .rxdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:2px 0 10px}
 .rxdays button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--disp);font-weight:700;font-size:13px;color:var(--mut);min-width:0}
 .rxdays button .rxi{font-size:11px;line-height:1;filter:grayscale(1) opacity(.55)}
@@ -262,7 +274,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v99";
+var APP_VERSION="v100";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1260,6 +1272,7 @@ function render(keepScroll){
     var lblD=dOff===0?T(B("Hoy","Today")):dOff===1?T(B("Ayer","Yesterday")):sdD.slice(8,10)+"/"+sdD.slice(5,7);
     h+='<div class="dnav"><button data-act="daynav" data-d="1"'+(dOff>=90?" disabled":"")+' aria-label="'+T(B("Día anterior","Previous day"))+'">‹</button><b>'+lblD+'</b><button data-act="daynav" data-d="-1"'+(dOff===0?" disabled":"")+' aria-label="'+T(B("Día siguiente","Next day"))+'">›</button></div>';
     h+=dayCard();
+    h+=macroCard();
     h+=daybriefCard();
     h+=hrDayCard();
     h+=achCard();
@@ -1923,6 +1936,51 @@ function runplanCard(){
   var b=S("runplan",null);if(!b||!b.body)return "";
   var txt=T(b.body)||"";if(!txt)return "";
   return '<div class="card"><div class="exhead"><h3>🏃 '+T(B("Plan de running","Running plan"))+'</h3><span class="note" style="color:var(--mut);font-size:11px">'+esc(b.week||"")+"</span></div>"+richBody(txt)+"</div>";
+}
+
+/* ---------- macros del día vs objetivo ----------
+   Pauta activa (corpus, 2026-08-01): la proteína es FIJA todos los días; los
+   carbohidratos y la grasa suben en los días de carga. El tipo de día se deduce
+   de la sesión que toca en la rutina, así que si cambia la semana esto la sigue
+   sin tocar nada. El backend puede sobrescribirlo con goal.macros. */
+var MACROS={prot:160,soft:{carb:60,fat:75},hard:{carb:110,fat:80},long:{carb:130,fat:80}};
+var DAYLOAD={descanso:"soft",lowA:"hard",upA:"soft",run1:"hard",lowB:"hard",upB:"soft",runLong:"long"};
+function macroGoal(day){
+  var G=S("goal",{})||{},cfg=(G&&G.macros)||MACROS;
+  var d=new Date(day+"T12:00:00"),idx=(d.getDay()+6)%7;
+  var w=getWeek()[idx],sid=w&&w.sid;
+  var kind=(cfg.byDay&&cfg.byDay[sid])||DAYLOAD[sid];
+  if(!kind){var s=sid&&getSession(sid);kind=(s&&s.type==="run")?"hard":"soft"}
+  var k=cfg[kind]||cfg.soft||MACROS.soft;
+  return {prot:cfg.prot||MACROS.prot,carb:k.carb,fat:k.fat,kind:kind};
+}
+function macroCard(){
+  if(!cloudOn())return "";
+  if((state.dayRange||1)!==1)return "";          // solo en la vista de un día
+  var day=selDay(),r=rowFor(day);
+  if(!r&&day!==TODAY)return "";                  // día pasado sin registro: nada que enseñar
+  var g=macroGoal(day);
+  var got={prot:+((r&&r.protein_g)||0),carb:+((r&&r.carbs_g)||0),fat:+((r&&r.fat_g)||0)};
+  var kcalG=Math.round(g.prot*4+g.carb*4+g.fat*9);
+  var kindL={soft:B("Día suave","Easy day"),hard:B("Día duro","Hard day"),long:B("Tirada larga","Long run")}[g.kind];
+  var defs=[
+    {l:B("Proteína","Protein"),got:got.prot,goal:g.prot,up:true},
+    {l:B("Carbos","Carbs"),got:got.carb,goal:g.carb,up:false},
+    {l:B("Grasa","Fat"),got:got.fat,goal:g.fat,up:false}
+  ];
+  var cols=defs.map(function(m){
+    var pct=m.goal>0?Math.min(100,Math.round(m.got/m.goal*100)):0;
+    /* La proteína es un SUELO: verde al alcanzarla. Carbos y grasa son techo:
+       rojo al pasarse claramente (>10%), que es cuando importa. */
+    var cls=m.up?(m.got>=m.goal*.95?" ok":""):(m.got>m.goal*1.1?" over":"");
+    return '<div class="macg"><div class="macl">'+esc(T(m.l))+"</div>"+
+      '<div class="macb"><i class="'+cls.trim()+'" style="width:'+pct+'%"></i></div>'+
+      '<div class="macv">'+Math.round(m.got)+' <span>/'+m.goal+" g</span></div></div>";
+  }).join("");
+  return '<div class="card" style="padding:11px 13px"><div class="exhead" style="margin-bottom:9px">'+
+    '<div class="tlab">'+T(B("Macros","Macros"))+" · "+esc(T(kindL))+"</div>"+
+    '<span class="macnote">'+kcalG+" kcal</span></div>"+
+    '<div class="macrow">'+cols+"</div></div>";
 }
 
 /* Logros del día: 10k pasos, sueño 80+, déficit calórico */
