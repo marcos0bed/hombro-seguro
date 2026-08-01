@@ -221,11 +221,11 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .rxdays button.done{border-color:rgba(70,192,138,.45);color:var(--ok)}
 .rxdays button.sel{border-color:var(--acc);color:var(--acc);background:rgba(240,166,60,.12)}
 .rxdays button.sel .rxi{filter:none}
-.rxnow{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:0 -14px 10px;padding:9px 14px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
-/* Con viewport-fit=cover el lienzo llega hasta arriba del todo: sin esta banda
-   opaca sobre el área segura, el contenido se ve pasar entre la barra de estado
-   y la barra pegada, y esta parece un panel suelto flotando. */
-#view.rutina::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:35;pointer-events:none}
+/* Esta barra fue `position:sticky` con una banda `fixed` encima que tapaba el
+   área segura. Esa banda era un elemento fixed más y disparaba el bug de WebKit
+   que descoloca los fixed (nav y temporizador aparecían en mitad de la página).
+   Se queda estática: el plegado de ejercicios hechos ya mantiene corta la lista. */
+.rxnow{margin:0 0 10px;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .rxnow .rxl{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left}
 .rxnow .rxn{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rxnow .rxc{font-family:var(--mono);font-size:12px;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -237,7 +237,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .rxdone .rxv{color:var(--ok);font-size:14px}
 .rxdone .rxt{flex:1;min-width:0;font-size:14.5px;color:#c6cdd6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rxdone .rxk{font-family:var(--mono);font-size:12px;color:var(--mut);white-space:nowrap}
-.rxw{scroll-margin-top:calc(64px + env(safe-area-inset-top,0px))}
+.rxw{scroll-margin-top:12px}
 .rxflash>.card{animation:rxfl 1.2s ease-out}
 @keyframes rxfl{0%,55%{border-color:var(--acc)}100%{border-color:var(--line)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -262,7 +262,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v96";
+var APP_VERSION="v97";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
