@@ -228,6 +228,18 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .macnote{font-family:var(--mono);font-size:11px;color:var(--mut);white-space:nowrap;flex:none}
 .macd{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* Mapa de calor corporal (sub-vista de Progreso) */
+.bmap{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.bfig{margin:0;text-align:center}
+.bfig svg{width:100%;height:auto;max-height:280px;display:block}
+.bfig figcaption{font-family:var(--disp);text-transform:uppercase;font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--mut);margin-top:4px}
+.bleg{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:11px;color:var(--mut);font-family:var(--disp);text-transform:uppercase;letter-spacing:.05em}
+.bleg i{flex:1;height:7px;border-radius:4px}
+.bchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.bchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#c6cdd6;background:var(--surface2);border-radius:7px;padding:3px 8px;white-space:nowrap}
+.bchip i{width:9px;height:9px;border-radius:3px;flex:none}
+.bchip b{font-family:var(--mono);font-size:11.5px;color:var(--text)}
+
 .rxdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:2px 0 10px}
 .rxdays button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--disp);font-weight:700;font-size:13px;color:var(--mut);min-width:0}
 .rxdays button .rxi{font-size:11px;line-height:1;filter:grayscale(1) opacity(.55)}
@@ -275,7 +287,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v104";
+var APP_VERSION="v105";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1374,17 +1386,21 @@ function render(keepScroll){
     else{
       loadLastUp();
       var LB=S("labs",null);
-      h+='<div class="seg"><button data-act="pview" data-pv="train"'+(state.pview!=="balance"&&state.pview!=="labs"?' class="sel"':"")+'>'+u("entreno")+"</button>"+
+      var pvT=(state.pview!=="balance"&&state.pview!=="labs"&&state.pview!=="mapa");
+      h+='<div class="seg"><button data-act="pview" data-pv="train"'+(pvT?' class="sel"':"")+'>'+u("entreno")+"</button>"+
+         '<button data-act="pview" data-pv="mapa"'+(state.pview==="mapa"?' class="sel"':"")+'>'+T(B("Mapa","Map"))+"</button>"+
          '<button data-act="pview" data-pv="balance"'+(state.pview==="balance"?' class="sel"':"")+'>'+u("balanceT")+"</button>"+
          (LB?'<button data-act="pview" data-pv="labs"'+(state.pview==="labs"?' class="sel"':"")+'>'+u("labsT")+"</button>":"")+"</div>";
       if(state.pview==="labs"&&LB){h+=labsView(LB);}
+      else if(state.pview==="mapa"){h+=bodyMapView();}
       else if(state.pview!=="balance"){
         if(LOGS.data===null){loadLogs();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
         else if(!LOGS.data.length){h+='<div class="card"><p class="note">'+u("noLogs")+"</p></div>";}
         else h+=statsView();
         h+=histView();
         h+=gactView();
-        h+=muscleView();
+        /* Las barras de series por grupo muscular vivían aquí. Se retiran: el
+           mapa de calor de la sub-vista "Mapa" cuenta lo mismo mejor. */
       }else{
         if(METRICS.data===null){loadMetrics();h+='<div class="card"><p class="note">'+u("loading")+"</p></div>";}
         else if(!METRICS.data.length){h+='<div class="card"><p class="note">'+u("noMetrics")+"</p></div>";}
@@ -1542,15 +1558,95 @@ function statsView(){
 }
 
 /* Series por grupo muscular — caja final con su propio rango */
+/* Series acumuladas por grupo muscular en los últimos `rng` días. */
+function muscleSets(rng){
+  var logs=LOGS.data||[],out={};
+  var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
+  logs.forEach(function(l){
+    if(l.day<cutS)return;
+    (l.entries||[]).forEach(function(e){if(e.m)out[e.m]=(out[e.m]||0)+(e.sets||0)});
+  });
+  return out;
+}
+
+/* ---------- mapa de calor corporal ----------
+   Cuerpo compuesto por regiones etiquetadas con el grupo muscular al que
+   pertenecen; cada una se tiñe según las series acumuladas. Dice de un vistazo
+   dónde estás cargando y qué tienes abandonado, que es lo que la lista de
+   barras no contaba. Las partes sin músculo asignado ("_": cabeza, antebrazos,
+   cadera) van siempre en color base. */
+var BODY={
+front:[
+ ["_",'<ellipse cx="55" cy="20" rx="12" ry="14"/><rect x="49" y="31" width="12" height="9" rx="4"/>'],
+ ["shoulders",'<ellipse cx="30" cy="52" rx="11" ry="9"/><ellipse cx="80" cy="52" rx="11" ry="9"/>'],
+ ["chest",'<rect x="39" y="44" width="15" height="26" rx="6"/><rect x="56" y="44" width="15" height="26" rx="6"/>'],
+ ["biceps",'<rect x="20" y="60" width="12" height="34" rx="6"/><rect x="78" y="60" width="12" height="34" rx="6"/>'],
+ ["_",'<rect x="18" y="96" width="11" height="30" rx="5"/><rect x="81" y="96" width="11" height="30" rx="5"/>'],
+ ["core",'<rect x="43" y="72" width="24" height="46" rx="8"/>'],
+ ["_",'<rect x="38" y="118" width="34" height="12" rx="5"/>'],
+ ["legs",'<rect x="38" y="130" width="15" height="56" rx="7"/><rect x="57" y="130" width="15" height="56" rx="7"/><rect x="40" y="190" width="12" height="42" rx="6"/><rect x="58" y="190" width="12" height="42" rx="6"/>']
+],
+back:[
+ ["_",'<ellipse cx="55" cy="20" rx="12" ry="14"/><rect x="49" y="31" width="12" height="9" rx="4"/>'],
+ ["shoulders",'<ellipse cx="30" cy="52" rx="11" ry="9"/><ellipse cx="80" cy="52" rx="11" ry="9"/>'],
+ ["back",'<rect x="43" y="40" width="24" height="16" rx="6"/><rect x="36" y="55" width="38" height="34" rx="10"/><rect x="44" y="88" width="22" height="28" rx="7"/>'],
+ ["cuff",'<circle cx="38" cy="50" r="5"/><circle cx="72" cy="50" r="5"/>'],
+ ["triceps",'<rect x="20" y="60" width="12" height="34" rx="6"/><rect x="78" y="60" width="12" height="34" rx="6"/>'],
+ ["_",'<rect x="18" y="96" width="11" height="30" rx="5"/><rect x="81" y="96" width="11" height="30" rx="5"/>'],
+ ["_",'<rect x="38" y="116" width="34" height="10" rx="4"/>'],
+ ["legs",'<ellipse cx="46" cy="127" rx="11" ry="10"/><ellipse cx="64" cy="127" rx="11" ry="10"/><rect x="38" y="134" width="15" height="52" rx="7"/><rect x="57" y="134" width="15" height="52" rx="7"/><rect x="40" y="190" width="12" height="42" rx="6"/><rect x="58" y="190" width="12" height="42" rx="6"/>']
+]};
+var HEAT=[[0,[34,42,53]],[.35,[61,70,87]],[.7,[122,90,37]],[1,[240,166,60]]];
+function heatColor(t){
+  if(!(t>0))return "rgb(34,42,53)";
+  if(t>1)t=1;
+  for(var i=1;i<HEAT.length;i++){
+    if(t<=HEAT[i][0]){
+      var a=HEAT[i-1],b=HEAT[i],f=(t-a[0])/((b[0]-a[0])||1);
+      return "rgb("+[0,1,2].map(function(c){return Math.round(a[1][c]+(b[1][c]-a[1][c])*f)}).join(",")+")";
+    }
+  }
+  return "rgb(240,166,60)";
+}
+function bodyFig(which,mus,mmax,titulo){
+  var g=BODY[which].map(function(p){
+    var key=p[0];
+    var col=key==="_"?"#2B3442":heatColor(mmax?((mus[key]||0)/mmax):0);
+    return '<g fill="'+col+'">'+p[1]+"</g>";
+  }).join("");
+  return '<figure class="bfig"><svg viewBox="0 0 110 240" aria-label="'+esc(titulo)+'">'+g+"</svg>"+
+    '<figcaption>'+esc(titulo)+"</figcaption></figure>";
+}
+function bodyMapView(){
+  if(LOGS.data===null){loadLogs();return '<div class="card"><p class="note">'+u("loading")+"</p></div>"}
+  if(!LOGS.data.length)return '<div class="card"><p class="note">'+u("noLogs")+"</p></div>";
+  var rng=state.musRange||30;
+  var mus=muscleSets(rng);
+  var enCuerpo=["chest","back","shoulders","biceps","triceps","legs","core","cuff"];
+  var mmax=0;enCuerpo.forEach(function(k){if((mus[k]||0)>mmax)mmax=mus[k]});
+  if(!mmax)return '<div class="card"><p class="note">'+T(B("Sin series registradas en este periodo.","No sets logged in this period."))+"</p>"+rangeSel(rng,"musrange")+"</div>";
+  var chips=enCuerpo.concat(["cardio"]).filter(function(k){return mus[k]}).sort(function(a,b){return mus[b]-mus[a]})
+    .map(function(k){
+      return '<span class="bchip"><i style="background:'+(k==="cardio"?"#4DD0C0":heatColor(mus[k]/mmax))+'"></i>'+
+        esc(T(MUSC[k]||{es:k,en:k}))+" <b>"+mus[k]+"</b></span>";
+    }).join("");
+  var sinTocar=enCuerpo.filter(function(k){return !mus[k]})
+    .map(function(k){return esc(T(MUSC[k]||{es:k,en:k}))});
+  var grad="linear-gradient(90deg,"+HEAT.map(function(s){
+    return "rgb("+s[1].join(",")+") "+Math.round(s[0]*100)+"%"}).join(",")+")";
+  return '<div class="card"><div class="exhead"><h3>'+T(B("Mapa de carga","Load map"))+"</h3>"+rangeSel(rng,"musrange")+"</div>"+
+    '<div class="bmap">'+bodyFig("front",mus,mmax,T(B("Frente","Front")))+bodyFig("back",mus,mmax,T(B("Espalda","Back")))+"</div>"+
+    '<div class="bleg"><span>'+T(B("menos","less"))+'</span><i style="background:'+grad+'"></i><span>'+T(B("más","more"))+" ("+mmax+")</span></div>"+
+    '<div class="bchips">'+chips+"</div>"+
+    (sinTocar.length?'<p class="note" style="font-size:12.5px;color:var(--mut);margin-top:10px">'+
+      T(B("Sin trabajar estos días: ","Untouched in this period: "))+sinTocar.join(" · ")+"</p>":"")+
+    "</div>";
+}
+
 function muscleView(){
   var logs=LOGS.data||[];if(!logs.length)return "";
   var rng=state.musRange||30;
-  var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
-  var mus={};
-  logs.forEach(function(l){
-    if(l.day<cutS)return;
-    (l.entries||[]).forEach(function(e){if(e.m)mus[e.m]=(mus[e.m]||0)+(e.sets||0)});
-  });
+  var mus=muscleSets(rng);
   var mk=Object.keys(mus).sort(function(a,b){return mus[b]-mus[a]});
   if(!mk.length)return "";
   var mmax=mus[mk[0]]||1;
