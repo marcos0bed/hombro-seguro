@@ -301,7 +301,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v115";
+var APP_VERSION="v116";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2228,15 +2228,35 @@ function weekPaceCard(){
     nP++;if((+r.protein_g||0)>=g.prot)protOK++;
   });
 
-  var hechas=0,plan=0,faltan=[];
-  var WK=getWeek(),logs=LOGS.data||[];
+  /* Se cuentan DÍAS con sesión de fuerza guardada, no coincidencias exactas de
+     día+sesión. Dos motivos: la app deja reordenar la semana, así que hacer el
+     Lower A un jueves no es un fallo; y si cambian los identificadores de sesión
+     (como al rehacer la rutina), lo antiguo dejaría de casar y parecería que no
+     has entrenado. El bloque de manguito no cuenta como sesión: es accesorio. */
+  var plan=0,faltan=[],WK=getWeek(),logs=LOGS.data||[],planSid={};
   dias.forEach(function(d,i){
     var w=WK[i];if(!w)return;var ses=getSession(w.sid);
     if(!ses||ses.type!=="gym")return;
-    plan++;
-    if(logs.some(function(l){return l.day===d&&l.session_id===w.sid})) hechas++;
-    else if(d<TODAY) faltan.push(String(T(ses.title)).split("·")[0].trim());
+    plan++;planSid[w.sid]=String(T(ses.title)).split("·")[0].trim();
   });
+  var conFuerza={};
+  logs.forEach(function(l){
+    if(dias.indexOf(l.day)<0)return;
+    if(l.session_id==="manguito"||l.session_id==="activo")return;
+    if(!(l.total_sets>1))return;
+    conFuerza[l.day]=1;
+  });
+  var hechas=Object.keys(conFuerza).length;
+  /* Solo se nombra lo que falta si de verdad faltan días; si ya has hecho tantas
+     sesiones como tocaban, dar nombres sobraría (y con los sids cambiados sería
+     engañoso). */
+  if(hechas<plan){
+    for(var sd in planSid){
+      if(!logs.some(function(l){return dias.indexOf(l.day)>=0&&l.session_id===sd}))
+        faltan.push(planSid[sd]);
+    }
+    if(faltan.length>plan-hechas)faltan=faltan.slice(0,plan-hechas);
+  }
 
   if(!nK&&!plan)return "";
   var g0=macroGoal(TODAY);
@@ -2250,7 +2270,9 @@ function weekPaceCard(){
     T(B("suelo ","floor "))+g0.prot+" g · "+T(B("no se compensa","no catching up"))]);
   if(plan)fil.push(['💪',T(B("Entreno","Training")),
     '<b style="color:'+(hechas>=plan?"var(--ok)":"var(--acc)")+'">'+hechas+"/"+plan+"</b> "+T(B("sesiones","sessions")),
-    faltan.length?T(B("falta ","missing "))+faltan.join(", "):T(B("al día","on track"))]);
+    hechas>=plan?T(B("al día","on track")):
+      (faltan.length?T(B("falta ","missing "))+faltan.join(", "):
+       (plan-hechas)+" "+T(B("por hacer","to go")))]);
 
   return '<div class="card" style="padding:11px 13px"><div class="exhead" style="margin-bottom:8px">'+
     '<div class="tlab">'+T(B("Esta semana","This week"))+'</div><span class="macnote">'+
