@@ -226,6 +226,12 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .macv{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .macv span{color:var(--mut);font-size:11px}
 .macwarn{margin-top:9px;font-size:12px;color:var(--warn);line-height:1.4;border-top:1px solid var(--line);padding-top:8px}
+.wkrow{display:grid;grid-template-columns:auto auto 1fr;gap:4px 8px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}
+.wkrow:first-of-type{border-top:none;padding-top:0}
+.wki{font-size:14px;grid-row:span 2}
+.wkl{font-family:var(--disp);text-transform:uppercase;font-size:10.5px;font-weight:600;letter-spacing:.05em;color:var(--mut);white-space:nowrap}
+.wkv{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;text-align:right}
+.wks{grid-column:2/4;font-size:11.5px;color:var(--mut);line-height:1.3}
 .macnote{font-family:var(--mono);font-size:11px;color:var(--mut);white-space:nowrap;flex:none}
 .macd{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -292,7 +298,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v112";
+var APP_VERSION="v113";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1317,6 +1323,7 @@ function render(keepScroll){
     h+='<div class="dnav"><button data-act="daynav" data-d="1"'+(dOff>=90?" disabled":"")+' aria-label="'+T(B("Día anterior","Previous day"))+'">‹</button><b>'+lblD+'</b><button data-act="daynav" data-d="-1"'+(dOff===0?" disabled":"")+' aria-label="'+T(B("Día siguiente","Next day"))+'">›</button></div>';
     h+=dayCard();
     h+=macroCard();
+    h+=weekPaceCard();
     h+=daybriefCard();
     h+=hrDayCard();
     h+=achCard();
@@ -2157,6 +2164,70 @@ function macroCard(){
     '<div class="macrow">'+cols+"</div>"+
     (incompleto?'<p class="macwarn">'+T(B("Registro incompleto: faltan comidas por meter, así que esto no cuadra y el día no cuenta para las medias.","Incomplete log: meals are missing, so this doesn\'t add up and the day won\'t count toward averages."))+"</p>":"")+
     "</div>";
+}
+
+/* ---------- ritmo de la semana ----------
+   Cada métrica se comporta distinto y se mide como toca:
+   · CALORÍAS: presupuesto SEMANAL. Un día de más lo absorbe la semana; lo que
+     importa es el acumulado, no compensar al día siguiente.
+   · PROTEÍNA: suelo DIARIO. La síntesis proteica es un proceso del día — lo que
+     falta hoy no se recupera mañana. Por eso se cuentan días cumplidos, no medias:
+     una media esconde justo los días malos.
+   · ENTRENO: objetivo SEMANAL, pero sin amontonar. Se muestra qué falta, no para
+     meterlo en otra sesión sino para saber dónde estás.
+   Solo cuentan los días con el registro de comida completo. */
+function weekPaceCard(){
+  if(!cloudOn()||!macroGoal(TODAY))return "";
+  var M=METRICS.data;if(!M||!M.length)return "";
+  var lun=mondayOf(TODAY);
+  var dias=[];for(var i=0;i<7;i++){var d=new Date(lun+"T12:00:00");d.setDate(d.getDate()+i);dias.push(iso(d))}
+  /* Comida: solo días CERRADOS. Un día en curso no se compara con un objetivo
+     diario — a media mañana diría que vas en déficit enorme, y es falso. El día
+     de hoy ya lo cubre la fila de macros. El entreno sí cuenta hoy: o está hecho
+     o no lo está. */
+  var hasta=dias.filter(function(d){return d<TODAY});
+  var porDia={};M.forEach(function(r){porDia[r.day]=r});
+
+  var difK=0,nK=0,protOK=0,nP=0,incompletos=0;
+  hasta.forEach(function(d){
+    var r=porDia[d],g=macroGoal(d);if(!g)return;
+    if(!r||r.kcal_in==null)return;
+    if(!logOK(r)){incompletos++;return}
+    difK+=(+r.kcal_in)-(g.prot*4+g.carb*4+g.fat*9);nK++;
+    nP++;if((+r.protein_g||0)>=g.prot)protOK++;
+  });
+
+  var hechas=0,plan=0,faltan=[];
+  var WK=getWeek(),logs=LOGS.data||[];
+  dias.forEach(function(d,i){
+    var w=WK[i];if(!w)return;var ses=getSession(w.sid);
+    if(!ses||ses.type!=="gym")return;
+    plan++;
+    if(logs.some(function(l){return l.day===d&&l.session_id===w.sid})) hechas++;
+    else if(d<TODAY) faltan.push(String(T(ses.title)).split("·")[0].trim());
+  });
+
+  if(!nK&&!plan)return "";
+  var g0=macroGoal(TODAY);
+  var col=Math.abs(difK)<=250?"var(--ok)":(difK>0?"var(--warn)":"var(--mut)");
+  var fil=[];
+  if(nK)fil.push(['🍽️',T(B("Calorías","Calories")),
+    '<b style="color:'+col+'">'+(difK>0?"+":"")+Math.round(difK)+"</b> kcal",
+    nK+" "+T(B("días cerrados","closed days"))+(incompletos?" · "+incompletos+" "+T(B("incompleto","incomplete"))+(incompletos>1?"s":""):"")+" · "+T(B("hoy aparte","today separate"))]);
+  if(nP)fil.push(['🥩',T(B("Proteína","Protein")),
+    '<b style="color:'+(protOK===nP?"var(--ok)":(protOK>=nP*0.6?"var(--acc)":"var(--warn)"))+'">'+protOK+"/"+nP+"</b> "+T(B("días","days")),
+    T(B("suelo ","floor "))+g0.prot+" g · "+T(B("no se compensa","no catching up"))]);
+  if(plan)fil.push(['💪',T(B("Entreno","Training")),
+    '<b style="color:'+(hechas>=plan?"var(--ok)":"var(--acc)")+'">'+hechas+"/"+plan+"</b> "+T(B("sesiones","sessions")),
+    faltan.length?T(B("falta ","missing "))+faltan.join(", "):T(B("al día","on track"))]);
+
+  return '<div class="card" style="padding:11px 13px"><div class="exhead" style="margin-bottom:8px">'+
+    '<div class="tlab">'+T(B("Esta semana","This week"))+'</div><span class="macnote">'+
+    lun.slice(8,10)+"/"+lun.slice(5,7)+" – "+dias[6].slice(8,10)+"/"+dias[6].slice(5,7)+"</span></div>"+
+    fil.map(function(f){
+      return '<div class="wkrow"><span class="wki">'+f[0]+'</span><span class="wkl">'+esc(f[1])+
+        '</span><span class="wkv">'+f[2]+'</span><span class="wks">'+esc(f[3])+"</span></div>";
+    }).join("")+"</div>";
 }
 
 /* Logros del día: 10k pasos, sueño 80+, déficit calórico */
