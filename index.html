@@ -225,6 +225,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .macb i.over{background:var(--bad)}
 .macv{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .macv span{color:var(--mut);font-size:11px}
+.macwarn{margin-top:9px;font-size:12px;color:var(--warn);line-height:1.4;border-top:1px solid var(--line);padding-top:8px}
 .macnote{font-family:var(--mono);font-size:11px;color:var(--mut);white-space:nowrap;flex:none}
 .macd{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -287,7 +288,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v107";
+var APP_VERSION="v108";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1911,8 +1912,19 @@ function multiChart(defs){
   svg+="</svg>";
   return svg;
 }
+/* ---------- días con el registro de comida a medias ----------
+   Por debajo de este umbral el día no refleja lo que se comió (falta una comida,
+   o el aceite y las bebidas). Contarlos hunde las medias y, peor, hace que la app
+   diga que quedan calorías por comer cuando no es verdad. Se excluyen de medias
+   y gráficas de NUTRICIÓN — nunca de peso, pasos, sueño ni gasto, que vienen de
+   sensores y siempre son válidos. Umbral ajustable con goal.minKcal. */
+var MINLOG=900;
+function minLog(){var g=S("goal",{})||{};return (g.minKcal!=null)?+g.minKcal:MINLOG}
+function logOK(r){return !!r&&r.kcal_in!=null&&+r.kcal_in>=minLog()}
+var NUTKEYS={kcal_in:1,carbs_g:1,protein_g:1,fat_g:1,sugar_g:1};
 function pickSeries(rows,key){
-  return rows.filter(function(r){return r[key]!=null}).map(function(r){return {day:r.day,v:+r[key]}});
+  return rows.filter(function(r){return r[key]!=null&&(!NUTKEYS[key]||logOK(r))})
+              .map(function(r){return {day:r.day,v:+r[key]}});
 }
 
 /* Casa un workout_log con su actividad Garmin: runs por id exacto; fuerza por
@@ -2228,10 +2240,13 @@ function macroCard(){
       '<div class="macb"><i class="'+cls.trim()+'" style="width:'+pct+'%"></i></div>'+
       '<div class="macv">'+Math.round(m.got)+' <span>/'+m.goal+" g</span></div></div>";
   }).join("");
+  var incompleto=r&&r.kcal_in!=null&&!logOK(r);
   return '<div class="card" style="padding:11px 13px"><div class="exhead" style="margin-bottom:9px">'+
     '<div class="tlab macd">'+sIc+" "+esc(sN)+" · "+esc(T(kindL))+"</div>"+
     '<span class="macnote">'+kcalG+" kcal</span></div>"+
-    '<div class="macrow">'+cols+"</div></div>";
+    '<div class="macrow">'+cols+"</div>"+
+    (incompleto?'<p class="macwarn">'+T(B("Registro incompleto: faltan comidas por meter, así que esto no cuadra y el día no cuenta para las medias.","Incomplete log: meals are missing, so this doesn\'t add up and the day won\'t count toward averages."))+"</p>":"")+
+    "</div>";
 }
 
 /* Logros del día: 10k pasos, sueño 80+, déficit calórico */
@@ -2287,7 +2302,11 @@ function dayCard(){
   function win(key){
     var span=rng===1?7:rng;
     var st0=new Date(day+"T12:00");st0.setDate(st0.getDate()-(span-1));var sS=iso(st0);
-    var out=[];M.forEach(function(x){if(x.day>=sS&&x.day<=day&&x[key]!=null)out.push(+x[key])});
+    var out=[];M.forEach(function(x){
+      if(x.day<sS||x.day>day||x[key]==null)return;
+      if(NUTKEYS[key]&&!logOK(x))return;      // día a medias: no promedia
+      out.push(+x[key]);
+    });
     return out;
   }
   function avg(arr){if(!arr.length)return null;var s=0;arr.forEach(function(x){s+=x});return s/arr.length}
@@ -2436,7 +2455,7 @@ function balanceView(){
   // macros apilados con rango propio (7/30 = diario; 90 = medias semanales)
   var mrng=state.macRange||30;
   var mcut=new Date();mcut.setDate(mcut.getDate()-mrng);var mcutS=iso(mcut);
-  var eat=M.filter(function(r){return r.kcal_in!=null&&r.day>=mcutS});
+  var eat=M.filter(function(r){return logOK(r)&&r.day>=mcutS});
   var mrows;
   if(mrng===90){
     var bw={};eat.forEach(function(r){var kk=mondayOf(r.day);(bw[kk]=bw[kk]||[]).push(r)});
@@ -2471,7 +2490,8 @@ function balanceView(){
   var weeks=Object.keys(byweek).sort().slice(-8);
   if(weeks.length){
     var trs=weeks.map(function(wk){
-      var rs=byweek[wk],eatw=rs.filter(function(r){return r.kcal_in!=null});
+      var rs=byweek[wk],eatw=rs.filter(logOK);
+      var inc=rs.filter(function(r){return r.kcal_in!=null&&!logOK(r)}).length;
       var kin=eatw.length?Math.round(eatw.reduce(function(a,r){return a+ +r.kcal_in},0)/eatw.length):"—";
       var cb=eatw.length?Math.round(eatw.reduce(function(a,r){return a+(+r.carbs_g||0)},0)/eatw.length):"—";
       var outw=rs.filter(function(r){return r.kcal_out!=null});
@@ -2481,7 +2501,7 @@ function balanceView(){
       var fsr=rs.filter(function(r){return r.body_fat_pct!=null});
       var fat=fsr.length?(+fsr[fsr.length-1].body_fat_pct).toFixed(1):"—";
       var d=new Date(wk+"T12:00:00");
-      return "<tr><td>"+pad(d.getDate())+"/"+pad(d.getMonth()+1)+"</td><td>"+eatw.length+"</td><td>"+kin+"</td><td>"+cb+"</td><td>"+kout+"</td><td>"+peso+"</td><td>"+fat+"</td></tr>";
+      return "<tr><td>"+pad(d.getDate())+"/"+pad(d.getMonth()+1)+"</td><td>"+eatw.length+(inc?' <span style="color:var(--warn)" title="'+esc(T(B("días incompletos, no contados","incomplete days, not counted")))+'">+'+inc+"</span>":"")+"</td><td>"+kin+"</td><td>"+cb+"</td><td>"+kout+"</td><td>"+peso+"</td><td>"+fat+"</td></tr>";
     }).join("");
     h+='<div class="card"><h3>'+u("weeklyT")+'</h3><div style="overflow-x:auto"><table class="mini" style="min-width:430px"><tr>'+
        "<td>"+u("thW")+"</td><td>"+u("thReg")+"</td><td>"+u("thIn")+"</td><td>"+u("thCarbs")+"</td><td>"+u("thOut")+"</td><td>"+u("thPeso")+"</td><td>"+u("thGrasa")+"</td></tr>"+trs+"</table></div></div>";
