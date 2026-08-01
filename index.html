@@ -262,7 +262,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v97";
+var APP_VERSION="v98";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2426,6 +2426,47 @@ document.addEventListener("change",function(e){
   W(inp.dataset.key,inp.value.trim());
   if(inp.dataset.key.indexOf("journal:")===0)render(true);
 });
+/* ---------- migración única a la rutina v96 ----------
+   La semana pasó a sids nuevos (lowA/upA/lowB/upB) para que un peso guardado no
+   acabara en un ejercicio distinto al cambiar el orden. Pero la mayoría de los
+   ejercicios son los mismos de antes, así que su peso SÍ debe viajar: aquí se
+   copia por correspondencia exacta, una sola vez y sin pisar nada ya escrito.
+   El floor press toma el peso del "pesado" de la Upper A antigua, que es el que
+   se corresponde con el nuevo (4×6-10, el press progresable). */
+(function(){
+  try{
+    if(S("migr96",false))return;
+    var MAP=[
+      ["upperA:1","upA:1"],   /* press inclinado 30°      */
+      ["upperA:5","upA:2"],   /* remo en polea sentado    */
+      ["upperA:3","upA:3"],   /* cruces en polea baja     */
+      ["upperA:6","upA:4"],   /* tríceps cuerda           */
+      ["upperA:7","upA:5"],   /* curl con barra           */
+      ["upperA:2","upB:1"],   /* floor press pesado       */
+      ["upperB:1","upB:1"],   /* floor press (respaldo)   */
+      ["upperA:4","upB:2"],   /* jalón neutro estrecho    */
+      ["upperB:4","upB:3"],   /* remo mancuerna en banco  */
+      ["upperB:6","upB:5"],   /* curl martillo            */
+      ["upperB:7","upB:6"],   /* farmer carry             */
+      ["lowerA:1","lowA:1"],  /* sentadilla SSB           */
+      ["lowerA:2","lowA:2"],  /* peso muerto rumano       */
+      ["lowerA:3","lowA:3"],  /* zancada búlgara          */
+      ["lowerA:6","lowA:5"],  /* pallof press             */
+      ["lowerA:4","lowB:1"],  /* hip thrust               */
+      ["lowerA:5","lowB:5"]   /* elevación de talones     */
+    ];
+    var n=0;
+    MAP.forEach(function(p){
+      var v=S("w:"+p[0],"");
+      if(v===""||v==null)return;
+      if(String(S("w:"+p[1],""))!=="")return;   // ya hay peso nuevo: no tocar
+      W("w:"+p[1],v);n++;
+    });
+    W("migr96",true);
+    if(n)try{console.log("Fitmet: "+n+" pesos migrados a la rutina nueva")}catch(e){}
+  }catch(e){}
+})();
+
 ensurePushSub();
 render();
 </script>
