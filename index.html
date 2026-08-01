@@ -275,7 +275,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v103";
+var APP_VERSION="v104";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -928,7 +928,33 @@ var MGROUPS={
   gomasA:["legs","chest","back","legs","legs","chest","core","cuff"],
   gomasB:["legs","chest","back","legs","legs","triceps","biceps","core"],
   manguito:["cuff","cuff","cuff"]};
-function muscleOf(sid,i,it){return (it&&it.m)||((MGROUPS[sid]||[])[i])||null}
+/* Último recurso para el seguimiento por grupo muscular: deducirlo del nombre.
+   Sin esto, una rutina nueva que no traiga `m` en sus ejercicios dejaría de
+   contar series en Progreso. El ORDEN de las reglas importa: "curl femoral" es
+   pierna y no bíceps, "leg press" es pierna y no pecho, y "face pull" es
+   manguito antes que espalda. */
+var MGUESS=[
+  ["cuff",   /manguito|cuff|rotaci[oó]n (externa|interna)|(external|internal) rotation|face ?pull|pull.?apart|isom[eé]tric/i],
+  ["legs",   /sentadilla|squat|peso muerto|deadlift|rumano|romanian|prensa|leg ?press|zancada|lunge|b[uú]lgara|bulgarian|femoral|leg ?curl|cu[aá]driceps|leg ?extension|hip ?thrust|gl[uú]teo|glute|gemelo|talones|calf|step.?up|hack/i],
+  ["core",   /plancha|plank|dead ?bug|pallof|crunch|abdominal|russian|hollow|ab.?wheel|\bcore\b/i],
+  ["cardio", /carrera|correr|rodaje|tirada|\brun\b|jog|bici|bike|cinta|treadmill|caminata|walk|hiit|sprint|el[ií]ptica|remo ergo/i],
+  /* Tracción ANTES que pecho: "jalón al pecho" es espalda, y si pecho fuese
+     primero se lo llevaría por la palabra "pecho". */
+  ["back",   /\bremo\b|\brow\b|jal[oó]n|pulldown|dominada|pull.?up|pull.?over|encogimiento|shrug|farmer|dorsal|espalda|\blat\b/i],
+  ["chest",  /press (inclinado|de banca|banca|de pecho|plano)|bench|floor ?press|pecho|apertura|\bfly/i],
+  ["chest",  /cruces|\bpec\b|flexion|push.?up|contractora/i],
+  ["shoulders",/elevaci[oó]n lateral|lateral raise|press militar|military|overhead press|deltoid|hombro/i],
+  ["triceps",/tr[ií]ceps|\bfondo|\bdip|pushdown/i],
+  ["biceps", /\bcurl\b|b[ií]ceps|martillo|hammer/i]
+];
+function guessMuscle(n){
+  var s=String(n||"");if(!s)return null;
+  for(var k=0;k<MGUESS.length;k++)if(MGUESS[k][1].test(s))return MGUESS[k][0];
+  return null;
+}
+function muscleOf(sid,i,it){
+  return (it&&it.m)||((MGROUPS[sid]||[])[i])||(it&&guessMuscle(T(it.n)))||null;
+}
 
 /* Rutina por usuario: si existe la clave kv "routine" (subida desde el backend),
    sustituye a la semana/sesiones integradas. Así cada perfil (p. ej. Lorena)
