@@ -229,6 +229,9 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
 .foldh .chev{color:var(--mut);font-size:12px}
+.lgds{display:flex;flex-wrap:wrap;gap:11px;padding:3px 4px 0}
+.lgd{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--mut)}
+.lgd i{width:8px;height:8px;border-radius:2px;flex:none}
 .strow{display:flex;align-items:baseline;gap:7px;min-width:0;overflow:hidden}
 .strow .snum{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:0;text-transform:none;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sview{flex:none}
@@ -305,7 +308,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v118";
+var APP_VERSION="v119";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1999,16 +2002,16 @@ function ensureGoal(){
 }
 
 /* FC a lo largo del día: curva intradía grande con eje horario (aprox.) */
-/* Estrés a lo largo del día (Garmin). Sustituye a la curva de FC: la FC ya
-   aparece como FC en reposo en la rejilla, mientras que el estrés dice algo que
-   ningún otro dato de la app cuenta — cuándo se carga el sistema nervioso.
-   La curva son 48 cubos de MEDIA HORA en hora local. Un cubo puede valer:
+/* Estrés a lo largo del día (Garmin), en cubos de MEDIA HORA en hora local.
+   Un cubo puede valer:
      · un número  -> estrés medio de esa franja
-     · -2         -> ESTABAS ENTRENANDO. Garmin no puede calcular estrés con
-                     movimiento: el cálculo se apoya en la variabilidad en reposo.
-                     El reloj está puesto y midiendo; es información, no un hueco.
+     · -2         -> ESTABAS ENTRENANDO. Garmin no calcula estrés con movimiento:
+                     se apoya en la variabilidad en reposo. El reloj está puesto.
      · null       -> sin dato suficiente
-   Dos vistas: línea del día, o barra por media hora. */
+   Y se sombrean las franjas de descanso (rest_win): 1 sueño, 2 siesta. Eso
+   convierte la gráfica en algo legible de un vistazo — dónde dormiste, cuándo
+   entrenaste y qué pasó con el estrés entre medias. */
+var SENTRENO="#B98BE0";
 var SBANDAS=[[0,25,"#46C08A"],[25,50,"#A8C97F"],[50,75,"#E8963E"],[75,101,"#E5484D"]];
 function sColor(v){
   for(var i=0;i<SBANDAS.length;i++)if(v<SBANDAS[i][1])return SBANDAS[i][2];
@@ -2021,76 +2024,60 @@ function stressDayCard(){
   if(!r||!Array.isArray(r.stress_curve))return "";
   var vs=r.stress_curve.map(function(v){return v==null?null:+v});
   var hay=vs.filter(function(v){return v!=null&&v>=0});
-  var act=vs.filter(function(v){return v===-2}).length;
   if(hay.length<2)return "";
+  var rw=Array.isArray(r.rest_win)?r.rest_win:[];
   var av=r.stress_avg!=null?r.stress_avg:Math.round(hay.reduce(function(a,b){return a+b},0)/hay.length);
   var mx=Math.max.apply(null,hay);
-  var media=state.sView==="30";
-  var W=320,H=media?66:60,P=4,TOP=5,BASE=H-13,N=vs.length;
+  var act=vs.filter(function(v){return v===-2}).length;
+  var sie=rw.filter(function(v){return v===2}).length;
+  var W=340,H=104,P=3,TOP=6,BASE=H-13,N=vs.length,an=(W-2*P)/N;
   function yy(v){return BASE-(BASE-TOP)*Math.min(100,v)/100}
-  var svg='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin-top:4px" role="img">';
+  var svg='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin-top:5px" role="img" preserveAspectRatio="none">';
   SBANDAS.forEach(function(b){
     svg+='<rect x="'+P+'" y="'+yy(Math.min(100,b[1])).toFixed(1)+'" width="'+(W-2*P)+
-         '" height="'+(yy(b[0])-yy(Math.min(100,b[1]))).toFixed(1)+'" fill="'+b[2]+'" opacity=".07"/>';
+         '" height="'+(yy(b[0])-yy(Math.min(100,b[1]))).toFixed(1)+'" fill="'+b[2]+'" opacity=".06"/>';
   });
-  if(media){
-    /* Una barra por media hora, con su color de banda. Los huecos se dejan vacíos
-       en vez de rellenarlos: no medir no es estrés bajo. */
-    var an=(W-2*P)/N;
-    vs.forEach(function(v,k){
-      if(v==null)return;
-      var x=P+an*k, hh2=pad(Math.floor(k/2))+":"+(k%2?"30":"00");
-      if(v===-2){
-        /* Entrenando: no hay valor que pintar, pero SÍ hay que decir por qué.
-           Bloque completo tenue con el color de acento. */
-        svg+='<rect x="'+(x+0.35).toFixed(1)+'" y="'+TOP+'" width="'+(an-0.7).toFixed(1)+
-             '" height="'+(BASE-TOP).toFixed(1)+'" fill="var(--acc)" opacity=".2"/>'+
-             '<rect x="'+(x+0.35).toFixed(1)+'" y="'+(BASE-1.6)+'" width="'+(an-0.7).toFixed(1)+
-             '" height="1.6" fill="var(--acc)" opacity=".85"><title>'+hh2+" · "+T(B("entrenando","training"))+"</title></rect>";
-        return;
-      }
-      var h=BASE-yy(v);
-      svg+='<rect x="'+(x+0.35).toFixed(1)+'" y="'+yy(v).toFixed(1)+'" width="'+(an-0.7).toFixed(1)+
-           '" height="'+Math.max(0.8,h).toFixed(1)+'" fill="'+sColor(v)+'" opacity=".9"><title>'+
-           hh2+" · "+v+"</title></rect>";
-    });
-  }else{
-    /* Línea, partiéndola donde falten datos para no inventar continuidad. */
-    var an2=(W-2*P)/N;
-    vs.forEach(function(v,k){
-      if(v!==-2)return;
-      svg+='<rect x="'+(P+an2*k).toFixed(1)+'" y="'+TOP+'" width="'+an2.toFixed(1)+
-           '" height="'+(BASE-TOP).toFixed(1)+'" fill="var(--acc)" opacity=".16"/>';
-    });
-    var seg=[],cur=[];
-    vs.forEach(function(v,k){
-      if(v==null||v<0){if(cur.length>1)seg.push(cur);cur=[];return}
-      cur.push((P+(W-2*P)*k/(N-1)).toFixed(1)+","+yy(v).toFixed(1));
-    });
-    if(cur.length>1)seg.push(cur);
-    seg.forEach(function(g){
-      svg+='<polyline fill="none" stroke="#C88BD8" stroke-width="1.3" stroke-linejoin="round" points="'+g.join(" ")+'"/>';
-    });
-    svg+='<line x1="'+P+'" y1="'+yy(av).toFixed(1)+'" x2="'+(W-P)+'" y2="'+yy(av).toFixed(1)+
-         '" stroke="#C88BD8" stroke-width="0.7" stroke-dasharray="3 3" opacity=".55"/>';
-  }
-  [0,6,12,18,24].forEach(function(hh){
+  /* Descanso al fondo, en azul frío: sueño oscuro, siesta más clara. Además una
+     banda fina ARRIBA — el entreno tiene la suya abajo, así no se confunden. */
+  rw.forEach(function(v,k){
+    if(!v)return;
+    var c=v===2?"#8FB3E0":"#5B84C4", x=(P+an*k).toFixed(1), w=an.toFixed(1);
+    svg+='<rect x="'+x+'" y="'+TOP+'" width="'+w+'" height="'+(BASE-TOP).toFixed(1)+
+         '" fill="'+c+'" opacity="'+(v===2?".30":".22")+'"/>'+
+         '<rect x="'+x+'" y="'+TOP+'" width="'+w+'" height="2.4" fill="'+c+'" opacity=".85"><title>'+
+         pad(Math.floor(k/2))+":"+(k%2?"30":"00")+" · "+T(v===2?B("siesta","nap"):B("durmiendo","asleep"))+"</title></rect>";
+  });
+  vs.forEach(function(v,k){
+    if(v==null)return;
+    var x=P+an*k, hh2=pad(Math.floor(k/2))+":"+(k%2?"30":"00");
+    if(v===-2){
+      /* Violeta a propósito: el ámbar chocaba con las barras de estrés alto, que
+         también son naranjas. Banda abajo, para no confundirla con el descanso. */
+      svg+='<rect x="'+(x+0.3).toFixed(1)+'" y="'+TOP+'" width="'+(an-0.6).toFixed(1)+'" height="'+(BASE-TOP).toFixed(1)+
+           '" fill="'+SENTRENO+'" opacity=".28"/><rect x="'+(x+0.3).toFixed(1)+'" y="'+(BASE-2.4)+'" width="'+(an-0.6).toFixed(1)+
+           '" height="2.4" fill="'+SENTRENO+'" opacity=".9"><title>'+hh2+" · "+T(B("entrenando","training"))+"</title></rect>";
+      return;
+    }
+    svg+='<rect x="'+(x+0.3).toFixed(1)+'" y="'+yy(v).toFixed(1)+'" width="'+(an-0.6).toFixed(1)+
+         '" height="'+Math.max(1,BASE-yy(v)).toFixed(1)+'" fill="'+sColor(v)+'" opacity=".92"><title>'+
+         hh2+" · "+v+"</title></rect>";
+  });
+  [0,3,6,9,12,15,18,21,24].forEach(function(hh){
     var x=(P+(W-2*P)*hh/24).toFixed(1);
-    svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#2B3442" stroke-width="0.5" opacity=".8"/>'+
-         '<text x="'+x+'" y="'+(H-2)+'" fill="#8E99A8" font-size="7" font-family="monospace" text-anchor="middle">'+hh+"h</text>";
+    svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#2B3442" stroke-width="0.4" opacity=".7"/>'+
+         '<text x="'+x+'" y="'+(H-3)+'" fill="#8E99A8" font-size="7.5" font-family="monospace" text-anchor="middle">'+hh+"</text>";
   });
   svg+="</svg>";
   var Q={CALM:B("Calma","Calm"),BALANCED:B("Equilibrado","Balanced"),
          STRESSFUL:B("Estrés","Stressful"),VERY_STRESSFUL:B("Mucho estrés","Very stressful")};
   var q=r.stress_q&&Q[r.stress_q]?T(Q[r.stress_q]):"";
-  var sel='<span class="rng sview">'+[["","24 h"],["30","30\u2032"]].map(function(o){
-    return '<button data-act="sview" data-v="'+o[0]+'"'+(((state.sView||"")===o[0])?' class="sel"':"")+'>'+o[1]+"</button>"}).join("")+"</span>";
-  return '<div class="card" style="padding:9px 12px"><div class="exhead"><div class="tlab strow">🧠 '+
-    T(B("Estrés","Stress"))+' <span class="snum">'+av+" · "+T(B("máx","max"))+" "+mx+(q?" · "+esc(q):"")+"</span></div>"+
-    sel+"</div>"+svg+
-    (act?'<p class="note" style="font-size:10.5px;color:var(--mut);margin-top:2px"><span style="color:var(--acc)">▮</span> '+
-      T(B("entrenando · Garmin no mide estrés con movimiento","training · Garmin can\'t measure stress while moving"))+"</p>":"")+
-    "</div>";
+  var leg=[];
+  if(rw.some(function(v){return v===1}))leg.push('<span class="lgd"><i style="background:#5B84C4"></i>'+T(B("sueño","sleep"))+"</span>");
+  if(sie)leg.push('<span class="lgd"><i style="background:#8FB3E0"></i>'+T(B("siesta","nap"))+"</span>");
+  if(act)leg.push('<span class="lgd"><i style="background:'+SENTRENO+'"></i>'+T(B("entrenando","training"))+"</span>");
+  return '<div class="card" style="padding:9px 8px"><div class="exhead" style="padding:0 4px"><div class="tlab strow">🧠 '+
+    T(B("Estrés","Stress"))+' <span class="snum">'+av+" · "+T(B("máx","max"))+" "+mx+(q?" · "+esc(q):"")+"</span></div></div>"+
+    svg+(leg.length?'<div class="lgds">'+leg.join("")+"</div>":"")+"</div>";
 }
 
 /* Journal: impresiones del día (kv journal:<día>, sincronizado; lo lee el parte semanal) */
@@ -2858,7 +2845,6 @@ document.addEventListener("click",function(e){
   if(act==="dayrange"){state.dayRange=+b.dataset.r;render(true);return}
   if(act==="balrange"){state.balRange=+b.dataset.r;render(true);return}
   if(act==="macrange"){state.macRange=+b.dataset.r;render(true);return}
-  if(act==="sview"){state.sView=b.dataset.v;render(true);return}
   if(act==="musrange"){state.musRange=+b.dataset.r;render(true);return}
   if(act==="rest-add"){
     rest.endAt+=30000;restTick();
