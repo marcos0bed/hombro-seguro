@@ -229,6 +229,13 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
 .foldh .chev{color:var(--mut);font-size:12px}
+.mealgrid{display:flex;flex-direction:column;gap:6px;padding:2px 2px 0}
+.mealit{display:flex;align-items:center;gap:9px;min-width:0}
+.mealic{font-size:16px;flex:none;width:19px;text-align:center}
+.mealnm{font-size:12.5px;color:var(--text);min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mealnm b{font:400 11px var(--mono);color:var(--mut);margin-left:6px}
+.t-in{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:5px 6px;font:13px var(--mono);flex:none;min-width:0;width:88px}
+.t-in:focus{outline:none;border-color:var(--acc)}
 .lgds{display:flex;flex-wrap:wrap;gap:11px;padding:3px 4px 0}
 .lgd{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--mut)}
 .lgd i{width:8px;height:8px;border-radius:2px;flex:none}
@@ -308,7 +315,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v119";
+var APP_VERSION="v120";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1336,6 +1343,7 @@ function render(keepScroll){
     h+=weekPaceCard();
     h+=daybriefCard();
     h+=stressDayCard();
+    h+=mealsCard();
     h+=achCard();
     h+=habCard();
     h+=doneTodayBox();
@@ -2017,6 +2025,40 @@ function sColor(v){
   for(var i=0;i<SBANDAS.length;i++)if(v<SBANDAS[i][1])return SBANDAS[i][2];
   return "#E5484D";
 }
+/* Horas de comida. MFP guarda el CUÁNTO por cajón (desayuno/comida/cena/snacks)
+   pero nunca la hora del reloj, así que la hora la pone él y nosotros le pegamos
+   las calorías y la proteína que ya sabemos. Solo se ofrecen los cajones en los
+   que ese día hay algo registrado: pedir la hora de una cena que no existe sobra. */
+var MEALKEYS=[["b","🍳",["Desayuno","Breakfast"]],["l","🥗",["Comida","Lunch"]],
+              ["d","🍽","Cena|Dinner".split("|")],["s","🍫",["Snacks","Snacks"]]];
+function mealsOf(day){
+  var r=rowFor(day), m=(r&&r.meals_kcal)||null;
+  if(!m)return [];
+  var out=[];
+  MEALKEYS.forEach(function(mk){
+    var v=m[mk[0]];
+    if(!v||!v.k)return;
+    out.push({k:mk[0],ic:mk[1],nm:B(mk[2][0],mk[2][1]),kcal:v.k,prot:v.p,
+              t:String(S("meal:"+day+":"+mk[0],""))});
+  });
+  return out;
+}
+function mealsCard(){
+  if(!cloudOn())return "";
+  var day=selDay(), ms=mealsOf(day);
+  if(!ms.length)return "";
+  var puestas=ms.filter(function(m){return m.t}).length;
+  var h='<div class="card"><div class="exhead"><div class="tlab">🕐 '+
+        T(B("Horas de comida","Meal times"))+' <span class="snum">'+puestas+"/"+ms.length+"</span></div></div>"+
+        '<div class="mealgrid">';
+  ms.forEach(function(m){
+    h+='<div class="mealit"><span class="mealic">'+m.ic+"</span>"+
+       '<span class="mealnm">'+esc(T(m.nm))+'<b>'+m.kcal+" kcal · "+m.prot+" g</b></span>"+
+       '<input class="t-in" type="time" data-key="meal:'+day+":"+m.k+'" value="'+esc(m.t)+
+       '" aria-label="'+esc(T(m.nm))+'"></div>';
+  });
+  return h+"</div></div>";
+}
 function stressDayCard(){
   if(!cloudOn())return "";
   if((state.dayRange||1)!==1)return "";
@@ -2062,6 +2104,20 @@ function stressDayCard(){
          '" height="'+Math.max(1,BASE-yy(v)).toFixed(1)+'" fill="'+sColor(v)+'" opacity=".92"><title>'+
          hh2+" · "+v+"</title></rect>";
   });
+  /* Las comidas, en crema: ni azul (descanso) ni violeta (entreno) ni la rampa
+     verde-rojo del estrés. El punto crece con las calorías. */
+  mealsOf(selDay()).forEach(function(m){
+    var pr=/^(\d{1,2}):(\d{2})$/.exec(m.t);
+    if(!pr)return;
+    var hr=+pr[1], mi=+pr[2];
+    if(hr>23||mi>59)return;          /* 12:75 caería en las 13:15 si solo sumáramos */
+    var mins=hr*60+mi;
+    var x=(P+(W-2*P)*mins/1440).toFixed(1), rad=(2+Math.min(2.4,m.kcal/450)).toFixed(1);
+    svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#EFE6D2" stroke-width="0.9" '+
+         'stroke-dasharray="2 2.5" opacity=".55"/>'+
+         '<circle cx="'+x+'" cy="'+(TOP+3.2)+'" r="'+rad+'" fill="#EFE6D2" opacity=".95"><title>'+
+         esc(m.t+" · "+T(m.nm)+" · "+m.kcal+" kcal · "+m.prot+" g prot")+"</title></circle>";
+  });
   [0,3,6,9,12,15,18,21,24].forEach(function(hh){
     var x=(P+(W-2*P)*hh/24).toFixed(1);
     svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#2B3442" stroke-width="0.4" opacity=".7"/>'+
@@ -2074,6 +2130,7 @@ function stressDayCard(){
   var leg=[];
   if(rw.some(function(v){return v===1}))leg.push('<span class="lgd"><i style="background:#5B84C4"></i>'+T(B("sueño","sleep"))+"</span>");
   if(sie)leg.push('<span class="lgd"><i style="background:#8FB3E0"></i>'+T(B("siesta","nap"))+"</span>");
+  if(mealsOf(selDay()).some(function(m){return m.t}))leg.push('<span class="lgd"><i style="background:#EFE6D2"></i>'+T(B("comida","meal"))+"</span>");
   if(act)leg.push('<span class="lgd"><i style="background:'+SENTRENO+'"></i>'+T(B("entrenando","training"))+"</span>");
   return '<div class="card" style="padding:9px 8px"><div class="exhead" style="padding:0 4px"><div class="tlab strow">🧠 '+
     T(B("Estrés","Stress"))+' <span class="snum">'+av+" · "+T(B("máx","max"))+" "+mx+(q?" · "+esc(q):"")+"</span></div></div>"+
@@ -2856,9 +2913,9 @@ document.addEventListener("click",function(e){
   if(act==="iso"){isoStart();return}
 });
 document.addEventListener("change",function(e){
-  var inp=e.target.closest(".w-in,.note-in");if(!inp)return;
+  var inp=e.target.closest(".w-in,.note-in,.t-in");if(!inp)return;
   W(inp.dataset.key,inp.value.trim());
-  if(inp.dataset.key.indexOf("journal:")===0)render(true);
+  if(/^(journal|meal):/.test(inp.dataset.key))render(true);
 });
 /* ---------- iOS: recolocar los elementos fijos tras cerrar el teclado ----------
    En iOS el teclado encoge el viewport visual. Al cerrarse, los elementos con
