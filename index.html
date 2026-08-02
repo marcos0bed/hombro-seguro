@@ -226,6 +226,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .macv{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .macv span{color:var(--mut);font-size:11px}
 .bedv{font-family:var(--mono);font-size:17px;font-variant-numeric:tabular-nums;margin-top:5px}
+.bedm{font:400 10px var(--mono);color:var(--mut);margin-top:3px}
 .bedv.ok{color:var(--ok)}
 .bedv.bad{color:var(--bad)}
 .macwarn{margin-top:9px;font-size:12px;color:var(--warn);line-height:1.4;border-top:1px solid var(--line);padding-top:8px}
@@ -318,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v123";
+var APP_VERSION="v124";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2267,13 +2268,13 @@ function macroGoal(day){
   var k=cfg[kind]||cfg.soft||MACROS.soft;
   return {prot:cfg.prot||MACROS.prot,carb:k.carb,fat:k.fat,kind:kind,sid:sid};
 }
-/* A qué hora SE DUERME — no a qué hora se acuesta. sleep_start_h es el instante
-   en que el reloj detecta la primera fase de sueño, y confundir las dos cosas
-   lleva a un consejo equivocado: él se acuesta a las 23:25 y apaga sobre las
-   00:00, con mediana de dormirse a las 00:10, o sea ~10 min de latencia, que
-   está bien. Su problema no es que le cueste dormirse ni que trasnoche a
-   diario: es la cola, una noche de cada diez a las 02:38. Por eso el aviso se
-   compara con SU mediana en vez de sermonear con una hora fija.
+/* Sueño: a qué hora se acostó, a qué hora se durmió y cuánto tardó.
+   Garmin NO da la hora de acostarse. Se aproxima con el último tramo de 15 min
+   con pasos de verdad antes de dormirse (bed_h, lo calcula balancetool). Está
+   validado: la mediana sale 23:30 y él dice acostarse a las 23:25-23:30.
+   La distinción importa porque una noche mala tiene dos causas opuestas y
+   remedios opuestos: estar levantado hasta tarde, o acostarse a su hora y no
+   coger el sueño. De sus 15 peores noches, 12 fueron lo primero.
    Se normaliza a horas relativas a medianoche: 23:45 -> -0,25; 01:18 -> +1,3. */
 function bedNorm(h){return h==null?null:(h>=12?h-24:h)}
 function bedFmt(h){
@@ -2282,51 +2283,48 @@ function bedFmt(h){
   if(mm===60){mm=0;hh=(hh+1)%24}
   return pad(hh)+":"+pad(mm);
 }
+function medianaDe(v){
+  var a=v.slice().sort(function(x,y){return x-y});
+  if(!a.length)return null;
+  return a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2;
+}
 function bedCard(){
   if(!cloudOn())return "";
   if((state.dayRange||1)!==1)return "";
   var day=selDay(), r=rowFor(day);
-  var b=r?bedNorm(r.sleep_start_h):null;
-  if(b==null)return "";
-  var M=(METRICS.data||[]).filter(function(x){return x.day<=day&&x.sleep_start_h!=null});
-  var ult=M.slice(-14).map(function(x){return bedNorm(x.sleep_start_h)});
-  var media=ult.length?ult.reduce(function(a,c){return a+c},0)/ult.length:null;
-  /* El coste sale de SUS noches, no de una cifra fija: si el patrón cambia, el
-     mensaje cambia con él. */
-  function dorm(sel){
-    var v=M.filter(function(x){return sel(bedNorm(x.sleep_start_h))&&x.sleep_h!=null})
-           .map(function(x){return +x.sleep_h});
-    return v.length>=5?v.reduce(function(a,c){return a+c},0)/v.length:null;
-  }
-  var pronto=dorm(function(h){return h<1}), tarde=dorm(function(h){return h>=1});
-  /* Mediana propia, que es el patrón real; la media la arrastran las noches sueltas. */
-  var todas=M.map(function(x){return bedNorm(x.sleep_start_h)}).sort(function(a,c){return a-c});
-  var mid=todas.length?(todas.length%2?todas[(todas.length-1)/2]:
-        (todas[todas.length/2-1]+todas[todas.length/2])/2):null;
-  var cls=b>=1?"bad":(b<0?"ok":"");
+  var on=r?bedNorm(r.sleep_start_h):null;
+  if(on==null)return "";
+  var ac=r?bedNorm(r.bed_h):null, lat=r&&r.sleep_lat_min!=null?+r.sleep_lat_min:null;
+  var M=(METRICS.data||[]).filter(function(x){return x.day<=day});
+  var acM=medianaDe(M.filter(function(x){return x.bed_h!=null}).map(function(x){return bedNorm(x.bed_h)}));
+  var latM=medianaDe(M.filter(function(x){return x.sleep_lat_min!=null}).map(function(x){return +x.sleep_lat_min}));
+  /* Rojo solo cuando el dato es peor que SU costumbre, no contra una hora fija. */
+  var acCls=(ac!=null&&acM!=null)?(ac>=acM+1?"bad":(ac<=acM-0.5?"ok":"")):"";
+  var latCls=(lat!=null&&latM!=null)?(lat>=latM+30?"bad":(lat<=latM?"ok":"")):"";
   var cols=[
-    [B("Anoche","Last night"),bedFmt(b),cls],
-    [B("Tu mediana","Your median"),bedFmt(mid),""],
-    [B("Dormido","Slept"),r.sleep_h!=null?(+r.sleep_h).toFixed(1)+" h":"—",""]
+    [B("Te acostaste","In bed"),bedFmt(ac),acCls,acM!=null?bedFmt(acM):null],
+    [B("Te dormiste","Asleep"),bedFmt(on),"",null],
+    [B("Tardaste","Took"),lat!=null?lat+" min":"—",latCls,latM!=null?Math.round(latM)+" min":null]
   ].map(function(c){
     return '<div class="macg"><div class="macl">'+esc(T(c[0]))+"</div>"+
-           '<div class="bedv '+c[2]+'">'+esc(c[1])+"</div></div>";
+           '<div class="bedv '+c[2]+'">'+esc(c[1])+"</div>"+
+           (c[3]?'<div class="bedm">'+T(B("normal ","usual "))+esc(c[3])+"</div>":"")+"</div>";
   }).join("");
-  /* El texto habla de dormirse tarde, NO de acostarse tarde: no sabemos a qué
-     hora apagó la luz. Y compara contra su mediana, que es su patrón real. */
-  var avisoTxt="";
-  if(b>=1&&mid!=null){
-    var dif=Math.round((b-mid)*60);
-    avisoTxt=T(B("Te dormiste ","Fell asleep "))+bedFmt(b)+
-      (dif>=20?", "+dif+" "+T(B("min más tarde de lo habitual","min later than usual"))+".":".");
-    if(pronto!=null&&tarde!=null)
-      avisoTxt+=" "+T(B("Esas noches duermes ","Those nights you get "))+tarde.toFixed(1)+
-        " h "+T(B("frente a ","vs "))+pronto.toFixed(1)+" h.";
+  /* El aviso nombra la CAUSA, porque el remedio de cada una es distinto. */
+  var av="";
+  if(ac!=null&&acM!=null&&lat!=null&&latM!=null){
+    if(ac>=acM+1)
+      av=T(B("Te acostaste tarde, no es que te costara dormir.",
+             "You went to bed late — falling asleep wasn't the issue."));
+    else if(lat>=latM+30)
+      av=T(B("Te acostaste a tu hora pero tardaste ","In bed on time but took "))+lat+
+          T(B(" min en dormirte, frente a "," min to fall asleep, vs "))+Math.round(latM)+
+          T(B(" de costumbre."," usually."));
   }
   return '<div class="card"><div class="exhead"><div class="tlab">🛏 '+
-    T(B("A qué hora te dormiste","Sleep onset"))+"</div></div>"+
+    T(B("Sueño","Sleep"))+"</div></div>"+
     '<div class="macrow">'+cols+"</div>"+
-    (avisoTxt?'<div class="macwarn">'+esc(avisoTxt)+"</div>":"")+"</div>";
+    (av?'<div class="macwarn">'+esc(av)+"</div>":"")+"</div>";
 }
 function macroCard(){
   if(!cloudOn())return "";
