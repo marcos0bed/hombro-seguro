@@ -318,7 +318,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v122";
+var APP_VERSION="v123";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2267,10 +2267,13 @@ function macroGoal(day){
   var k=cfg[kind]||cfg.soft||MACROS.soft;
   return {prot:cfg.prot||MACROS.prot,carb:k.carb,fat:k.fat,kind:kind,sid:sid};
 }
-/* A qué hora se acuesta. Es su palanca más grande y no estaba en ningún sitio:
-   en 62 noches, cada hora de retraso le cuesta ~34 min de sueño (r=-0,57), y el
-   daño se concentra pasada la 1:00 — antes de esa hora el score apenas cambia.
-   Garmin ya da sleep_start_h, así que no hay nada que teclear.
+/* A qué hora SE DUERME — no a qué hora se acuesta. sleep_start_h es el instante
+   en que el reloj detecta la primera fase de sueño, y confundir las dos cosas
+   lleva a un consejo equivocado: él se acuesta a las 23:25 y apaga sobre las
+   00:00, con mediana de dormirse a las 00:10, o sea ~10 min de latencia, que
+   está bien. Su problema no es que le cueste dormirse ni que trasnoche a
+   diario: es la cola, una noche de cada diez a las 02:38. Por eso el aviso se
+   compara con SU mediana en vez de sermonear con una hora fija.
    Se normaliza a horas relativas a medianoche: 23:45 -> -0,25; 01:18 -> +1,3. */
 function bedNorm(h){return h==null?null:(h>=12?h-24:h)}
 function bedFmt(h){
@@ -2295,26 +2298,33 @@ function bedCard(){
            .map(function(x){return +x.sleep_h});
     return v.length>=5?v.reduce(function(a,c){return a+c},0)/v.length:null;
   }
-  var pronto=dorm(function(h){return h<0}), tarde=dorm(function(h){return h>=1});
+  var pronto=dorm(function(h){return h<1}), tarde=dorm(function(h){return h>=1});
+  /* Mediana propia, que es el patrón real; la media la arrastran las noches sueltas. */
+  var todas=M.map(function(x){return bedNorm(x.sleep_start_h)}).sort(function(a,c){return a-c});
+  var mid=todas.length?(todas.length%2?todas[(todas.length-1)/2]:
+        (todas[todas.length/2-1]+todas[todas.length/2])/2):null;
   var cls=b>=1?"bad":(b<0?"ok":"");
   var cols=[
     [B("Anoche","Last night"),bedFmt(b),cls],
-    [B("Media 14 n.","14-night avg"),bedFmt(media),""],
+    [B("Tu mediana","Your median"),bedFmt(mid),""],
     [B("Dormido","Slept"),r.sleep_h!=null?(+r.sleep_h).toFixed(1)+" h":"—",""]
   ].map(function(c){
     return '<div class="macg"><div class="macl">'+esc(T(c[0]))+"</div>"+
            '<div class="bedv '+c[2]+'">'+esc(c[1])+"</div></div>";
   }).join("");
+  /* El texto habla de dormirse tarde, NO de acostarse tarde: no sabemos a qué
+     hora apagó la luz. Y compara contra su mediana, que es su patrón real. */
   var avisoTxt="";
-  if(b>=1){
-    avisoTxt=T(B("Pasaste de la 1:00.","Past 1:00 a.m."));
+  if(b>=1&&mid!=null){
+    var dif=Math.round((b-mid)*60);
+    avisoTxt=T(B("Te dormiste ","Fell asleep "))+bedFmt(b)+
+      (dif>=20?", "+dif+" "+T(B("min más tarde de lo habitual","min later than usual"))+".":".");
     if(pronto!=null&&tarde!=null)
-      avisoTxt+=" "+T(B("Tus noches así rondan las ","Nights like this average "))+
-        tarde.toFixed(1)+" h "+T(B("frente a ","vs "))+pronto.toFixed(1)+
-        " h "+T(B("cuando te acuestas antes de medianoche.","when you turn in before midnight."));
+      avisoTxt+=" "+T(B("Esas noches duermes ","Those nights you get "))+tarde.toFixed(1)+
+        " h "+T(B("frente a ","vs "))+pronto.toFixed(1)+" h.";
   }
   return '<div class="card"><div class="exhead"><div class="tlab">🛏 '+
-    T(B("A qué hora te acuestas","Bedtime"))+"</div></div>"+
+    T(B("A qué hora te dormiste","Sleep onset"))+"</div></div>"+
     '<div class="macrow">'+cols+"</div>"+
     (avisoTxt?'<div class="macwarn">'+esc(avisoTxt)+"</div>":"")+"</div>";
 }
