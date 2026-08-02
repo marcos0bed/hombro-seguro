@@ -315,7 +315,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v120";
+var APP_VERSION="v121";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2030,7 +2030,8 @@ function sColor(v){
    las calorías y la proteína que ya sabemos. Solo se ofrecen los cajones en los
    que ese día hay algo registrado: pedir la hora de una cena que no existe sobra. */
 var MEALKEYS=[["b","🍳",["Desayuno","Breakfast"]],["l","🥗",["Comida","Lunch"]],
-              ["d","🍽","Cena|Dinner".split("|")],["s","🍫",["Snacks","Snacks"]]];
+              ["d","🍽","Cena|Dinner".split("|")],["w","🥤",["Batido","Shake"]],
+              ["s","🍫",["Picoteo","Snack"]]];
 function mealsOf(day){
   var r=rowFor(day), m=(r&&r.meals_kcal)||null;
   if(!m)return [];
