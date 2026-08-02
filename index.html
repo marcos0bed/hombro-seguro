@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v124";
+var APP_VERSION="v125";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2316,10 +2316,21 @@ function bedCard(){
     if(ac>=acM+1)
       av=T(B("Te acostaste tarde, no es que te costara dormir.",
              "You went to bed late — falling asleep wasn't the issue."));
-    else if(lat>=latM+30)
+    else if(lat>=latM+30){
       av=T(B("Te acostaste a tu hora pero tardaste ","In bed on time but took "))+lat+
-          T(B(" min en dormirte, frente a "," min to fall asleep, vs "))+Math.round(latM)+
-          T(B(" de costumbre."," usually."));
+         T(B(" min en dormirte, frente a "," min to fall asleep, vs "))+Math.round(latM)+
+         T(B(" de costumbre."," usually."));
+      /* Y si aun así durmió lo suyo, decirlo. Tardar en dormirse no cuesta sueño
+         cuando se compensa acostándose antes o levantándose después — que es lo
+         que hace él: en sus noches lentas duerme lo mismo, 6,6 h. Sin este
+         matiz la tarjeta alarmaba por algo que no tiene consecuencia. */
+      var shM=medianaDe(M.filter(function(x){return x.sleep_h!=null}).map(function(x){return +x.sleep_h}));
+      if(r.sleep_h!=null&&shM!=null)
+        av+=" "+(r.sleep_h>=shM-0.3
+          ? T(B("Aun así dormiste tus ","Still slept your usual "))+(+r.sleep_h).toFixed(1)+" h."
+          : T(B("Y esta vez sí lo pagaste: ","And this time it cost you: "))+(+r.sleep_h).toFixed(1)+
+            T(B(" h frente a tus "," h vs your usual "))+shM.toFixed(1)+".");
+    }
   }
   return '<div class="card"><div class="exhead"><div class="tlab">🛏 '+
     T(B("Sueño","Sleep"))+"</div></div>"+
