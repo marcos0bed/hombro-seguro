@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v125";
+var APP_VERSION="v126";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2555,10 +2555,19 @@ function dayCard(){
   ensureGoal();
   var GG=S("goal",{})||{};
   function gtag(v){return v?' <span style="font-size:11px;color:var(--mut);font-weight:400">◎ '+v+"</span>":""}
+  /* Los km del día al lado de los pasos. Es la distancia que Garmin deriva de
+     los propios pasos, así que las dos cifras cuentan lo mismo y no se
+     contradicen. En vista de varios días, la media. */
+  function kmTag(){
+    var k=rng===1?(r.distance_km!=null?+r.distance_km:null):avg(win("distance_km"));
+    if(k==null||!(k>0))return "";
+    return ' <span style="font-size:11px;color:var(--mut);font-weight:400">· '+
+           k.toFixed(1)+" km</span>";
+  }
   var tiles=[
     ["⚖️ "+T(B("Peso","Weight")),wVal+gtag(GG.weight_kg),null,spark(wwin(),"#C88BD8")],
     ["🧈 "+u("bodyFat"),fVal+gtag(GG.body_fat_pct),null,spark(fwin(),"#46C08A")],
-    ["👣 "+u("dSteps"),val("steps",function(x){return Math.round(x).toLocaleString()}),null,stepsSpark],
+    ["👣 "+u("dSteps"),val("steps",function(x){return Math.round(x).toLocaleString()})+kmTag(),null,stepsSpark],
     ["😴 "+u("dSleep"),slV,rng===1?r.sleep_q:null,spark(win("sleep_h"),"#46C08A")],
     ["💓 HRV",val("hrv_ms",function(x){return Math.round(x)+" ms"}),rng===1?r.hrv_q:null,spark(win("hrv_ms"),"#4DD0C0")],
     ["🫀 "+u("dRhr"),val("rhr",function(x){return Math.round(x)}),null,
