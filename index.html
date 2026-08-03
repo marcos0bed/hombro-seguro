@@ -237,6 +237,12 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
 .foldh .chev{color:var(--mut);font-size:12px}
+.pbr{display:flex;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line)}
+.pbr:last-child{border-bottom:0}
+.pbd{font-family:var(--disp);text-transform:uppercase;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--mut);width:52px;flex:none}
+.pbt{font:600 16px var(--mono);font-variant-numeric:tabular-nums;color:var(--text);flex:none}
+.pbp{font:11px var(--mono);color:var(--mut);flex:1}
+.pby{font:11px var(--mono);color:var(--mut)}
 .intwrap{display:flex;align-items:center;gap:16px;padding:6px 2px 2px}
 .intlist{flex:1;min-width:0}
 .intr{display:flex;align-items:center;gap:8px;padding:3.5px 0}
@@ -330,7 +336,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v152";
+var APP_VERSION="v153";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -548,7 +554,7 @@ function loadGact(){
   GACT.loading=true;
   sb.from("garmin_activities")
     .select("activity_id,start_time,type,distance_km,duration_min,pace,hr_avg,hr_max,calories,cadence,elevation_m,temp_c,apparent_c")
-    .order("start_time",{ascending:false}).limit(400)
+    .order("start_time",{ascending:false}).limit(1200)
     .then(function(r){GACT.loading=false;GACT.data=r.data||[];render();},
           function(){GACT.loading=false;GACT.data=[];render();});
 }
@@ -2023,10 +2029,60 @@ function adherenceCard(){
     T(B("Esta semana","This week"))+' <span class="snum">'+ok+"/"+ks.length+"</span></div></div>"+filas+"</div>";
 }
 
+/* Marcas personales y volumen por año, del histórico completo. Con 769 carreras
+   desde 2016 importadas de Strava, una lista de las 10 últimas no sirve de nada:
+   lo que se quiere ver es qué has hecho y cómo has evolucionado. */
+function marcasCard(){
+  var runs=runsOf();
+  if(runs.length<10)return "";
+  var DIST=[[5,"5K",0.96,1.06],[10,"10K",0.96,1.07],[21.097,B("Media","Half"),0.975,1.04]];
+  var filas=DIST.map(function(D){
+    var mejor=null;
+    runs.forEach(function(a){
+      var km=a.distance_km||0;
+      if(km<D[0]*D[2]||km>D[0]*D[3]||!a.duration_min)return;
+      if(mejor===null||a.duration_min<mejor.duration_min)mejor=a;
+    });
+    if(!mejor)return "";
+    var rit=paceMin(mejor);
+    return '<div class="pbr"><span class="pbd">'+esc(T(D[1]))+'</span>'+
+      '<span class="pbt">'+fmtMin(mejor.duration_min)+"</span>"+
+      '<span class="pbp">'+fmtPace(rit)+"/km</span>"+
+      '<span class="pby">'+mejor.start_time.slice(0,4)+"</span></div>";
+  }).join("");
+  if(!filas)return "";
+  /* volumen y eficiencia por año: la foto de una década en cinco filas */
+  var porAno={};
+  runs.forEach(function(a){
+    var y=a.start_time.slice(0,4);
+    var o=porAno[y]=porAno[y]||{n:0,km:0,ef:[]};
+    o.n++;o.km+=a.distance_km||0;
+    var pm=paceCorr(a);
+    if(pm!=null&&a.hr_avg&&a.hr_avg>120&&a.hr_avg<175)o.ef.push(pm/a.hr_avg*150);
+  });
+  var anos=Object.keys(porAno).sort().slice(-6);
+  var filasA=anos.map(function(y){
+    var o=porAno[y];
+    o.ef.sort(function(a,b){return a-b});
+    var med=o.ef.length?o.ef[Math.floor(o.ef.length/2)]:null;
+    return '<div class="pbr"><span class="pbd">'+y+'</span>'+
+      '<span class="pbt" style="font-size:13px">'+Math.round(o.km)+" km</span>"+
+      '<span class="pbp">'+o.n+" "+T(B("carreras","runs"))+"</span>"+
+      '<span class="pby">'+(med?fmtPace(med):"—")+"</span></div>";
+  }).join("");
+  return '<div class="card"><div class="exhead"><div class="tlab">🏅 '+
+    T(B("Tus marcas","Your bests"))+' <span class="snum">'+runs.length+" "+
+    T(B("carreras desde","runs since"))+" "+runs[0].start_time.slice(0,4)+"</span></div></div>"+
+    filas+
+    '<div class="exhead" style="margin-top:12px"><div class="tlab">📅 '+
+    T(B("Por año","By year"))+' <span class="snum">'+T(B("última columna: ritmo a 150 ppm","last column: pace at 150 bpm"))+"</span></div></div>"+
+    filasA+"</div>";
+}
+
 function carreraView(){
   if(!cloudOn())return '<p class="note">'+T(B("Inicia sesión para ver tu plan.","Sign in to see your plan."))+"</p>";
   if(GACT.data===null){loadGact();return '<p class="note">'+T(B("Cargando carreras…","Loading runs…"))+"</p>";}
-  return raceHeadCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard();
+  return raceHeadCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
 }
 
 /* ---------- dashboard ---------- */
