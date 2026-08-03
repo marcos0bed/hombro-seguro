@@ -324,7 +324,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v139";
+var APP_VERSION="v140";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -785,7 +785,7 @@ lowA:{title:B("Lower A · Fuerza","Lower A · Strength"),sub:B("Sentadilla SSB +
         "Cable at chest height, standing perpendicular to it. Press your hands straight out and resist the twist. Anti-rotation with arms below shoulder height: completely safe. It replaces any hanging bar core work, which is off the table.")}
 ]},
 
-upA:{title:"Upper A",sub:B("Empuje inclinado + tracción horizontal","Incline press + horizontal pulling"),load:"soft",type:"gym",items:[
+upA:{title:"Upper A",sub:B("Empuje inclinado + tracción horizontal · 40 min","Incline press + horizontal pulling · 40 min"),load:"soft",type:"gym",items:[
   WARMUP,
   {n:B("Press inclinado mancuernas 30°","Incline dumbbell press 30°"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("Codos pegados","Elbows tucked")],yt:"incline dumbbell press neutral grip",
    how:B("Banco a 30°, palmas enfrentadas. Baja controlado con los codos a menos de 45° del tronco, hasta que lleguen a la altura del torso — sin buscar estiramiento profundo. Arriba, no juntes las mancuernas sobre la cara. Para colocarte: mancuernas en los muslos y súbelas con impulso de rodillas, nunca con los brazos estirados. Si HOY hay molestia ≥1/10 o chasquidos al calentar: cambia a floor press esta sesión y anótalo en la nota.",
@@ -793,21 +793,17 @@ upA:{title:"Upper A",sub:B("Empuje inclinado + tracción horizontal","Incline pr
   {n:B("Remo en polea sentado","Seated cable row"),sets:4,reps:"8-12",chips:[B("Codos pegados","Elbows tucked")],yt:"seated cable row neutral grip",
    how:B("Maneral triángulo, rodillas semiflexionadas. Tira hacia el abdomen con los codos pegados al cuerpo, junta las escápulas al final y vuelve controlado sin encorvarte. La tracción es el bloque más amable con tu hombro: por eso lleva una serie más que el empuje.",
         "V-handle, knees slightly bent. Pull to your abdomen with elbows tucked, squeeze the shoulder blades at the end, return under control without rounding. Pulling is the friendliest block for your shoulder — that's why it gets one more set than pressing.")},
-  {n:B("Cruces en polea baja","Low-to-high cable flys"),sets:3,reps:"12-15",chips:[B("Rango controlado","Controlled range")],yt:"low to high cable chest fly",
-   how:B("Poleas a la altura de la rodilla o menos, un pie adelantado. Codos ligeramente flexionados y fijos: lleva las manos adelante-arriba-adentro hasta que se ENCUENTREN a la altura del esternón — sin cruzarlas ni pasar de la línea media, y nunca más arriba. Cruzar el brazo sobre el pecho comprime la acromioclavicular, que ya muestra desgaste en tus ecos. Si notas tirón delante del hombro, acorta la vuelta.",
-        "Pulleys at knee height or lower, one foot forward. Elbows slightly bent and locked: bring your hands forward-up-inward until they MEET at sternum height — no crossing past the midline, and never higher. Crossing the arm over the chest compresses the AC joint, which already shows wear on your scans. If you feel a pull at the front of the shoulder, shorten the return.")},
   {n:B("Tríceps en polea (cuerda)","Triceps rope pushdown"),sets:3,reps:"10-15",chips:[B("Codos fijos","Elbows pinned")],yt:"triceps rope pushdown technique",
    how:B("De pie, codos pegados a los costados: son la bisagra y no se mueven. Extiende hacia abajo separando la cuerda al final. Todo tríceps por encima de la cabeza y los fondos siguen fuera.",
         "Standing, elbows pinned to your sides: they're the hinge and don't move. Extend down, splitting the rope at the bottom. All overhead triceps work and dips remain off the table.")},
   {n:B("Curl con barra","Barbell curl"),sets:3,reps:"8-12",chips:[B("Libre","Unrestricted")],yt:"barbell curl technique",
    how:B("Curl clásico de pie, sin balanceo. Sin restricciones por el hombro: aquí puedes ir a por ello.",
-        "Classic standing curl, no swinging. No shoulder restrictions here: you can go after it.")},
-  CUFFREF
+        "Classic standing curl, no swinging. No shoulder restrictions here: you can go after it.")}
 ]},
 
 lowB:{title:B("Lower B · Volumen","Lower B · Volume"),sub:B("Glúteo, unilateral y máquinas","Glutes, unilateral and machines"),load:"hard",type:"gym",items:[
   LOWWARM,
-  {n:B("Hip thrust con barra","Barbell hip thrust"),sets:4,reps:"8-12",chips:[B("Pad en cadera","Pad on hips"),B("Glúteo","Glutes")],yt:"barbell hip thrust technique",
+  {n:B("Hip thrust con barra","Barbell hip thrust"),sets:3,reps:"8-12",chips:[B("Pad en cadera","Pad on hips"),B("Glúteo","Glutes")],yt:"barbell hip thrust technique",
    how:B("Espalda alta apoyada en el banco, pad en la cadera. Sube con glúteo hasta la extensión completa, sin arquear la lumbar, barbilla ligeramente recogida. Pausa de 1 s arriba. El glúteo es el motor de la zancada al correr y no se entrena solo con sentadilla.",
         "Upper back on the bench, pad on the hips. Drive up with the glutes to full extension without arching the lower back, chin slightly tucked. 1 s pause at the top. The glutes are the engine of your running stride and squats alone don't train them.")},
   {n:B("Zancadas caminando con mancuernas","Walking lunges, dumbbells"),sets:3,reps:B("10 /pierna","10 /leg"),chips:[B("Unilateral","Unilateral")],yt:"dumbbell walking lunge technique",
@@ -819,15 +815,12 @@ lowB:{title:B("Lower B · Volumen","Lower B · Volume"),sub:B("Glúteo, unilater
   {n:B("Curl femoral en máquina","Machine leg curl"),sets:3,reps:"12-15",chips:[B("Isquios","Hamstrings")],yt:"lying leg curl technique",
    how:B("Mismo ejercicio que el martes pero en rango alto de repeticiones. Isquios fuertes son la mejor protección que tienes para la rodilla en la tirada larga.",
         "Same exercise as Tuesday but in a high rep range. Strong hamstrings are the best knee protection you have on the long run.")},
-  {n:B("Elevación de talones","Standing calf raise"),sets:3,reps:"12-15",chips:[B("Gemelo","Calves")],yt:"standing calf raise dumbbell",
-   how:B("De pie con mancuernas. Pausa de 1 s arriba, bajada lenta y estiramiento completo abajo. El gemelo y el sóleo absorben cada zancada: entrenarlos es prevención de tendinopatía de Aquiles, no estética.",
-        "Standing with dumbbells. 1 s pause at the top, slow lowering and a full stretch at the bottom. Calves and soleus absorb every stride: training them is Achilles tendinopathy prevention, not aesthetics.")},
   {n:B("Dead bug","Dead bug"),sets:2,reps:B("10 /lado","10 /side"),chips:["Core"],yt:"dead bug exercise technique",
    how:B("Tumbado boca arriba, extiende el brazo y la pierna contrarios a la vez, lumbar pegada al suelo. El brazo sube vertical sin soportar peso: sustituye a la plancha, que en tu caso ha irritado el hombro al cargarlo sobre el antebrazo.",
         "Lying on your back, extend the opposite arm and leg together, lower back pinned to the floor. The arm rises straight up with no weight-bearing: it replaces the plank, which has irritated your shoulder by loading it through the forearm.")}
 ]},
 
-carga:{title:B("Carga · pierna + upper","Load day · legs + upper"),sub:B("El día fuerte de la semana · alterna pierna y torso","The week's heavy day · alternate legs and torso"),load:"hard",type:"gym",items:[
+carga:{title:B("Carga · pierna + upper","Load day · legs + upper"),sub:B("El día fuerte · alterna pierna y torso · sin tope de tiempo","The heavy day · alternate legs and torso · no time cap"),load:"long",type:"gym",items:[
   {n:B("Calentamiento","Warm-up"),sets:0,reps:"5-10 min",chips:[],yt:"",
    how:B("Movilidad de cadera y tobillo, y series de aproximación de la sentadilla. En el día de carga el calentamiento no es opcional.",
         "Hip and ankle mobility, plus ramp-up sets on the squat. On the heavy day the warm-up is not optional.")},
@@ -2692,7 +2685,7 @@ function runplanCard(){
    de la sesión que toca en la rutina, así que si cambia la semana esto la sigue
    sin tocar nada. El backend puede sobrescribirlo con goal.macros. */
 var MACROS={prot:160,soft:{carb:60,fat:75},hard:{carb:110,fat:80},long:{carb:130,fat:80}};
-var DAYLOAD={descanso:"soft",lowA:"hard",upA:"soft",run1:"hard",runEasy:"soft",carga:"hard",lowB:"hard",upB:"soft",runLong:"long"};
+var DAYLOAD={descanso:"soft",lowA:"hard",upA:"soft",run1:"hard",runEasy:"soft",carga:"long",lowB:"hard",upB:"soft",runLong:"long"};
 /* Carga del día, en orden de autoridad. Pensado para que al CAMBIAR DE RUTINA
    no haya que tocar nada aquí:
      1) goal.macros.byDay[sid]  — lo que diga el backend, manda
