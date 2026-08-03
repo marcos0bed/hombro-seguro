@@ -330,7 +330,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v148";
+var APP_VERSION="v149";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1965,9 +1965,13 @@ function intensityCard(){
     '" x2="'+(cx+Math.cos(ang)*(R+9)).toFixed(1)+'" y2="'+(cy+Math.sin(ang)*(R+9)).toFixed(1)+
     '" stroke="#EDF0F4" stroke-width="2" opacity=".85"><title>'+T(B("objetivo 80 %","80 % target"))+"</title></line>";
   var col=pctS>=75?"#46C08A":(pctS>=65?"#E8963E":"#E5484D");
-  anillo+='<text x="'+cx+'" y="'+(cy+3)+'" text-anchor="middle" fill="'+col+
-    '" font-size="26" font-weight="700" font-family="ui-monospace,monospace">'+pctS+"%</text>"+
-    '<text x="'+cx+'" y="'+(cy+20)+'" text-anchor="middle" fill="#8E99A8" font-size="10" font-family="ui-monospace,monospace">'+
+  /* El hueco interior mide 69 px de ancho (radio 42 menos medio grosor de 15),
+     así que "100%" a 26 se salía por los lados. Se encoge cuando hay tres
+     cifras, que es justo el caso en el que más ancho ocupa. */
+  var fz=pctS>=100?19:23;
+  anillo+='<text x="'+cx+'" y="'+(cy+2)+'" text-anchor="middle" fill="'+col+
+    '" font-size="'+fz+'" font-weight="700" font-family="ui-monospace,monospace">'+pctS+"%</text>"+
+    '<text x="'+cx+'" y="'+(cy+17)+'" text-anchor="middle" fill="#8E99A8" font-size="9.5" font-family="ui-monospace,monospace">'+
     T(B("suave","easy"))+"</text>";
 
   function fila(et,mm,c){
