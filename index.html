@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v131";
+var APP_VERSION="v132";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2165,6 +2165,23 @@ function stressDayCard(){
          '<circle cx="'+x+'" cy="'+(TOP+3.2)+'" r="'+rad+'" fill="#EFE6D2" opacity=".95"><title>'+
          esc(m.t+" · "+T(m.nm)+(m.kcal!=null?" · "+m.kcal+" kcal · "+m.prot+" g prot":""))+"</title></circle>";
   });
+  /* Un hueco por falta de dato y un hueco porque el reloj todavía no ha volcado
+     se pintaban IGUAL, y no son lo mismo. La cadena reloj → móvil → Garmin
+     Connect → nuestro sync tarda, así que la parte derecha del día suele estar
+     simplemente pendiente. Se sombrea a partir de la última descarga de Garmin
+     para que se distinga "aún no ha llegado" de "no se pudo medir". */
+  var ss=S("sync_status",null), horaSync=null;
+  if(ss&&ss.garmin_t&&String(ss.garmin_t).slice(0,10)===selDay()){
+    var pr=String(ss.garmin_t).slice(11,16).split(":");
+    if(pr.length===2)horaSync=(+pr[0])+(+pr[1])/60;
+  }
+  if(horaSync!=null&&horaSync<24){
+    var xs=(P+(W-2*P)*horaSync/24).toFixed(1);
+    svg+='<rect x="'+xs+'" y="'+TOP+'" width="'+Math.max(0,W-P-xs).toFixed(1)+'" height="'+(BASE-TOP).toFixed(1)+
+         '" fill="#8E99A8" opacity=".10"/>'+
+         '<line x1="'+xs+'" y1="'+TOP+'" x2="'+xs+'" y2="'+BASE+'" stroke="#8E99A8" stroke-width="0.8" stroke-dasharray="1.5 2" opacity=".7"><title>'+
+         esc(T(B("Último volcado del reloj: ","Watch last synced: "))+String(ss.garmin_t).slice(11,16))+"</title></line>";
+  }
   [0,3,6,9,12,15,18,21,24].forEach(function(hh){
     var x=(P+(W-2*P)*hh/24).toFixed(1);
     svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#2B3442" stroke-width="0.4" opacity=".7"/>'+
@@ -2177,6 +2194,9 @@ function stressDayCard(){
   var leg=[];
   if(rw.some(function(v){return v===1}))leg.push('<span class="lgd"><i style="background:#5B84C4"></i>'+T(B("sueño","sleep"))+"</span>");
   if(sie)leg.push('<span class="lgd"><i style="background:#8FB3E0"></i>'+T(B("siesta","nap"))+"</span>");
+  if(horaSync!=null&&horaSync<23.5)
+    leg.push('<span class="lgd"><i style="background:#8E99A8;opacity:.45"></i>'+
+      T(B("sin volcar aún","not synced yet"))+"</span>");
   if(mealsOf(selDay()).some(function(m){return m.t}))leg.push('<span class="lgd"><i style="background:#EFE6D2"></i>'+T(B("comida","meal"))+"</span>");
   if(act)leg.push('<span class="lgd"><i style="background:'+SENTRENO+'"></i>'+T(B("en movimiento","moving"))+"</span>");
   return '<div class="card" style="padding:9px 8px"><div class="exhead" style="padding:0 4px"><div class="tlab strow">🧠 '+
