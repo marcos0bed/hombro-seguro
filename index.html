@@ -229,6 +229,10 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .bedm{font:400 10px var(--mono);color:var(--mut);margin-top:3px}
 .bedv.ok{color:var(--ok)}
 .bedv.bad{color:var(--bad)}
+.eatrow{margin-top:11px;padding-top:9px;border-top:1px solid var(--line)}
+.eatl{font-family:var(--disp);text-transform:uppercase;font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--mut)}
+.eatv{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums}
+.eatv span{color:var(--mut);font-size:11px}
 .macwarn{margin-top:9px;font-size:12px;color:var(--warn);line-height:1.4;border-top:1px solid var(--line);padding-top:8px}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
@@ -326,7 +330,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v143";
+var APP_VERSION="v144";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2870,10 +2874,22 @@ function macroCard(){
       '<div class="macv">'+Math.round(m.got)+' <span>/'+m.goal+" g</span></div></div>";
   }).join("");
   var incompleto=r&&r.kcal_in!=null&&!logOK(r);
+  /* El presupuesto vivía arriba, entre peso y pasos, y ahí no pegaba: es una
+     cuenta de comida y su sitio es debajo de los macros, con el mismo objetivo
+     del día del que sale. */
+  var comido=Math.round((r&&r.kcal_in)||0), queda=kcalG-comido;
+  var pctK=kcalG>0?Math.min(100,Math.round(comido/kcalG*100)):0;
+  var pasado=queda<0;
+  var barra='<div class="eatrow">'+
+    '<div class="eatl">'+(day===TODAY?"🎯 "+T(B("Por comer","Left to eat")):"🎯 "+T(B("Balance","Balance")))+"</div>"+
+    '<div class="macb" style="margin:5px 0 4px"><i class="'+(pasado?"over":"")+'" style="width:'+pctK+'%"></i></div>'+
+    '<div class="eatv"><b style="color:'+(pasado?"var(--bad)":"var(--ok)")+'">'+
+      (day===TODAY?(pasado?"":"")+queda:(pasado?"+":"")+(-queda))+"</b> <span>"+
+      comido+" / "+kcalG+" kcal</span></div></div>";
   return '<div class="card" style="padding:11px 13px"><div class="exhead" style="margin-bottom:9px">'+
     '<div class="tlab macd">'+sIc+" "+esc(sN)+" · "+esc(T(kindL))+"</div>"+
     '<span class="macnote">'+kcalG+" kcal</span></div>"+
-    '<div class="macrow">'+cols+"</div>"+
+    '<div class="macrow">'+cols+"</div>"+barra+
     (incompleto?'<p class="macwarn">'+T(B("Registro incompleto: faltan comidas por meter, así que esto no cuadra y el día no cuenta para las medias.","Incomplete log: meals are missing, so this doesn\'t add up and the day won\'t count toward averages."))+"</p>":"")+
     "</div>";
 }
@@ -3056,6 +3072,15 @@ function dayCard(){
     var out=[];M.forEach(function(x){if(x.day>=sS2&&x.day<=day&&x.body_fat_pct!=null)out.push(+x.body_fat_pct)});
     return out;
   }
+  /* El VO2max solo lo calcula Garmin los días de carrera al aire libre, así que
+     es disperso: se enseña el último conocido, como el peso. */
+  var vRow=null;
+  for(var vi=M.length-1;vi>=0;vi--){if(M[vi].day<=day&&M[vi].vo2max!=null){vRow=M[vi];break}}
+  function vwin(){
+    var out=[];M.forEach(function(x){if(x.day<=day&&x.vo2max!=null)out.push(+x.vo2max)});
+    return out.slice(-12);
+  }
+  var vVal=vRow?(+vRow.vo2max).toFixed(1):"—";
   var fVal;
   if(rng===1)fVal=fRow?(+fRow.body_fat_pct).toFixed(1)+" %":"—";
   else{var fa=avg(win("body_fat_pct"));fVal=fa==null?"—":fa.toFixed(1)+" %"}
@@ -3081,7 +3106,8 @@ function dayCard(){
     ["💓 HRV",val("hrv_ms",function(x){return Math.round(x)+" ms"}),rng===1?r.hrv_q:null,spark(win("hrv_ms"),"#4DD0C0")],
     ["🫀 "+u("dRhr"),val("rhr",function(x){return Math.round(x)}),null,
       (rng===1&&Array.isArray(r.hr_curve)&&r.hr_curve.length>1)?spark(r.hr_curve,"#E5484D"):spark(win("rhr"),"#E5484D")],
-    ["🔥 Kcal out",val("kcal_out",function(x){return Math.round(x)}),null,spark(win("kcal_out"),"#E8963E")]);
+    ["🔥 Kcal out",val("kcal_out",function(x){return Math.round(x)}),null,spark(win("kcal_out"),"#E8963E")],
+    ["🫁 VO₂max",vVal,null,spark(vwin(),"#7BD8C0")]);
   if(!runOnly())tiles.splice(tiles.length-1,0,
     ["🍽️ Kcal in",val("kcal_in",function(x){return Math.round(x)}),null,spark(win("kcal_in"),"#7BA1D9")]);
   /* Presupuesto del día. Sale del MISMO objetivo que la fila de macros, para
@@ -3089,48 +3115,6 @@ function dayCard(){
      (goal.eat) más las calorías activas, y en días de entreno eso se desviaba
      del plan y además invitaba a "comerse" el entrenamiento. El modo anterior
      sigue disponible poniendo goal.eatMode = "base+active". */
-  var gM=macroGoal(day);
-  var dayKcal=gM?Math.round(gM.prot*4+gM.carb*4+gM.fat*9):null;
-  var legacy=(GG.eatMode==="base+active"&&GG.eat!=null)||(!dayKcal&&GG.eat!=null);
-  if(!runOnly()&&(dayKcal||GG.eat!=null)){
-    var act=0,tR=rowFor(day);
-    if(tR&&tR.kcal_active!=null)act=+tR.kcal_active;
-    var budget=legacy?(GG.eat+act):dayKcal;
-    var dsub=' <span style="font-size:11px;color:var(--mut);font-weight:400">'+
-      (legacy?(GG.eat+"+"+Math.round(act)):(T(B("de","of"))+" "+budget))+"</span>";
-    if(rng===1&&day===TODAY){
-      var remain=Math.round(budget-((tR&&tR.kcal_in)||0));
-      tiles.push(["🎯 "+T(B("Por comer","Left to eat")),
-        '<span style="color:'+(remain>=0?"var(--ok)":"#E5484D")+'">'+remain+"</span>"+dsub,null,""]);
-    }else if(rng===1){
-      if(tR&&tR.kcal_in!=null){
-        var over=Math.round(+tR.kcal_in-budget);
-        tiles.push(["🎯 "+T(B("Vs presupuesto","Vs budget")),
-          '<span style="color:'+(over<=0?"var(--ok)":"#E5484D")+'">'+(over>0?"+":"")+over+"</span>"+dsub,null,""]);
-      }
-    }else{
-      var iW=avg(win("kcal_in")),aW=avg(win("kcal_active"));
-      /* En 7/30 días el presupuesto de referencia es la MEDIA de los objetivos
-         diarios de esa ventana: al variar por tipo de día, un solo número fijo
-         daría una comparación falsa. */
-      var bW=null;
-      if(legacy)bW=GG.eat+(aW||0);
-      else{
-        var sT=0,nT=0,st3=new Date(day+"T12:00");st3.setDate(st3.getDate()-(rng-1));
-        for(var q=0;q<rng;q++){
-          var dq=new Date(st3);dq.setDate(dq.getDate()+q);
-          var gq=macroGoal(iso(dq));
-          if(gq){sT+=gq.prot*4+gq.carb*4+gq.fat*9;nT++}
-        }
-        if(nT)bW=sT/nT;
-      }
-      if(iW!=null&&bW!=null){
-        var ovW=Math.round(iW-bW);
-        tiles.push(["🎯 "+T(B("Vs presupuesto","Vs budget")),
-          '<span style="color:'+(ovW<=0?"var(--ok)":"#E5484D")+'">'+(ovW>0?"+":"")+ovW+'</span> <span style="font-size:11px;color:var(--mut);font-weight:400">'+T(B("media","avg"))+" "+Math.round(bW)+"</span>",null,""]);
-      }
-    }
-  }
   var rsel='<span class="rng">'+[[1,T(B("Día","Day"))],[7,"7d"],[30,"30d"]].map(function(p){
     return '<button data-act="dayrange" data-r="'+p[0]+'"'+(rng===p[0]?' class="sel"':"")+'>'+p[1]+"</button>"}).join("")+"</span>";
   return '<div class="card"><div class="exhead" style="margin-bottom:9px"><div class="tlab">'+u("bodyT")+"</div>"+rsel+"</div><div class=\"dgrid\">"+tiles.map(function(t){

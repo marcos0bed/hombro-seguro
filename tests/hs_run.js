@@ -16,7 +16,7 @@ var n=dayCard();
 ok("hay peso",/Peso|Weight/.test(n),"");
 ok("hay grasa",/Grasa|Body fat/i.test(n),"");
 ok("hay kcal in",/Kcal in/.test(n),"");
-ok("hay presupuesto",/Por comer|Left to eat/.test(n),"");
+ok("el presupuesto ya no está arriba, sino en macros",!/Por comer|Left to eat/.test(n)&&/Por comer|Left to eat/.test(macroCard()),"");
 ok("hay macros",macroCard().length>100,"");
 ok("hay horas de comida",mealsCard().length>100,"");
 
@@ -27,7 +27,7 @@ var c=dayCard();
 ok("NO hay peso",!/Peso<|Weight<|⚖️/.test(c),"");
 ok("NO hay grasa",!/🧈/.test(c),"");
 ok("NO hay kcal in",!/Kcal in/.test(c),"");
-ok("NO hay presupuesto",!/Por comer|Left to eat|Vs presupuesto/.test(c),"");
+ok("NO hay presupuesto en ningún sitio",!/Por comer|Left to eat/.test(c)&&macroCard()==="","");
 ok("NO hay macros",macroCard()==="","");
 ok("NO hay horas de comida",mealsCard()==="","");
 ok("NO hay parte semanal",weekPaceCard()==="","");
