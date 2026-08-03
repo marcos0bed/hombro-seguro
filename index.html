@@ -341,7 +341,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v161";
+var APP_VERSION="v162";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1232,12 +1232,12 @@ function painBlock(){
     '<div class="painmsg'+(p!==null?" show":"")+'">'+(p!==null?PAINMSGS[LANG][p]:"")+"</div></div>";
 }
 
-function sessionView(sid){
+function sessionView(sid,dia){
   var s=getSession(sid);var h="";
   if(!s)return "";
   if(s.type==="run"){
     var done=S("done:"+TODAY+":"+sid,false);
-    h+='<div class="card runcard"><h3>'+esc(T(s.title))+'</h3><p class="big">'+(s.km||"")+'</p><p class="note" style="margin-top:8px">'+esc(T(s.note)||"")+"</p>"+
+    h+='<div class="card runcard"><h3>'+esc(planTitulo(dia||selDay(),s)||T(s.title))+'</h3><p class="big">'+(s.km||"")+'</p><p class="note" style="margin-top:8px">'+esc(T(s.note)||"")+"</p>"+
        '<button class="donebtn'+(done?" on":"")+'" data-act="run-done" data-sid="'+sid+'">'+(done?u("done"):u("markDone"))+"</button></div>";
     /* Las sesiones de carrera solo enseñaban los km y el botón: sus bloques
        —objetivo, calentamiento, series, enfriamiento— nunca llegaban a pintarse
@@ -1327,7 +1327,7 @@ function rutinaView(){
       esc(T(getSession(extra).title))+' <span class="snum">'+T(B("primero las pesas, después el rodaje","lift first, then run"))+
       "</span></div></div></div>"+
       (getSession(extra).items||[]).map(function(it,i){return exCard(extra,i,it,i,(getSession(extra).items||[]).length)}).join("")):"";
-  if(s.type!=="gym")return h+pre+sessionView(sid);
+  if(s.type!=="gym")return h+pre+sessionView(sid,fechaDeIdx(idx));
 
   var c=rxCount(sid),f=rxFocus(sid);
   var pct=c.total?Math.round(c.done/c.total*100):0;
@@ -1362,8 +1362,9 @@ function renderHdr(){
   if(state.tab==="hoy"){big=T(w.name)+" · "+T(s.title);sub=T(s.sub)||""}
   else if(state.tab==="rutina"){
     /* En Rutina el titular es la sesión que se está haciendo, no la pestaña. */
-    var wr=WK[rxIdx()],sr=getSession(wr.sid);
-    big=T(sr.title);sub=T(wr.name)+(T(sr.sub)?" · "+T(sr.sub):"");
+    var rxJ=rxIdx(),wr=WK[rxJ],sr=getSession(wr.sid);
+    big=planTitulo(fechaDeIdx(rxJ),sr)||T(sr.title);
+    sub=T(wr.name)+(T(sr.sub)?" · "+T(sr.sub):"");
   }
   else{big={semana:u("tSemana"),progreso:u("progreso"),viaje:u("tViaje"),manguito:u("tManguito"),reglas:u("tReglas"),cuenta:u("acct")}[state.tab];
        sub={semana:(cx&&cx.subSemana)||u("subSemana"),progreso:u("subProgreso"),viaje:u("subViaje"),manguito:u("subManguito"),reglas:u("subReglas"),cuenta:u("acctSub")}[state.tab]}
@@ -1528,8 +1529,10 @@ function render(keepScroll){
     h+=journalCard();
   }
   else if(state.tab==="rutina"){
-    var wRx=getWeek()[rxIdx()],sRx=wRx&&getSession(wRx.sid);
-    if(sRx&&sRx.type==="run")h+=planCard(selDay());
+    /* La ficha va del día que se ha tocado en el selector, no de hoy. Sofi
+       tocaba MAR y le seguía saliendo lo del lunes, o sea nada. */
+    var rxI=rxIdx(),wRx=getWeek()[rxI],sRx=wRx&&getSession(wRx.sid);
+    if(sRx&&sRx.type==="run")h+=planCard(fechaDeIdx(rxI));
     h+=rutinaView();
   }
   else if(state.tab==="cuenta"){

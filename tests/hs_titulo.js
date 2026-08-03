@@ -34,6 +34,19 @@ ok("un descanso también",planTitulo("2026-08-11",{type:"rest"})===null,"");
 ok("y la de correr sí lo coge",planTitulo("2026-08-11",{type:"run"})==="Series 6 × 1 min","");
 ok("sin decir qué sesión, se comporta como antes",planTitulo("2026-08-11")==="Series 6 × 1 min","");
 
+print("\n== La fecha de cada posición de la semana ==");
+var lun=fechaDeIdx(0),dom=fechaDeIdx(6);
+ok("la posición 0 es lunes",new Date(lun+"T12:00:00").getDay()===1,lun);
+ok("la 6 es domingo",new Date(dom+"T12:00:00").getDay()===0,dom);
+ok("y van seguidas",(new Date(dom+"T12:00:00")-new Date(lun+"T12:00:00"))===6*86400000,"");
+
+print("\n== La sesión de correr coge el nombre del día que se mira ==");
+W("race",{name:"x",date:"2026-11-15",km:10,plan:plan});
+var vRun=sessionView("run1","2026-08-11");
+ok("no el título fijo, sino el del plan",/Series 6 × 1 min/.test(vRun),vRun.slice(0,120));
+var vOtro=sessionView("run1","2026-08-12");
+ok("un día sin plan conserva el suyo",!/Series 6 × 1 min/.test(vOtro),"");
+
 print("\n== Sin plan de carrera ninguno ==");
 W("race",null);
 ok("no inventa títulos",planTitulo("2026-08-11")===null,"");
