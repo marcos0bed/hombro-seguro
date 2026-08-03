@@ -64,10 +64,15 @@ print("\n== Distribución de intensidad ==");
 GACT.data=[run(20,5,40,150,15),run(19,5,40,152,15),run(18,5,30,180,15),
            run(13,5,40,150,15),run(12,5,25,185,15),run(11,5,40,151,15)];
 var i2=intensityCard();
-ok("se pinta",/Distribución|Intensity/.test(i2),"");
-ok("con las tres bandas",/#46C08A/.test(i2)&&/#E8963E/.test(i2)&&/#E5484D/.test(i2),"");
+ok("se pinta",/repartes el esfuerzo|split effort/.test(i2),"");
+ok("es un anillo, no barras",/<circle/.test(i2)&&/stroke-dasharray/.test(i2),"");
+ok("con los tres colores",/#46C08A/.test(i2)&&/#E8963E/.test(i2)&&/#E5484D/.test(i2),"");
+ok("y el porcentaje suave en el centro",/font-size="26"/.test(i2)&&/%<\/text>/.test(i2),"");
+ok("con la marca del objetivo al 80 %",/objetivo 80|80 % target/.test(i2),"");
 GACT.data=[run(20,5,30,178,15),run(19,5,30,180,15),run(18,5,30,179,15)];
 ok("todo en zona gris -> lo avisa",/zona gris|grey zone/.test(intensityCard()),"");
+GACT.data=[run(20,5,40,150,15),run(19,5,40,148,15),run(18,5,40,152,15)];
+ok("todo suave -> avisa de que falta velocidad",/sin un día rápido|without one fast day/.test(intensityCard()),"");
 
 print("\n== Adherencia ==");
 /* fijamos un miércoles para que la semana tenga más de un día cerrado */

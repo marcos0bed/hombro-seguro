@@ -233,11 +233,13 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
 .foldh .chev{color:var(--mut);font-size:12px}
-.introw{display:flex;align-items:center;gap:9px;padding:4px 2px}
-.intk{font:10.5px var(--mono);color:var(--mut);width:38px;flex:none}
-.intbar{flex:1;height:11px;border-radius:3px;overflow:hidden;display:flex;background:var(--surface2)}
-.intbar i{display:block;height:100%}
-.intm{font:10.5px var(--mono);color:var(--mut);width:36px;text-align:right;flex:none}
+.intwrap{display:flex;align-items:center;gap:16px;padding:6px 2px 2px}
+.intlist{flex:1;min-width:0}
+.intr{display:flex;align-items:center;gap:8px;padding:3.5px 0}
+.intr i{width:9px;height:9px;border-radius:2px;flex:none}
+.intn{font-size:12px;color:var(--text);flex:1}
+.intv{font:11px var(--mono);color:var(--mut)}
+.intp{font:11px var(--mono);color:var(--text);width:34px;text-align:right}
 .mealgrid{display:flex;flex-direction:column;gap:6px;padding:2px 2px 0}
 .mealit{display:flex;align-items:center;gap:9px;min-width:0}
 .mealic{font-size:16px;flex:none;width:19px;text-align:center}
@@ -324,7 +326,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v142";
+var APP_VERSION="v143";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1881,42 +1883,63 @@ function intensityCard(){
   var desde=new Date();desde.setDate(desde.getDate()-56);
   var runs=runsOf(iso(desde)).filter(function(a){return a.hr_avg});
   if(runs.length<3)return "";
-  var sem=porSemana(runs),ks=Object.keys(sem).sort();
-  var M=fcMax();
-  var filas=ks.map(function(k){
-    var min={s:0,m:0,d:0};
-    sem[k].forEach(function(a){
-      var p=a.hr_avg/M,t=a.duration_min||0;
-      if(p<=PCT_SUAVE)min.s+=t;else if(p<=0.89)min.m+=t;else min.d+=t;
-    });
-    return {k:k.slice(8,10)+"/"+k.slice(5,7),...min,tot:min.s+min.m+min.d};
-  }).filter(function(f){return f.tot>0});
-  if(!filas.length)return "";
-  var tS=0,tT=0;filas.forEach(function(f){tS+=f.s;tT+=f.tot});
-  var pctS=Math.round(tS/tT*100);
-  var barras=filas.map(function(f){
-    function w(x){return (x/f.tot*100).toFixed(1)+"%"}
-    return '<div class="introw"><span class="intk">'+f.k+'</span><div class="intbar">'+
-      '<i style="width:'+w(f.s)+';background:#46C08A" title="'+T(B("suave","easy"))+'"></i>'+
-      '<i style="width:'+w(f.m)+';background:#E8963E" title="'+T(B("medio","moderate"))+'"></i>'+
-      '<i style="width:'+w(f.d)+';background:#E5484D" title="'+T(B("duro","hard"))+'"></i></div>'+
-      '<span class="intm">'+Math.round(f.tot)+"′</span></div>";
-  }).join("");
-  /* El reparto sano ronda 80 % suave. Correrlo todo a media intensidad —la zona
-     gris— es el error más repetido: demasiado duro para acumular volumen y
-     demasiado suave para estimular el VO2max. */
+  var M=fcMax(),min={s:0,m:0,d:0};
+  runs.forEach(function(a){
+    var p=a.hr_avg/M,t=a.duration_min||0;
+    if(p<=PCT_SUAVE)min.s+=t;else if(p<=0.89)min.m+=t;else min.d+=t;
+  });
+  var tot=min.s+min.m+min.d;
+  if(!tot)return "";
+  var pctS=Math.round(min.s/tot*100);
+
+  /* Anillo en vez de barras apiladas: el mensaje de esta tarjeta es UN número
+     —qué porcentaje del tiempo va suave— y un anillo lo dice de un vistazo.
+     La marca del 80 % es el objetivo: por debajo del 65 % se vive en la zona
+     gris, demasiado duro para acumular volumen y demasiado suave para ganar
+     velocidad. */
+  var R=42,C=2*Math.PI*R,cx=60,cy=60,off=0;
+  var segs=[[min.s,"#46C08A"],[min.m,"#E8963E"],[min.d,"#E5484D"]];
+  var anillo='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="#222A35" stroke-width="15"/>';
+  segs.forEach(function(sg){
+    if(sg[0]<=0)return;
+    var len=sg[0]/tot*C;
+    anillo+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="'+sg[1]+
+      '" stroke-width="15" stroke-dasharray="'+len.toFixed(1)+" "+(C-len).toFixed(1)+
+      '" stroke-dashoffset="'+(-off).toFixed(1)+'" transform="rotate(-90 '+cx+" "+cy+')"/>';
+    off+=len;
+  });
+  /* marca del objetivo, al 80 % */
+  var ang=(0.80*360-90)*Math.PI/180;
+  anillo+='<line x1="'+(cx+Math.cos(ang)*(R-9)).toFixed(1)+'" y1="'+(cy+Math.sin(ang)*(R-9)).toFixed(1)+
+    '" x2="'+(cx+Math.cos(ang)*(R+9)).toFixed(1)+'" y2="'+(cy+Math.sin(ang)*(R+9)).toFixed(1)+
+    '" stroke="#EDF0F4" stroke-width="2" opacity=".85"><title>'+T(B("objetivo 80 %","80 % target"))+"</title></line>";
+  var col=pctS>=75?"#46C08A":(pctS>=65?"#E8963E":"#E5484D");
+  anillo+='<text x="'+cx+'" y="'+(cy+3)+'" text-anchor="middle" fill="'+col+
+    '" font-size="26" font-weight="700" font-family="ui-monospace,monospace">'+pctS+"%</text>"+
+    '<text x="'+cx+'" y="'+(cy+20)+'" text-anchor="middle" fill="#8E99A8" font-size="10" font-family="ui-monospace,monospace">'+
+    T(B("suave","easy"))+"</text>";
+
+  function fila(et,mm,c){
+    if(mm<=0)return "";
+    return '<div class="intr"><i style="background:'+c+'"></i><span class="intn">'+T(et)+
+      '</span><span class="intv">'+Math.round(mm)+"′</span><span class=\"intp\">"+
+      Math.round(mm/tot*100)+"%</span></div>";
+  }
+  var det=fila(B("Suave","Easy"),min.s,"#46C08A")+fila(B("Medio","Moderate"),min.m,"#E8963E")+
+          fila(B("Duro","Hard"),min.d,"#E5484D");
   var av=pctS<65
-    ? '<div class="macwarn">'+esc(T(B("Solo el ","Only "))+pctS+
-        T(B(" % de tu tiempo es suave. Por debajo del 65 % estás viviendo en la zona gris: demasiado duro para acumular volumen y demasiado suave para mejorar la velocidad.",
-            " % of your time is easy. Below 65 % you're living in the grey zone: too hard to build volume, too easy to build speed.")))+"</div>"
-    : '<div class="macwarn" style="color:var(--ok);border-top-color:var(--line)">'+esc(pctS+
-        T(B(" % de tu tiempo en suave. Buen reparto."," % of your time easy. Good distribution.")))+"</div>";
+    ? '<div class="macwarn">'+esc(T(B("Estás en la zona gris: demasiado duro para acumular volumen y demasiado suave para ganar velocidad. Separa los días.",
+        "You're in the grey zone: too hard to build volume, too easy to build speed. Separate the days.")))+"</div>"
+    : (pctS>96&&min.d<=0
+      ? '<div class="macwarn" style="color:var(--mut);border-top-color:var(--line)">'+
+        esc(T(B("Todo suave. Bien para volver, pero sin un día rápido a la semana no se gana velocidad.",
+                "All easy. Fine for coming back, but without one fast day a week you don't gain speed.")))+"</div>"
+      : "");
   return '<div class="card"><div class="exhead"><div class="tlab">🎚 '+
-    T(B("Distribución de intensidad","Intensity distribution"))+' <span class="snum">'+
-    T(B("objetivo ~80 % suave","target ~80 % easy"))+"</span></div></div>"+barras+
-    '<div class="lgds"><span class="lgd"><i style="background:#46C08A"></i>'+T(B("suave","easy"))+
-    '</span><span class="lgd"><i style="background:#E8963E"></i>'+T(B("medio","moderate"))+
-    '</span><span class="lgd"><i style="background:#E5484D"></i>'+T(B("duro","hard"))+"</span></div>"+av+"</div>";
+    T(B("Cómo repartes el esfuerzo","How you split effort"))+' <span class="snum">'+
+    T(B("8 semanas","8 weeks"))+"</span></div></div>"+
+    '<div class="intwrap"><svg viewBox="0 0 120 120" width="120" height="120">'+anillo+"</svg>"+
+    '<div class="intlist">'+det+"</div></div>"+av+"</div>";
 }
 
 function adherenceCard(){
