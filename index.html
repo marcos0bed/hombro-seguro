@@ -324,7 +324,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v136";
+var APP_VERSION="v137";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -827,7 +827,7 @@ lowB:{title:B("Lower B · Volumen","Lower B · Volume"),sub:B("Glúteo, unilater
         "Lying on your back, extend the opposite arm and leg together, lower back pinned to the floor. The arm rises straight up with no weight-bearing: it replaces the plank, which has irritated your shoulder by loading it through the forearm.")}
 ]},
 
-upB:{title:"Upper B",sub:B("Floor press + tracción vertical · día doble","Floor press + vertical pulling · double day"),load:"soft",type:"gym",items:[
+upB:{title:"Upper B",sub:B("Floor press + tracción vertical","Floor press + vertical pulling"),load:"soft",type:"gym",items:[
   WARMUP,
   {n:B("Floor press con mancuernas","Dumbbell floor press"),sets:4,reps:"6-10",chips:[B("Agarre neutro","Neutral grip"),B("Tu press progresable","Your progressable press")],yt:"dumbbell floor press neutral grip",
    how:B("Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas, codos pegados. Baja hasta que los tríceps tocan el suelo y ahí paras (pausa de 1 s). El suelo corta el recorrido justo donde empieza la zona de riesgo — por eso ESTE es el press que sí puedes cargar progresivamente mientras la banca sigue vetada. Aquí es donde recuperas masa y dureza de pecho: aplica la progresión sin miedo, el rango protegido lo permite. Entra y sal de la posición con el truco de las rodillas. Cuando el equipo médico autorice, la vuelta será: floor press → press plano con mancuernas → banca con barra.",
@@ -847,7 +847,6 @@ upB:{title:"Upper B",sub:B("Floor press + tracción vertical · día doble","Flo
   {n:B("Farmer carry con mancuernas","Dumbbell farmer carry"),sets:3,reps:"30-40 m",chips:[B("Joya para tu hombro","A gem for your shoulder")],yt:"farmer carry technique",
    how:B("Mancuernas pesadas colgando a los lados, camina erguido con las escápulas 'metidas en los bolsillos'. Trabajo isométrico de trapecio y manguito sin ningún gesto de riesgo: de lo mejor que puedes hacer por ese hombro. Si no hay espacio, 3×30-40 s de pie sujetando.",
         "Heavy dumbbells hanging at your sides, walk tall with the shoulder blades 'tucked into your back pockets'. Isometric trap and cuff work with zero risky movement: among the best things you can do for that shoulder. No space? 3×30-40 s standing holds.")},
-  RUNEASY,
   CUFFREF
 ]},
 
@@ -982,7 +981,7 @@ var MGROUPS={
   lowA:[null,"legs","legs","legs","legs","core"],
   upA:[null,"chest","back","chest","triceps","biceps","cuff"],
   lowB:[null,"legs","legs","legs","legs","legs","core"],
-  upB:[null,"chest","back","back","cuff","biceps","back","cardio","cuff"],
+  upB:[null,"chest","back","back","cuff","biceps","back","cuff"],
   activo:["cuff","core","core"],
   hotelA:["legs","chest","back","core","cuff"],
   hotelB:["legs","chest","back","core","cuff"],
@@ -1016,8 +1015,19 @@ function guessMuscle(n){
   for(var k=0;k<MGUESS.length;k++)if(MGUESS[k][1].test(s))return MGUESS[k][0];
   return null;
 }
+/* MGROUPS mapea grupo muscular POR ÍNDICE, y eso se desalinea en cuanto alguien
+   inserta o mueve un ejercicio. Ha pasado tres veces: manguito, upB y las dos
+   sesiones de gomas, donde un face pull insertado corrió todo el mapa una
+   posición y el pecho se contaba como espalda. Un mapa descuadrado es PEOR que
+   no tener mapa, así que si la longitud no cuadra con los ejercicios se ignora
+   entero y manda el nombre. Lo definitivo es `m` en cada ejercicio. */
+function mapaDe(sid){
+  var m=MGROUPS[sid];if(!m)return null;
+  var s=getSession(sid);
+  return (s&&s.items&&s.items.length===m.length)?m:null;
+}
 function muscleOf(sid,i,it){
-  return (it&&it.m)||((MGROUPS[sid]||[])[i])||(it&&guessMuscle(T(it.n)))||null;
+  return (it&&it.m)||((mapaDe(sid)||[])[i])||(it&&guessMuscle(T(it.n)))||null;
 }
 
 /* Rutina por usuario: si existe la clave kv "routine" (subida desde el backend),
@@ -1565,6 +1575,95 @@ function render(keepScroll){
 }
 
 
+
+/* ---------- gráficas de la pestaña Carrera ----------
+   Las genéricas de la app (colChart) son barras planas de un color: valen para
+   un vistazo, no para mirar una tendencia doce semanas seguidas. Estas son SVG
+   con degradado, curva suave y la última muestra destacada. */
+
+/* Curva suave de Catmull-Rom pasada a Bézier: sin esto los picos hacen sierra. */
+function suave(pts){
+  if(pts.length<2)return "";
+  var d="M"+pts[0][0].toFixed(1)+" "+pts[0][1].toFixed(1);
+  for(var i=0;i<pts.length-1;i++){
+    var p0=pts[i?i-1:0],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+    var c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6];
+    var c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+    d+="C"+c1[0].toFixed(1)+" "+c1[1].toFixed(1)+","+c2[0].toFixed(1)+" "+c2[1].toFixed(1)+
+       ","+p2[0].toFixed(1)+" "+p2[1].toFixed(1);
+  }
+  return d;
+}
+/* pares: [etiqueta, valor]. opts.fmt formatea · opts.mejor "abajo"|"arriba"
+   decide el color · opts.uid hace único el degradado (varios en la misma vista). */
+function areaChart(pares,opts){
+  opts=opts||{};
+  var W=320,H=110,PL=8,PR=8,TOP=16,BASE=H-17;
+  var vs=pares.map(function(p){return p[1]});
+  var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs);
+  if(mx===mn){mx=mn+1;mn=mn-1}
+  var pad=(mx-mn)*0.25;mn-=pad;mx+=pad;
+  var n=pares.length,paso=n>1?(W-PL-PR)/(n-1):0;
+  function X(i){return PL+paso*i}
+  function Y(v){return BASE-(v-mn)/(mx-mn)*(BASE-TOP)}
+  var pts=pares.map(function(p,i){return [X(i),Y(p[1])]});
+  var col=opts.col||"#46C08A", uid=opts.uid||"g";
+  var linea=suave(pts);
+  var area=linea+"L"+X(n-1).toFixed(1)+" "+BASE+"L"+X(0).toFixed(1)+" "+BASE+"Z";
+  var h='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin:2px 0 0" preserveAspectRatio="none">'+
+    '<defs><linearGradient id="ar'+uid+'" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="'+col+'" stop-opacity=".38"/>'+
+    '<stop offset="100%" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>';
+  /* dos líneas guía tenues, para dar escala sin ensuciar */
+  [0.33,0.66].forEach(function(f){
+    var y=(TOP+(BASE-TOP)*f).toFixed(1);
+    h+='<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="#2B3442" stroke-width="0.6" opacity=".55"/>';
+  });
+  h+='<path d="'+area+'" fill="url(#ar'+uid+')"/>'+
+     '<path d="'+linea+'" fill="none" stroke="'+col+'" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>';
+  pts.forEach(function(pt,i){
+    var ult=i===n-1;
+    h+='<circle cx="'+pt[0].toFixed(1)+'" cy="'+pt[1].toFixed(1)+'" r="'+(ult?4:2.6)+
+       '" fill="'+(ult?col:"#12151A")+'" stroke="'+col+'" stroke-width="1.8"/>';
+  });
+  /* etiquetas: solo primera y última, y el valor de la última destacado */
+  var f=opts.fmt||function(v){return v};
+  h+='<text x="'+X(0).toFixed(1)+'" y="'+(H-4)+'" fill="#8E99A8" font-size="8.5" font-family="ui-monospace,monospace">'+esc(pares[0][0])+"</text>"+
+     '<text x="'+X(n-1).toFixed(1)+'" y="'+(H-4)+'" fill="#8E99A8" font-size="8.5" font-family="ui-monospace,monospace" text-anchor="end">'+esc(pares[n-1][0])+"</text>"+
+     '<text x="'+X(n-1).toFixed(1)+'" y="'+Math.max(11,Y(vs[n-1])-8).toFixed(1)+'" fill="'+col+
+     '" font-size="11.5" font-weight="700" font-family="ui-monospace,monospace" text-anchor="end">'+esc(String(f(vs[n-1])))+"</text>"+
+     '<text x="'+X(0).toFixed(1)+'" y="'+Math.max(11,Y(vs[0])-8).toFixed(1)+'" fill="#8E99A8" font-size="9.5" font-family="ui-monospace,monospace">'+esc(String(f(vs[0])))+"</text>";
+  return h+"</svg>";
+}
+/* Barras con punta redondeada y la última destacada. */
+function barChart(pares,opts){
+  opts=opts||{};
+  var W=320,H=104,PL=6,PR=6,TOP=16,BASE=H-16;
+  var mx=Math.max.apply(null,pares.map(function(p){return p[1]}))||1;
+  var n=pares.length,hueco=n>1?(W-PL-PR)/n:(W-PL-PR);
+  var an=Math.min(30,hueco*0.62),col=opts.col||"#F0A63C";
+  var f=opts.fmt||function(v){return v};
+  var h='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto;margin:2px 0 0" preserveAspectRatio="none">'+
+    '<defs><linearGradient id="bg'+(opts.uid||"b")+'" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="'+col+'"/><stop offset="100%" stop-color="'+col+'" stop-opacity=".45"/>'+
+    "</linearGradient></defs>";
+  if(opts.meta!=null&&opts.meta<=mx){
+    var ym=(BASE-(opts.meta/mx)*(BASE-TOP)).toFixed(1);
+    h+='<line x1="'+PL+'" y1="'+ym+'" x2="'+(W-PR)+'" y2="'+ym+'" stroke="#8E99A8" stroke-width="0.9" stroke-dasharray="3 3" opacity=".7"/>';
+  }
+  pares.forEach(function(p,i){
+    var x=PL+hueco*i+(hueco-an)/2, alt=Math.max(2,(p[1]/mx)*(BASE-TOP)), y=BASE-alt;
+    var ult=i===n-1;
+    h+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+an.toFixed(1)+'" height="'+alt.toFixed(1)+
+       '" rx="'+Math.min(5,an/2).toFixed(1)+'" fill="url(#bg'+(opts.uid||"b")+')"'+(ult?"":' opacity=".82"')+"/>"+
+       '<text x="'+(x+an/2).toFixed(1)+'" y="'+Math.max(10,y-4).toFixed(1)+'" fill="'+(ult?col:"#8E99A8")+
+       '" font-size="'+(ult?"10.5":"9")+'" font-weight="'+(ult?"700":"400")+
+       '" font-family="ui-monospace,monospace" text-anchor="middle">'+esc(String(f(p[1])))+"</text>"+
+       '<text x="'+(x+an/2).toFixed(1)+'" y="'+(H-4)+'" fill="#8E99A8" font-size="8" font-family="ui-monospace,monospace" text-anchor="middle">'+esc(p[0])+"</text>";
+  });
+  return h+"</svg>";
+}
+
 /* ============================ PESTAÑA CARRERA ============================
    Seguimiento de un plan de running hacia una carrera objetivo. Se configura
    con el kv "race": {name, date, km, goal_min, plan:{"2026-08-03":km,...}}.
@@ -1576,7 +1675,9 @@ function render(keepScroll){
    con calor el pulso sube 5-15 ppm al mismo ritmo, así que sin esa corrección
    agosto siempre parece peor que octubre aunque no lo sea. */
 
-var RUNEASY = 0.82;          /* por debajo de este % de la FC máx = rodaje suave */
+var PCT_SUAVE = 0.82;        /* por debajo de este % de la FC máx = rodaje suave.
+                                Se llamaba RUNEASY y pisaba el ejercicio del mismo
+                                nombre en upB: latente, pero latente hasta que no. */
 var TEMP_REF = 15;           /* temperatura de referencia para normalizar */
 var TEMP_SEG_GRADO = 1.5;    /* s/km que cuesta cada grado por encima de 15 */
 
@@ -1688,13 +1789,13 @@ function volumeCard(){
   return '<div class="card"><div class="exhead"><div class="tlab">📏 '+
     T(B("Kilómetros por semana","Weekly volume"))+' <span class="snum">'+Math.round(tot)+" km "+
     T(B("en 11 semanas","over 11 weeks"))+"</span></div></div>"+
-    colChart(pares,function(n){return n})+av+"</div>";
+    barChart(pares,{uid:"vol",col:"#F0A63C",fmt:function(v){return v}})+av+"</div>";
 }
 
 function efficiencyCard(){
   var desde=new Date();desde.setDate(desde.getDate()-84);
   var runs=runsOf(iso(desde)).filter(function(a){
-    return a.hr_avg&&a.hr_avg<=fcMax()*RUNEASY&&(a.distance_km||0)>=2;
+    return a.hr_avg&&a.hr_avg<=fcMax()*PCT_SUAVE&&(a.distance_km||0)>=2;
   });
   if(runs.length<3)
     return '<div class="card"><div class="exhead"><div class="tlab">📈 '+T(B("Eficiencia aeróbica","Aerobic efficiency"))+
@@ -1721,11 +1822,12 @@ function efficiencyCard(){
         : T(B("Has perdido ","You've lost "))+Math.abs(mejora)+T(B(" s/km a igual pulso. Con calor o fatiga es esperable."," s/km at the same HR. Heat or fatigue will do that.")));
   return '<div class="card"><div class="exhead"><div class="tlab">📈 '+
     T(B("Eficiencia aeróbica","Aerobic efficiency"))+' <span class="snum">'+
-    T(B("ritmo a 150 ppm · menos es mejor","pace at 150 bpm · lower is better"))+"</span></div></div>"+
-    '<p class="note" style="margin:0 0 4px 4px">'+
-    esc(T(B("Ritmo corregido a 15 °C: con calor el pulso sube y el ritmo se cae sin que hayas empeorado.",
-            "Pace corrected to 15 °C: heat raises HR and slows pace without you getting worse.")))+"</p>"+
-    colChart(pares,function(n){return Math.floor(n/60)+":"+pad(n%60)})+
+    T(B("menos es mejor","lower is better"))+"</span></div></div>"+
+    '<p class="note" style="margin:0 0 2px 4px">'+
+    esc(T(B("Tu ritmo a 150 ppm, corregido a 15 °C: con calor el pulso sube y el ritmo se cae sin que hayas empeorado.",
+            "Your pace at 150 bpm, corrected to 15 °C: heat raises HR and slows pace without you getting worse.")))+"</p>"+
+    areaChart(pares,{uid:"ef",col:mejora>=4?"#46C08A":(mejora<=-4?"#E8963E":"#7BA1D9"),
+      fmt:function(v){return Math.floor(v/60)+":"+pad(v%60)}})+
     '<div class="macwarn" style="color:'+(mejora>=4?"var(--ok)":"var(--mut)")+';border-top-color:var(--line)">'+esc(msg)+
     "</div></div>";
 }
@@ -1740,7 +1842,7 @@ function intensityCard(){
     var min={s:0,m:0,d:0};
     sem[k].forEach(function(a){
       var p=a.hr_avg/M,t=a.duration_min||0;
-      if(p<=RUNEASY)min.s+=t;else if(p<=0.89)min.m+=t;else min.d+=t;
+      if(p<=PCT_SUAVE)min.s+=t;else if(p<=0.89)min.m+=t;else min.d+=t;
     });
     return {k:k.slice(8,10)+"/"+k.slice(5,7),...min,tot:min.s+min.m+min.d};
   }).filter(function(f){return f.tot>0});
@@ -1766,7 +1868,7 @@ function intensityCard(){
         T(B(" % de tu tiempo en suave. Buen reparto."," % of your time easy. Good distribution.")))+"</div>";
   return '<div class="card"><div class="exhead"><div class="tlab">🎚 '+
     T(B("Distribución de intensidad","Intensity distribution"))+' <span class="snum">'+
-    T(B("8 sem · objetivo ~80 % suave","8 wk · target ~80 % easy"))+"</span></div></div>"+barras+
+    T(B("objetivo ~80 % suave","target ~80 % easy"))+"</span></div></div>"+barras+
     '<div class="lgds"><span class="lgd"><i style="background:#46C08A"></i>'+T(B("suave","easy"))+
     '</span><span class="lgd"><i style="background:#E8963E"></i>'+T(B("medio","moderate"))+
     '</span><span class="lgd"><i style="background:#E5484D"></i>'+T(B("duro","hard"))+"</span></div>"+av+"</div>";
