@@ -16,8 +16,17 @@ ok("y por qué cae tras el día de carga",/cansadas|tired legs/.test(T(EX.runLon
 print("\n== Con ritmos concretos ==");
 ok("calidad da ritmos de series y umbral",/5:50-6:10/.test(T(EX.run1.items[2].how))&&/6:20-6:40/.test(T(EX.run1.items[2].how)),"");
 ok("y avisa de que se recalibran con el test",/test de 5 km|5 km test/.test(T(EX.run1.items[2].how)),"");
-ok("la larga da los tres tercios",/8:00-8:15/.test(T(EX.runLong.items[1].how))&&/6:50-7:10/.test(T(EX.runLong.items[1].how)),"");
-ok("y avituallamiento a partir de 60 min",/30-60 g/.test(T(EX.runLong.items[2].how)),"");
+/* buscar por nombre, no por índice: meter un ejercicio en medio no debe
+   romper la prueba (es la misma fragilidad que tenía MGROUPS) */
+function item(sid,txt){return (EX[sid].items||[]).filter(function(i){return T(i.n).indexOf(txt)>-1})[0]}
+var prog=item("runLong","Tirada progresiva");
+ok("la larga da los tres tercios",prog&&/8:00-8:15/.test(T(prog.how))&&/6:50-7:10/.test(T(prog.how)),"");
+var av=item("runLong","Avituallamiento");
+ok("y avituallamiento a partir de 60 min",av&&/30-60 g/.test(T(av.how)),"");
+var ci=item("runLong","En cinta");
+ok("la cinta tiene su apartado",!!ci,"");
+ok("con el 1 % de inclinación",ci&&/1 %/.test(T(ci.how)),"");
+ok("y dice que el bloque final va fuera",ci&&/bloque final|final block/.test(T(ci.how)),"");
 print("\n== La estructura del día de calidad ==");
 var n=EX.run1.items.map(function(i){return T(i.n)});
 ok("objetivo, calentamiento, bloque y enfriamiento",n.length===4,n.join(" | "));
