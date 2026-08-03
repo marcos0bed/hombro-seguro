@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v127";
+var APP_VERSION="v128";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1040,8 +1040,24 @@ function orderedIdx(sid,items){
 function shoulderUser(){var rt=getRT();return !rt||rt.shoulderCheck===true}
 
 var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas"),pview:"train",dayOff:0,dayRange:1,rxSid:null,rxExp:{}};
+/* El día se calculaba UNA vez, al cargar. Si la PWA se queda abierta y pasa la
+   medianoche, TODAY se quedaba en el día anterior y TODO lo que se apuntara
+   —horas de comida, series, pesos, journal— se guardaba con la fecha
+   equivocada y sin aviso. Ahora se recalcula antes de cada render y al volver
+   a primer plano, que es el caso real: el móvil pasa la noche bloqueado con la
+   app abierta y se abre por la mañana. */
 var todayIdx=(new Date().getDay()+6)%7;
 var TODAY=iso(new Date());
+function refrescaDia(){
+  var hoy=iso(new Date());
+  if(hoy===TODAY)return false;
+  TODAY=hoy;
+  todayIdx=(new Date().getDay()+6)%7;
+  /* Si estaba mirando un día pasado, al cambiar la fecha ese offset ya no
+     apunta a lo que él creía: se vuelve a hoy, que es lo menos sorprendente. */
+  if(state&&state.dayOff)state.dayOff=0;
+  return true;
+}
 
 /* ---------- renders ---------- */
 function setsKey(sid){return "sets:"+TODAY+":"+sid}
@@ -1326,6 +1342,7 @@ function structTable(rows){
 
 var _lastTab=null;
 function render(keepScroll){
+  refrescaDia();
   if(state.tab!=="cuenta"&&visibleTabs().indexOf(state.tab)<0)state.tab="hoy";
   renderHdr();renderNav();
   document.documentElement.lang=LANG;
@@ -2875,6 +2892,7 @@ function doRefresh(){
 /* al volver del segundo plano: recalcular contra el reloj (si venció, suena ya) */
 document.addEventListener("visibilitychange",function(){
   if(document.visibilityState!=="visible")return;
+  if(refrescaDia())render();      /* se abrió al día siguiente */
   if(!rest.done){wakeOn();restTick();}
   if(isoST.running){wakeOn();isoTick();}
 });
