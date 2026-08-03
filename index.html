@@ -241,6 +241,18 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .sesr:last-child{border-bottom:0}
 .sesl{font-family:var(--disp);text-transform:uppercase;font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--mut);width:78px;flex:none}
 .sesd{font-size:14.5px;line-height:1.35;flex:1}
+/* Tramos del reloj: una barra por tramo, larga = rápida. Una tabla de números
+   no deja ver de un vistazo el diente de sierra de unas series. */
+.lapr{display:grid;grid-template-columns:16px 1fr 44px 46px 40px;align-items:center;gap:7px;padding:5px 2px}
+.lapn{font-family:var(--mono);font-size:10px;color:var(--mut);text-align:right}
+.lapb{height:9px;border-radius:5px;background:var(--surface2);overflow:hidden}
+.lapb>i{display:block;height:100%;border-radius:5px;background:var(--mut);opacity:.55}
+.lapb>i.on{background:var(--acc);opacity:1}
+.lapp{font-family:var(--mono);font-size:12.5px;text-align:right}
+.lapr.hard .lapp{color:var(--acc);font-weight:600}
+.lapm,.laphr{font-size:10.5px;color:var(--mut);text-align:right}
+.lapleg{display:flex;gap:14px;margin:10px 4px 0;font-size:10.5px;color:var(--mut)}
+.lapleg b{font-family:var(--mono);color:var(--fg);font-weight:600}
 .rxplus{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--acc);vertical-align:super;margin-left:1px}
 .pbr{display:flex;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line)}
 .pbr:last-child{border-bottom:0}
@@ -341,7 +353,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v165";
+var APP_VERSION="v166";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1889,26 +1901,40 @@ function lapsCard(){
   if(!conL.length)return "";
   conL.sort(function(x,y){return x.start_time<y.start_time?1:-1});
   var a=conL[0],L=a.raw.laps;
-  /* Rápido = por debajo del 90% del ritmo mediano del propio entreno. Se
-     compara contra uno mismo y ese día, que es lo único justo: el mismo 4:00
-     es serie para uno y calentamiento para otro. */
-  var rit=L.map(function(l){return l.min/l.km}).filter(function(x){return isFinite(x)&&x>0}).sort(function(x,y){return x-y});
-  var med=rit.length?rit[Math.floor(rit.length/2)]:null;
-  var filas=L.map(function(l){
-    var pm=(l.km>0)?l.min/l.km:null;
-    var fuerte=med!=null&&pm!=null&&pm<med*0.9;
-    return '<div class="wkrow"'+(fuerte?' style="color:var(--acc)"':"")+"><span>"+
-      (fuerte?"▶ ":"")+l.i+'</span><span class="note">'+
-      (l.km>=1?l.km.toFixed(2)+" km":Math.round(l.km*1000)+" m")+" · "+fmtMin(l.min)+
-      '</span><span style="font-family:var(--mono)">'+esc(l.ritmo||"—")+
-      "</span><span>"+(l.fc?l.fc+" ppm":"")+"</span></div>";
+  var pm=L.map(function(l){return (l.km>0)?l.min/l.km:null});
+  var val=pm.filter(function(x){return x!=null&&isFinite(x)&&x>0});
+  if(!val.length)return "";
+  var ord=val.slice().sort(function(x,y){return x-y});
+  var med=ord[Math.floor(ord.length/2)],rap=ord[0],len=ord[ord.length-1];
+  /* El ritmo del mejor tramo se toma tal cual lo dio el reloj. Recalcularlo
+     desde los km redondeados daba 3:26 en la leyenda y 3:29 en su fila. */
+  var mejor="";
+  L.forEach(function(l,k){if(pm[k]===rap&&!mejor)mejor=l.ritmo||""});
+  /* Barra invertida: cuanto más rápido el tramo, más larga. Se estira entre el
+     mejor y el peor del propio entreno, si no un rodaje parejo saldría plano. */
+  function ancho(x){
+    if(x==null||!isFinite(x))return 0;
+    if(len<=rap)return 100;
+    return Math.round(22+78*(len-x)/(len-rap));
+  }
+  var nf=0;
+  var filas=L.map(function(l,k){
+    var x=pm[k],fuerte=x!=null&&x<med*0.9;
+    if(fuerte)nf++;
+    return '<div class="lapr'+(fuerte?" hard":"")+'"><span class="lapn">'+l.i+"</span>"+
+      '<div class="lapb"><i class="'+(fuerte?"on":"")+'" style="width:'+ancho(x)+'%"></i></div>'+
+      '<span class="lapp">'+esc(l.ritmo||"—")+"</span>"+
+      '<span class="lapm">'+(l.km>=1?l.km.toFixed(2)+" km":Math.round(l.km*1000)+" m")+"</span>"+
+      '<span class="laphr">'+(l.fc?l.fc:"")+"</span></div>";
   }).join("");
   var f=a.start_time.slice(8,10)+"/"+a.start_time.slice(5,7);
-  return '<div class="card"><div class="exhead"><div class="tlab">⏱ '+
-    T(B("Tramos del reloj","Watch laps"))+' <span class="snum">'+f+" · "+
-    (a.distance_km||0).toFixed(2)+" km</span></div></div>"+filas+
-    '<p class="note" style="margin:8px 4px 0;color:var(--mut)">'+
-    T(B("En naranja, los tramos fuertes de ese entreno.","In orange, the hard laps of that session."))+"</p></div>";
+  var leg='<div class="lapleg"><span>'+T(B("Mejor","Best"))+" <b>"+esc(mejor||fmtPace(rap))+"</b></span>"+
+    (nf?"<span>"+T(B("Fuertes","Hard"))+" <b>"+nf+"</b></span>":"")+
+    "<span>"+T(B("Tramos","Laps"))+" <b>"+L.length+"</b></span>"+
+    '<span style="margin-left:auto">'+T(B("barra larga = más rápido","longer bar = faster"))+"</span></div>";
+  return '<div class="card"><div class="exhead"><div class="tlab">\u23f1 '+
+    T(B("Tramos del reloj","Watch laps"))+' <span class="snum">'+f+" \u00b7 "+
+    (a.distance_km||0).toFixed(2)+" km</span></div></div>"+filas+leg+"</div>";
 }
 function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
 /* Riegel parte de que la marca de referencia fue a tope. Proyectar desde un
