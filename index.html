@@ -324,7 +324,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v135";
+var APP_VERSION="v136";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1679,7 +1679,10 @@ function volumeCard(){
   var salto=prev>0?Math.round((ult/prev-1)*100):0;
   /* La regla del 10 %: subir el volumen semanal más de eso es el factor de
      riesgo de lesión mejor documentado en corredores populares. */
-  var av=(prev>0&&salto>15)?
+  /* Por debajo de 12 km/semana el porcentaje es ruido: pasar de 4 a 4,9 km es
+     un +23 % que no significa nada, y avisar cada semana de la reconstrucción
+     entrena a ignorar el aviso justo antes de que importe. */
+  var av=(prev>=12&&salto>15)?
     '<div class="macwarn">'+esc(T(B("Has subido el volumen un ","Volume up "))+salto+
       T(B(" % respecto a la semana pasada. Por encima del 10-15 % sube el riesgo de lesión."," % on last week. Above 10-15 % injury risk rises.")))+"</div>":"";
   return '<div class="card"><div class="exhead"><div class="tlab">📏 '+
