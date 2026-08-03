@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v129";
+var APP_VERSION="v130";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2137,11 +2137,14 @@ function stressDayCard(){
     if(v==null)return;
     var x=P+an*k, hh2=pad(Math.floor(k/2))+":"+(k%2?"30":"00");
     if(v===-2){
-      /* Violeta a propósito: el ámbar chocaba con las barras de estrés alto, que
-         también son naranjas. Banda abajo, para no confundirla con el descanso. */
+      /* Garmin marca -2 cuando hay DEMASIADO MOVIMIENTO para medir estrés, que
+         se calcula sobre la variabilidad en reposo. No significa "entrenando":
+         a Lorena le salió andando deprisa (772 pasos en media hora, 3-ago-2026).
+         Llamarlo entrenamiento era generalizar desde el caso de Marcos.
+         Violeta a propósito: el ámbar chocaba con las barras de estrés alto. */
       svg+='<rect x="'+(x+0.3).toFixed(1)+'" y="'+TOP+'" width="'+(an-0.6).toFixed(1)+'" height="'+(BASE-TOP).toFixed(1)+
            '" fill="'+SENTRENO+'" opacity=".28"/><rect x="'+(x+0.3).toFixed(1)+'" y="'+(BASE-2.4)+'" width="'+(an-0.6).toFixed(1)+
-           '" height="2.4" fill="'+SENTRENO+'" opacity=".9"><title>'+hh2+" · "+T(B("entrenando","training"))+"</title></rect>";
+           '" height="2.4" fill="'+SENTRENO+'" opacity=".9"><title>'+hh2+" · "+T(B("en movimiento","moving"))+"</title></rect>";
       return;
     }
     svg+='<rect x="'+(x+0.3).toFixed(1)+'" y="'+yy(v).toFixed(1)+'" width="'+(an-0.6).toFixed(1)+
@@ -2175,7 +2178,7 @@ function stressDayCard(){
   if(rw.some(function(v){return v===1}))leg.push('<span class="lgd"><i style="background:#5B84C4"></i>'+T(B("sueño","sleep"))+"</span>");
   if(sie)leg.push('<span class="lgd"><i style="background:#8FB3E0"></i>'+T(B("siesta","nap"))+"</span>");
   if(mealsOf(selDay()).some(function(m){return m.t}))leg.push('<span class="lgd"><i style="background:#EFE6D2"></i>'+T(B("comida","meal"))+"</span>");
-  if(act)leg.push('<span class="lgd"><i style="background:'+SENTRENO+'"></i>'+T(B("entrenando","training"))+"</span>");
+  if(act)leg.push('<span class="lgd"><i style="background:'+SENTRENO+'"></i>'+T(B("en movimiento","moving"))+"</span>");
   return '<div class="card" style="padding:9px 8px"><div class="exhead" style="padding:0 4px"><div class="tlab strow">🧠 '+
     T(B("Estrés","Stress"))+' <span class="snum">'+av+" · "+T(B("máx","max"))+" "+mx+(q?" · "+esc(q):"")+"</span></div></div>"+
     svg+(leg.length?'<div class="lgds">'+leg.join("")+"</div>":"")+"</div>";
