@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v130";
+var APP_VERSION="v131";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2520,6 +2520,11 @@ function achCard(){
 /* Log del día: hábitos con toggle de icono (kv habits:<día>, sincronizado).
    wk/viaje/madrugada se auto-marcan desde logs y daily_metrics (travel, sleep_start_h). */
 var HABITS=[
+  /* Ningún sensor detecta estar enfermo, y a veces las cifras apuntan al revés:
+     Lorena, con catarro y en reposo absoluto (1.651 pasos frente a sus ~11.000),
+     marcaba su mejor HRV y su pulso en reposo más bajo del mes, y el parte le
+     recomendó entrenar. Eso solo lo sabe quien lo está pasando. */
+  {k:"malo",i:"🤒",n:B("Enfermo/a","Unwell")},
   {k:"ayuno",i:"⏳",n:B("Ayuno intermitente","Intermittent fasting")},
   {k:"cafe",i:"☕",n:B("Café","Coffee")},
   {k:"supl",i:"💊",n:B("Suplementos","Supplements")},
