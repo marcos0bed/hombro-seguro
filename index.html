@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v133";
+var APP_VERSION="v134";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1016,7 +1016,19 @@ function muscleOf(sid,i,it){
    sustituye a la semana/sesiones integradas. Así cada perfil (p. ej. Lorena)
    tiene su propio plan sin tocar este código. */
 function getRT(){return S("routine",null)}
-function getWeekBase(){var rt=getRT();return (rt&&rt.week)||WEEK}
+/* Perfil solo-running. La app entera gira en torno a comida y peso, y hay quien
+   solo quiere correr (Lorena Sofía, 19 años: le interesa el rendimiento, no la
+   báscula). Un único punto de decisión en vez de ifs repartidos por el fichero:
+   se activa con rt.mode === "run" en la rutina que trae kv_state. */
+function runOnly(){var rt=getRT();return !!(rt&&rt.mode==="run")}
+function getWeekBase(){
+  /* Una rutina de kv_state con la semana incompleta tumbaba la app entera al
+     indexar WK[idx]. Si no trae 7 días válidos, se usa la integrada. */
+  var rt=getRT(),w=rt&&rt.week;
+  if(!Array.isArray(w)||w.length!==7)return WEEK;
+  for(var i=0;i<7;i++)if(!w[i]||!w[i].sid)return WEEK;
+  return w;
+}
 function weekOrder(){
   var o=S("weekorder",null);
   if(!Array.isArray(o)||o.length!==7)return null;
@@ -2100,6 +2112,7 @@ function mealsOf(day){
   return out;
 }
 function mealsCard(){
+  if(runOnly())return "";
   if(!cloudOn())return "";
   var day=selDay(), ms=mealsOf(day);
   if(!ms.length)return "";
@@ -2411,6 +2424,7 @@ function bedCard(){
     (av?'<div class="macwarn">'+esc(av)+"</div>":"")+"</div>";
 }
 function macroCard(){
+  if(runOnly())return "";
   if(!cloudOn())return "";
   if((state.dayRange||1)!==1)return "";          // solo en la vista de un día
   var day=selDay(),r=rowFor(day);
@@ -2461,6 +2475,7 @@ function macroCard(){
      meterlo en otra sesión sino para saber dónde estás.
    Solo cuentan los días con el registro de comida completo. */
 function weekPaceCard(){
+  if(runOnly())return "";      /* pendiente: versión de carrera */
   if(!cloudOn()||!macroGoal(TODAY))return "";
   var M=METRICS.data;if(!M||!M.length)return "";
   var lun=mondayOf(TODAY);
@@ -2642,17 +2657,19 @@ function dayCard(){
     return ' <span style="font-size:11px;color:var(--mut);font-weight:400">· '+
            k.toFixed(1)+" km</span>";
   }
-  var tiles=[
+  var tiles=[];
+  if(!runOnly())tiles.push(
     ["⚖️ "+T(B("Peso","Weight")),wVal+gtag(GG.weight_kg),null,spark(wwin(),"#C88BD8")],
-    ["🧈 "+u("bodyFat"),fVal+gtag(GG.body_fat_pct),null,spark(fwin(),"#46C08A")],
+    ["🧈 "+u("bodyFat"),fVal+gtag(GG.body_fat_pct),null,spark(fwin(),"#46C08A")]);
+  tiles.push(
     ["👣 "+u("dSteps"),val("steps",function(x){return Math.round(x).toLocaleString()})+kmTag(),null,stepsSpark],
     ["😴 "+u("dSleep"),slV,rng===1?r.sleep_q:null,spark(win("sleep_h"),"#46C08A")],
     ["💓 HRV",val("hrv_ms",function(x){return Math.round(x)+" ms"}),rng===1?r.hrv_q:null,spark(win("hrv_ms"),"#4DD0C0")],
     ["🫀 "+u("dRhr"),val("rhr",function(x){return Math.round(x)}),null,
       (rng===1&&Array.isArray(r.hr_curve)&&r.hr_curve.length>1)?spark(r.hr_curve,"#E5484D"):spark(win("rhr"),"#E5484D")],
-    ["🍽️ Kcal in",val("kcal_in",function(x){return Math.round(x)}),null,spark(win("kcal_in"),"#7BA1D9")],
-    ["🔥 Kcal out",val("kcal_out",function(x){return Math.round(x)}),null,spark(win("kcal_out"),"#E8963E")]
-  ];
+    ["🔥 Kcal out",val("kcal_out",function(x){return Math.round(x)}),null,spark(win("kcal_out"),"#E8963E")]);
+  if(!runOnly())tiles.splice(tiles.length-1,0,
+    ["🍽️ Kcal in",val("kcal_in",function(x){return Math.round(x)}),null,spark(win("kcal_in"),"#7BA1D9")]);
   /* Presupuesto del día. Sale del MISMO objetivo que la fila de macros, para
      que la app no cuente dos historias distintas: antes era una base fija
      (goal.eat) más las calorías activas, y en días de entreno eso se desviaba
@@ -2661,7 +2678,7 @@ function dayCard(){
   var gM=macroGoal(day);
   var dayKcal=gM?Math.round(gM.prot*4+gM.carb*4+gM.fat*9):null;
   var legacy=(GG.eatMode==="base+active"&&GG.eat!=null)||(!dayKcal&&GG.eat!=null);
-  if(dayKcal||GG.eat!=null){
+  if(!runOnly()&&(dayKcal||GG.eat!=null)){
     var act=0,tR=rowFor(day);
     if(tR&&tR.kcal_active!=null)act=+tR.kcal_active;
     var budget=legacy?(GG.eat+act):dayKcal;
