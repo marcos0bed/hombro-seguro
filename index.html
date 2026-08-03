@@ -233,6 +233,11 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
 .foldh .chev{color:var(--mut);font-size:12px}
+.introw{display:flex;align-items:center;gap:9px;padding:4px 2px}
+.intk{font:10.5px var(--mono);color:var(--mut);width:38px;flex:none}
+.intbar{flex:1;height:11px;border-radius:3px;overflow:hidden;display:flex;background:var(--surface2)}
+.intbar i{display:block;height:100%}
+.intm{font:10.5px var(--mono);color:var(--mut);width:36px;text-align:right;flex:none}
 .mealgrid{display:flex;flex-direction:column;gap:6px;padding:2px 2px 0}
 .mealit{display:flex;align-items:center;gap:9px;min-width:0}
 .mealic{font-size:16px;flex:none;width:19px;text-align:center}
@@ -319,7 +324,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v134";
+var APP_VERSION="v135";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -535,8 +540,9 @@ var GACT={data:null,loading:false};
 function loadGact(){
   if(!cloudOn()||GACT.loading)return;
   GACT.loading=true;
-  sb.from("garmin_activities").select("activity_id,start_time,type,distance_km,duration_min,pace,hr_avg,calories")
-    .order("start_time",{ascending:false}).limit(60)
+  sb.from("garmin_activities")
+    .select("activity_id,start_time,type,distance_km,duration_min,pace,hr_avg,hr_max,calories,cadence,elevation_m,temp_c,apparent_c")
+    .order("start_time",{ascending:false}).limit(400)
     .then(function(r){GACT.loading=false;GACT.data=r.data||[];render();},
           function(){GACT.loading=false;GACT.data=[];render();});
 }
@@ -625,6 +631,7 @@ function T(v){return (v&&typeof v==="object"&&("es" in v))?(v[LANG]||v.es):v}
 var UI={
 es:{hoy:"Hoy",rutina:"Rutina",semana:"Semana",viaje:"Viaje",manguito:"Manguito",reglas:"Reglas",
   rxJump:"Ir al ejercicio en curso",rxRe:"Volver a abrir el ejercicio",
+  carrera:"Carrera",
   phaseB:"Fase de protección",phaseS:"Hasta revisión médica → preguntar techo de carga para press",
   strip:["Dolor máx 0-1/10","RPE 6-7","Nada overhead","2 limpias → subir"],
   subSemana:"Plan completo · fase de protección",subViaje:"La maleta siempre lleva las gomas",subManguito:"3-5 días/semana · el seguro de todo lo demás",subReglas:"Lo que protege al supraespinoso",
@@ -680,6 +687,7 @@ es:{hoy:"Hoy",rutina:"Rutina",semana:"Semana",viaje:"Viaje",manguito:"Manguito",
   doneT:"Hecho hoy",bodyT:"Tu cuerpo hoy",achT:"Logros del día",ach10k:"10k pasos",ach80:"Sueño 80+",achDef:"Déficit",habT:"Log del día"},
 en:{hoy:"Today",rutina:"Workout",semana:"Week",viaje:"Travel",manguito:"Cuff",reglas:"Rules",
   rxJump:"Jump to the current exercise",rxRe:"Reopen this exercise",
+  carrera:"Racing",
   phaseB:"Protection phase",phaseS:"Until medical review → ask for your pressing load ceiling",
   strip:["Pain max 0-1/10","RPE 6-7","Nothing overhead","2 clean → progress"],
   subSemana:"Full plan · protection phase",subViaje:"The bands always travel with you",subManguito:"3-5 days/week · the insurance for everything else",subReglas:"What protects the supraspinatus",
@@ -1496,6 +1504,7 @@ function render(keepScroll){
       }
     }
   }
+  else if(state.tab==="carrera"){h+=carreraView();}
   else if(state.tab==="viaje"){
     h+='<div class="seg"><button data-act="tview" data-tv="wk"'+(state.tview!=="trip"?' class="sel"':"")+'>'+T(B("Ejercicios","Workouts"))+"</button>"+
        '<button data-act="tview" data-tv="trip"'+(state.tview==="trip"?' class="sel"':"")+'>'+T(B("Hoteles y rutas","Hotels & routes"))+"</button></div>";
@@ -1553,6 +1562,234 @@ function render(keepScroll){
   v.innerHTML=h;
   if(!keepScroll&&_lastTab!==state.tab)window.scrollTo(0,0);
   _lastTab=state.tab;
+}
+
+
+/* ============================ PESTAÑA CARRERA ============================
+   Seguimiento de un plan de running hacia una carrera objetivo. Se configura
+   con el kv "race": {name, date, km, goal_min, plan:{"2026-08-03":km,...}}.
+   Sin ese kv la pestaña no existe.
+
+   La pieza central es la EFICIENCIA AERÓBICA: el ritmo de los rodajes suaves a
+   igual pulso. Es lo único que distingue "estoy mejorando" de "estoy acumulando
+   kilómetros", y casi ninguna app lo hace porque exige corregir por temperatura:
+   con calor el pulso sube 5-15 ppm al mismo ritmo, así que sin esa corrección
+   agosto siempre parece peor que octubre aunque no lo sea. */
+
+var RUNEASY = 0.82;          /* por debajo de este % de la FC máx = rodaje suave */
+var TEMP_REF = 15;           /* temperatura de referencia para normalizar */
+var TEMP_SEG_GRADO = 1.5;    /* s/km que cuesta cada grado por encima de 15 */
+
+function raceCfg(){return S("race",null)}
+function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
+
+function runsOf(desde){
+  var a=(GACT.data||[]).filter(function(x){
+    return /running/.test(x.type||"") && (x.distance_km||0)>=1 && x.start_time;
+  });
+  if(desde)a=a.filter(function(x){return x.start_time.slice(0,10)>=desde});
+  return a.sort(function(x,y){return x.start_time<y.start_time?-1:1});
+}
+function paceMin(a){
+  if(!a.distance_km||!a.duration_min)return null;
+  return a.duration_min/a.distance_km;
+}
+function fmtPace(m){
+  if(m==null||!isFinite(m))return "—";
+  var s=Math.round(m*60);return Math.floor(s/60)+":"+pad(s%60);
+}
+/* Ritmo corregido a 15 °C. Solo se corrige hacia arriba: por debajo de 15 el
+   efecto es despreciable y corregir a la baja inventaría mejoras. */
+function paceCorr(a){
+  var pm=paceMin(a);if(pm==null)return null;
+  var t=a.apparent_c!=null?+a.apparent_c:(a.temp_c!=null?+a.temp_c:null);
+  if(t==null||t<=TEMP_REF)return pm;
+  return pm-((t-TEMP_REF)*TEMP_SEG_GRADO)/60;
+}
+function lunesDe(ds){
+  var d=new Date(ds+"T12:00:00"),wd=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-wd);return iso(d);
+}
+/* Agrupa por semana natural (lunes). */
+function porSemana(runs){
+  var m={};
+  runs.forEach(function(a){
+    var k=lunesDe(a.start_time.slice(0,10));
+    (m[k]=m[k]||[]).push(a);
+  });
+  return m;
+}
+/* Predicción de tiempo con Riegel (exponente 1,06), el estándar para extrapolar
+   entre distancias. Se alimenta del mejor esfuerzo reciente, no de un rodaje. */
+function riegel(km1,min1,km2){return min1*Math.pow(km2/km1,1.06)}
+function fmtMin(m){
+  if(m==null||!isFinite(m))return "—";
+  var s=Math.round(m*60);
+  return Math.floor(s/3600)+":"+pad(Math.floor(s%3600/60))+":"+pad(s%60);
+}
+
+function raceHeadCard(){
+  var R=raceCfg();if(!R)return "";
+  var hoy=new Date(),meta=new Date(R.date+"T12:00:00");
+  var dias=Math.ceil((meta-hoy)/86400000);
+  var runs=runsOf(),pred=null,base=null;
+  /* Mejor esfuerzo de las últimas 6 semanas: el más rápido de al menos 3 km. */
+  var lim=new Date();lim.setDate(lim.getDate()-42);
+  runs.filter(function(a){return a.start_time.slice(0,10)>=iso(lim)&&(a.distance_km||0)>=3})
+      .forEach(function(a){
+        var pm=paceCorr(a);
+        if(pm!=null&&(base===null||pm<base.pm))base={pm:pm,km:a.distance_km,min:a.duration_min,a:a};
+      });
+  if(base)pred=riegel(base.km,base.min,R.km||10);
+  var meta_min=R.goal_min||null;
+  var ok=pred!=null&&meta_min!=null&&pred<=meta_min;
+  var cols=[
+    [B("Faltan","To go"),dias>0?dias+" "+T(B("días","days")):T(B("¡es hoy!","today!")),""],
+    [B("Objetivo","Goal"),meta_min?fmtMin(meta_min):"—",""],
+    [B("Previsto","Projected"),pred?fmtMin(pred):"—",pred==null?"":(ok?"ok":"bad")]
+  ].map(function(c){
+    return '<div class="macg"><div class="macl">'+esc(T(c[0]))+"</div><div class=\"bedv "+c[2]+'">'+esc(c[1])+"</div></div>";
+  }).join("");
+  var nota="";
+  if(pred!=null&&base){
+    var dif=Math.round((pred-(meta_min||pred)));
+    nota=T(B("Proyección desde tu mejor esfuerzo reciente: ","Projected from your best recent effort: "))+
+         base.km.toFixed(2)+" km a "+fmtPace(base.pm)+" ("+base.a.start_time.slice(8,10)+"/"+base.a.start_time.slice(5,7)+")."+
+         (meta_min?(" "+(ok?T(B("Vas por delante del objetivo.","You're ahead of goal.")):
+           T(B("Te faltan ","You're "))+Math.abs(dif)+T(B(" min para el objetivo."," min off goal.")))):"");
+  }else nota=T(B("Necesito una carrera reciente de 3 km o más para proyectar.","I need a recent run of 3 km or more to project."));
+  return '<div class="card"><div class="exhead"><div class="tlab">🏁 '+esc(T(R.name||"Carrera"))+
+    ' <span class="snum">'+esc(R.date)+" · "+(R.km||10)+" km</span></div></div>"+
+    '<div class="macrow">'+cols+'</div><div class="macwarn" style="color:var(--mut);border-top-color:var(--line)">'+esc(nota)+"</div></div>";
+}
+
+function volumeCard(){
+  var R=raceCfg();
+  var desde=new Date();desde.setDate(desde.getDate()-77);      /* 11 semanas */
+  var runs=runsOf(iso(desde));
+  if(!runs.length)return "";
+  var sem=porSemana(runs),ks=Object.keys(sem).sort();
+  var pares=ks.map(function(k){
+    var km=sem[k].reduce(function(a,b){return a+(b.distance_km||0)},0);
+    return [k.slice(8,10)+"/"+k.slice(5,7),Math.round(km*10)/10];
+  });
+  var tot=pares.reduce(function(a,b){return a+b[1]},0);
+  var ult=pares.length?pares[pares.length-1][1]:0;
+  var prev=pares.length>1?pares[pares.length-2][1]:0;
+  var salto=prev>0?Math.round((ult/prev-1)*100):0;
+  /* La regla del 10 %: subir el volumen semanal más de eso es el factor de
+     riesgo de lesión mejor documentado en corredores populares. */
+  var av=(prev>0&&salto>15)?
+    '<div class="macwarn">'+esc(T(B("Has subido el volumen un ","Volume up "))+salto+
+      T(B(" % respecto a la semana pasada. Por encima del 10-15 % sube el riesgo de lesión."," % on last week. Above 10-15 % injury risk rises.")))+"</div>":"";
+  return '<div class="card"><div class="exhead"><div class="tlab">📏 '+
+    T(B("Kilómetros por semana","Weekly volume"))+' <span class="snum">'+Math.round(tot)+" km "+
+    T(B("en 11 semanas","over 11 weeks"))+"</span></div></div>"+
+    colChart(pares,function(n){return n})+av+"</div>";
+}
+
+function efficiencyCard(){
+  var desde=new Date();desde.setDate(desde.getDate()-84);
+  var runs=runsOf(iso(desde)).filter(function(a){
+    return a.hr_avg&&a.hr_avg<=fcMax()*RUNEASY&&(a.distance_km||0)>=2;
+  });
+  if(runs.length<3)
+    return '<div class="card"><div class="exhead"><div class="tlab">📈 '+T(B("Eficiencia aeróbica","Aerobic efficiency"))+
+      '</div></div><p class="note">'+esc(T(B("Hacen falta al menos 3 rodajes suaves (por debajo del 82 % de tu máxima) para empezar a ver la tendencia.",
+      "At least 3 easy runs (below 82 % of max HR) are needed before a trend shows.")))+"</p></div>";
+  var sem=porSemana(runs),ks=Object.keys(sem).sort();
+  /* Índice: segundos de ritmo corregido por pulsación. Baja = mejor. Se muestra
+     como ritmo a 150 ppm, que se entiende mucho mejor que el índice crudo. */
+  var pares=ks.map(function(k){
+    var ss=0,n=0;
+    sem[k].forEach(function(a){
+      var pm=paceCorr(a);
+      if(pm!=null&&a.hr_avg)  {ss+=pm/a.hr_avg;n++;}
+    });
+    return n?[k.slice(8,10)+"/"+k.slice(5,7),Math.round(ss/n*150*60)]:null;
+  }).filter(Boolean);
+  if(pares.length<2)return "";
+  var pri=pares[0][1],ult=pares[pares.length-1][1];
+  var mejora=pri-ult;                                  /* segundos ganados */
+  var msg=Math.abs(mejora)<4
+    ? T(B("Estable. Todavía no hay tendencia clara.","Flat. No clear trend yet."))
+    : (mejora>0
+        ? T(B("Has ganado ","You've gained "))+mejora+T(B(" s/km a igual pulso desde ","s/km at the same HR since "))+pares[0][0]+"."
+        : T(B("Has perdido ","You've lost "))+Math.abs(mejora)+T(B(" s/km a igual pulso. Con calor o fatiga es esperable."," s/km at the same HR. Heat or fatigue will do that.")));
+  return '<div class="card"><div class="exhead"><div class="tlab">📈 '+
+    T(B("Eficiencia aeróbica","Aerobic efficiency"))+' <span class="snum">'+
+    T(B("ritmo a 150 ppm · menos es mejor","pace at 150 bpm · lower is better"))+"</span></div></div>"+
+    '<p class="note" style="margin:0 0 4px 4px">'+
+    esc(T(B("Ritmo corregido a 15 °C: con calor el pulso sube y el ritmo se cae sin que hayas empeorado.",
+            "Pace corrected to 15 °C: heat raises HR and slows pace without you getting worse.")))+"</p>"+
+    colChart(pares,function(n){return Math.floor(n/60)+":"+pad(n%60)})+
+    '<div class="macwarn" style="color:'+(mejora>=4?"var(--ok)":"var(--mut)")+';border-top-color:var(--line)">'+esc(msg)+
+    "</div></div>";
+}
+
+function intensityCard(){
+  var desde=new Date();desde.setDate(desde.getDate()-56);
+  var runs=runsOf(iso(desde)).filter(function(a){return a.hr_avg});
+  if(runs.length<3)return "";
+  var sem=porSemana(runs),ks=Object.keys(sem).sort();
+  var M=fcMax();
+  var filas=ks.map(function(k){
+    var min={s:0,m:0,d:0};
+    sem[k].forEach(function(a){
+      var p=a.hr_avg/M,t=a.duration_min||0;
+      if(p<=RUNEASY)min.s+=t;else if(p<=0.89)min.m+=t;else min.d+=t;
+    });
+    return {k:k.slice(8,10)+"/"+k.slice(5,7),...min,tot:min.s+min.m+min.d};
+  }).filter(function(f){return f.tot>0});
+  if(!filas.length)return "";
+  var tS=0,tT=0;filas.forEach(function(f){tS+=f.s;tT+=f.tot});
+  var pctS=Math.round(tS/tT*100);
+  var barras=filas.map(function(f){
+    function w(x){return (x/f.tot*100).toFixed(1)+"%"}
+    return '<div class="introw"><span class="intk">'+f.k+'</span><div class="intbar">'+
+      '<i style="width:'+w(f.s)+';background:#46C08A" title="'+T(B("suave","easy"))+'"></i>'+
+      '<i style="width:'+w(f.m)+';background:#E8963E" title="'+T(B("medio","moderate"))+'"></i>'+
+      '<i style="width:'+w(f.d)+';background:#E5484D" title="'+T(B("duro","hard"))+'"></i></div>'+
+      '<span class="intm">'+Math.round(f.tot)+"′</span></div>";
+  }).join("");
+  /* El reparto sano ronda 80 % suave. Correrlo todo a media intensidad —la zona
+     gris— es el error más repetido: demasiado duro para acumular volumen y
+     demasiado suave para estimular el VO2max. */
+  var av=pctS<65
+    ? '<div class="macwarn">'+esc(T(B("Solo el ","Only "))+pctS+
+        T(B(" % de tu tiempo es suave. Por debajo del 65 % estás viviendo en la zona gris: demasiado duro para acumular volumen y demasiado suave para mejorar la velocidad.",
+            " % of your time is easy. Below 65 % you're living in the grey zone: too hard to build volume, too easy to build speed.")))+"</div>"
+    : '<div class="macwarn" style="color:var(--ok);border-top-color:var(--line)">'+esc(pctS+
+        T(B(" % de tu tiempo en suave. Buen reparto."," % of your time easy. Good distribution.")))+"</div>";
+  return '<div class="card"><div class="exhead"><div class="tlab">🎚 '+
+    T(B("Distribución de intensidad","Intensity distribution"))+' <span class="snum">'+
+    T(B("8 sem · objetivo ~80 % suave","8 wk · target ~80 % easy"))+"</span></div></div>"+barras+
+    '<div class="lgds"><span class="lgd"><i style="background:#46C08A"></i>'+T(B("suave","easy"))+
+    '</span><span class="lgd"><i style="background:#E8963E"></i>'+T(B("medio","moderate"))+
+    '</span><span class="lgd"><i style="background:#E5484D"></i>'+T(B("duro","hard"))+"</span></div>"+av+"</div>";
+}
+
+function adherenceCard(){
+  var R=raceCfg();if(!R||!R.plan)return "";
+  var hoy=TODAY,lun=lunesDe(hoy);
+  var ks=Object.keys(R.plan).sort().filter(function(d){return d>=lun&&d<=hoy});
+  if(!ks.length)return "";
+  var runs=runsOf(lun);
+  var hechos={};runs.forEach(function(a){hechos[a.start_time.slice(0,10)]=(hechos[a.start_time.slice(0,10)]||0)+(a.distance_km||0)});
+  var ok=0,filas=ks.map(function(d){
+    var plan=R.plan[d],hecho=Math.round((hechos[d]||0)*10)/10;
+    var bien=hecho>0;if(bien)ok++;
+    return '<div class="wkrow"><span>'+d.slice(8,10)+"/"+d.slice(5,7)+'</span><span style="color:'+
+      (bien?"var(--ok)":"var(--mut)")+'">'+(bien?"✓ "+hecho+" km":"—")+'</span><span class="note">'+esc(String(plan))+"</span></div>";
+  }).join("");
+  return '<div class="card"><div class="exhead"><div class="tlab">✅ '+
+    T(B("Esta semana","This week"))+' <span class="snum">'+ok+"/"+ks.length+"</span></div></div>"+filas+"</div>";
+}
+
+function carreraView(){
+  if(!cloudOn())return '<p class="note">'+T(B("Inicia sesión para ver tu plan.","Sign in to see your plan."))+"</p>";
+  if(GACT.data===null){loadGact();return '<p class="note">'+T(B("Cargando carreras…","Loading runs…"))+"</p>";}
+  return raceHeadCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard();
 }
 
 /* ---------- dashboard ---------- */
@@ -1747,7 +1984,7 @@ semana:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=
 progreso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20v-7M12 20V5M19 20v-10"/></svg>',
 viaje:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="2.5"/><path d="M9 8V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V8M9.5 12v4M14.5 12v4"/></svg>',
 manguito:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-2.9 7.4-7 9-4.1-1.6-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
-reglas:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 5.5l1 1L6.8 4.6M4 11.5l1 1 1.8-1.9M4 17.5l1 1 1.8-1.9"/></svg>'};
+reglas:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 5.5l1 1L6.8 4.6M4 11.5l1 1 1.8-1.9M4 17.5l1 1 1.8-1.9"/></svg>',carrera:'<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h11l-2 3 2 3H5"/><circle cx="18" cy="17" r="3"/></svg>'};
 /* ---------- analíticas (kv "labs", subida desde el backend con labs_push.py) ----------
    Sub-vista de Progreso, solo visible para cuentas con la clave. Los rangos son
    orientativos del laboratorio: el color naranja marca "fuera de rango", la
@@ -1847,7 +2084,11 @@ function labsView(L){
 
 function visibleTabs(){
   var rt=getRT(),hide=(rt&&rt.hideTabs)||[];
-  return ["hoy","rutina","semana","progreso","viaje","manguito","reglas"].filter(function(t){return hide.indexOf(t)<0});
+  var base=["hoy","rutina","semana","progreso","carrera","viaje","manguito","reglas"];
+  /* La pestaña de carrera solo aparece si hay una carrera objetivo configurada
+     (kv "race"): a quien no corre no le sobra una pestaña vacía. */
+  if(!S("race",null))hide=hide.concat(["carrera"]);
+  return base.filter(function(t){return hide.indexOf(t)<0});
 }
 /* Gráfica de tendencias por carriles: cada serie en su banda (mismo eje temporal),
    con su etiqueta y último valor. Las series ruidosas se suavizan (media móvil). */
