@@ -12,9 +12,11 @@ ok("y tres de fuerza",W.filter(function(w){return (getSession(w.sid)||{}).type==
 ok("martes, jueves y domingo",W[1].sid==="run1"&&W[3].sid==="runEasy"&&W[6].sid==="runLong","");
 ok("la larga es el domingo",/larga|long/i.test(T(getSession("runLong").title)),"");
 ok("el sábado es el día de carga",W[5].sid==="carga","");
-ok("hay upper y lower entre semana",W[0].sid==="upA"&&W[2].sid==="lowB","");
+ok("el lunes es descanso",W[0].sid==="descanso",W[0].sid);
+ok("hay upper y lower entre semana",W[4].sid==="upA"&&W[2].sid==="lowB","");
 ok("las piernas descansan 3 días entre el miércoles y el sábado",true,"");
-ok("y el viernes libre antes del día fuerte",W[4].sid==="descanso",W[4].sid);
+ok("el viernes es de torso, no de pierna, porque el sábado toca sentadilla",W[4].sid==="upA",W[4].sid);
+ok("y las piernas descansan 3 días entre miércoles y sábado",W[2].sid==="lowB"&&W[5].sid==="carga","");
 ok("seis días de entreno, uno de descanso",
    W.filter(function(w){return (getSession(w.sid)||{}).type!=="rest"}).length===6,"");
 ok("y junta pierna con upper",
