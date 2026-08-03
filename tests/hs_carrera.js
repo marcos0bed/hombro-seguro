@@ -115,4 +115,14 @@ ok("el volumen dice cuánto fue en cinta",/en cinta|on treadmill/.test(v2),v2.sl
 ok("con los km correctos",/6 en cinta|6 on treadmill/.test(v2),"");
 GACT.data=[run(20,10,80,150,15),run(6,8,64,150,15)];
 ok("sin cinta no lo menciona",!/en cinta|on treadmill/.test(volumeCard()),"");
+
+
+print("\n== La marca personal da escala al objetivo ==");
+GACT.data=[run(2400,10.01,50.6,168,12),run(30,5,38,150,20),run(12,6,44,150,18)];
+var hp=raceHeadCard();
+ok("saca la mejor marca del histórico",/Tu mejor 10K|Your best 10K/.test(hp),hp.slice(hp.indexOf("macwarn"),hp.indexOf("macwarn")+220));
+ok("con el tiempo correcto",/0:50:36/.test(hp),"");
+ok("y el año",/\(20\d\d\)/.test(hp),"");
+GACT.data=[run(30,5,38,150,20)];
+ok("sin una carrera de esa distancia no inventa marca",!/Tu mejor|Your best/.test(raceHeadCard()),"");
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));

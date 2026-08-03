@@ -330,7 +330,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v147";
+var APP_VERSION="v148";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1844,6 +1844,17 @@ function raceHeadCard(){
          (meta_min?(" "+(ok?T(B("Vas por delante del objetivo.","You're ahead of goal.")):
            T(B("Te faltan ","You're "))+Math.abs(dif)+T(B(" min para el objetivo."," min off goal.")))):"");
   }else nota=T(B("Necesito una carrera reciente de 3 km o más para proyectar.","I need a recent run of 3 km or more to project."));
+  /* La marca personal, sacada del propio histórico: da la escala de si el
+     objetivo es una vuelta o un salto. Sin esto, un objetivo de 55 min parece
+     una temeridad cuando en realidad ya se ha corrido 50:36. */
+  var mejor=null;
+  runsOf().forEach(function(a){
+    var d=a.distance_km||0;
+    if(d>=(R.km||10)*0.96&&d<=(R.km||10)*1.07&&a.duration_min&&
+       (mejor===null||a.duration_min<mejor.duration_min))mejor=a;
+  });
+  if(mejor)nota+=" "+T(B("Tu mejor ","Your best "))+(R.km||10)+"K: "+fmtMin(mejor.duration_min)+
+    " ("+mejor.start_time.slice(0,4)+").";
   return '<div class="card"><div class="exhead"><div class="tlab">🏁 '+esc(T(R.name||"Carrera"))+
     ' <span class="snum">'+esc(R.date)+" · "+(R.km||10)+" km</span></div></div>"+
     '<div class="macrow">'+cols+'</div><div class="macwarn" style="color:var(--mut);border-top-color:var(--line)">'+esc(nota)+"</div></div>";
