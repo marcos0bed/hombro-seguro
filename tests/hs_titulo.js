@@ -27,6 +27,13 @@ W("race",{name:"x",date:"2026-11-15",km:10,plan:{"2026-08-11":{t:{es:"Solo nombr
 ok("título sí",planTitulo("2026-08-11")==="Solo nombre","");
 ok("tarjeta no, porque no hay qué hacer",planCard("2026-08-11")==="","");
 
+print("\n== Si ese día no se corre, el plan no manda ==");
+W("race",{name:"x",date:"2026-11-15",km:10,plan:plan});
+ok("una sesión de pesas conserva su nombre",planTitulo("2026-08-11",{type:"gym"})===null,String(planTitulo("2026-08-11",{type:"gym"})));
+ok("un descanso también",planTitulo("2026-08-11",{type:"rest"})===null,"");
+ok("y la de correr sí lo coge",planTitulo("2026-08-11",{type:"run"})==="Series 6 × 1 min","");
+ok("sin decir qué sesión, se comporta como antes",planTitulo("2026-08-11")==="Series 6 × 1 min","");
+
 print("\n== Sin plan de carrera ninguno ==");
 W("race",null);
 ok("no inventa títulos",planTitulo("2026-08-11")===null,"");

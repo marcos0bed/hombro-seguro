@@ -341,7 +341,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v160";
+var APP_VERSION="v161";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1515,7 +1515,7 @@ function render(keepScroll){
     var wkOpen=!!state.wkOpen&&!pastD;
     if(sS){
       var sIc=sS.type==="run"?"🏃":sS.type==="rest"?"😴":"💪";
-      var tS=planTitulo(sdD)||T(sS.title)||"";
+      var tS=planTitulo(sdD,sS)||T(sS.title)||"";
       if(pastD){
         h+='<div class="card wkhead" style="opacity:.75"><span>'+sIc+" "+esc(tS)+'</span><span class="chev" style="font-size:10px">'+T(B("plan de ese día","that day's plan"))+"</span></div>";
       }else{
@@ -1565,7 +1565,7 @@ function render(keepScroll){
     }else{
       getWeek().forEach(function(w,i){
         var s=getSession(w.sid);var done=isDone(w.sid);
-        var tPlan=planTitulo(fechaDeIdx(i));
+        var tPlan=planTitulo(fechaDeIdx(i),s);
         h+='<button class="dayrow'+(i===todayIdx?" today":"")+'" data-act="day" data-sid="'+w.sid+'">'+
           '<span class="dn">'+T(w.d)+'</span><span class="dt"><b>'+esc(tPlan||T(s.title))+"</b><small>"+esc(T(s.sub)||s.km||"")+"</small></span>"+
           '<span class="dmv"><span role="button" tabindex="0" data-act="wkmove" data-i="'+i+'" data-dir="-1" aria-label="'+T(B("Subir sesión","Move session up"))+'"'+(i===0?' style="opacity:.25"':"")+">▲</span>"+
@@ -1789,7 +1789,12 @@ function planDelDia(dia){
   if(d&&!Array.isArray(d)&&typeof d==="object")return d.p||null;
   return d;
 }
-function planTitulo(dia){
+/* El título del plan solo vale si ese día se corre. Sin esta comprobación, al
+   mover el rodaje de sitio con las flechas la sesión de pesas que ocupa su
+   hueco se quedaba con el rótulo de la carrera: el jueves ponía "Rodaje suave
+   30 min" encima de Lower B. */
+function planTitulo(dia,ses){
+  if(ses&&ses.type!=="run")return null;
   var R=raceCfg(),d=(R&&R.plan&&R.plan[dia])||null;
   if(d&&!Array.isArray(d)&&typeof d==="object"&&d.t)return T(d.t)||null;
   return null;
@@ -1852,7 +1857,7 @@ function proximasCard(){
     }
     filas.push('<div style="margin:14px 4px 0"><div class="tlab" style="color:var(--acc)">'+
       esc(T(w.d))+" "+d.getDate()+" "+MESC[d.getMonth()]+
-      ' <span class="snum" style="color:var(--mut)">'+esc(planTitulo(ds)||T(s.title))+(ex?" + "+esc(T(ex.title)):"")+"</span></div></div>"+
+      ' <span class="snum" style="color:var(--mut)">'+esc(planTitulo(ds,s)||T(s.title))+(ex?" + "+esc(T(ex.title)):"")+"</span></div></div>"+
       (cuerpo||'<div class="sesr"><span class="sesd" style="color:var(--mut)">'+T(B("Descanso","Rest"))+"</span></div>"));
   }
   if(!filas.length)return "";
