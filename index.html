@@ -330,7 +330,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v144";
+var APP_VERSION="v145";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1492,6 +1492,8 @@ function render(keepScroll){
     h+=journalCard();
   }
   else if(state.tab==="rutina"){
+    var wRx=getWeek()[rxIdx()],sRx=wRx&&getSession(wRx.sid);
+    if(sRx&&sRx.type==="run")h+=planCard(selDay());
     h+=rutinaView();
   }
   else if(state.tab==="cuenta"){
@@ -1733,6 +1735,29 @@ var TEMP_REF = 15;           /* temperatura de referencia para normalizar */
 var TEMP_SEG_GRADO = 1.5;    /* s/km que cuesta cada grado por encima de 15 */
 
 function raceCfg(){return S("race",null)}
+/* Lo que toca HOY según el plan fechado. Las sesiones de carrera describen la
+   progresión de las 15 semanas en general; esto dice qué te toca exactamente
+   este día concreto, que es lo que uno quiere ver con las zapatillas puestas. */
+function planDelDia(dia){
+  var R=raceCfg();
+  return (R&&R.plan&&R.plan[dia])||null;
+}
+function planCard(dia){
+  var t=planDelDia(dia);
+  if(!t)return "";
+  var R=raceCfg(),meta=new Date(R.date+"T12:00:00"),ini=null;
+  var ks=Object.keys(R.plan).sort();
+  ini=ks.length?ks[0]:null;
+  var sem=null;
+  if(ini){
+    var d1=new Date(ini+"T12:00:00"),d2=new Date(dia+"T12:00:00");
+    sem=Math.floor((d2-d1)/(7*86400000))+1;
+  }
+  return '<div class="card" style="border-left:3px solid var(--acc)"><div class="exhead">'+
+    '<div class="tlab">🎯 '+T(B("Hoy toca","Today"))+
+    (sem?' <span class="snum">'+T(B("semana","week"))+" "+sem+" "+T(B("de 15","of 15"))+"</span>":"")+
+    "</div></div><p style=\"font-size:15px;margin:2px 4px 0;line-height:1.4\">"+esc(t)+"</p></div>";
+}
 function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
 
 function runsOf(desde){
@@ -2261,7 +2286,7 @@ function labsView(L){
 
 function visibleTabs(){
   var rt=getRT(),hide=(rt&&rt.hideTabs)||[];
-  var base=["hoy","rutina","semana","progreso","carrera","viaje","manguito","reglas"];
+  var base=["hoy","rutina","carrera","semana","progreso","viaje","manguito","reglas"];
   /* La pestaña de carrera solo aparece si hay una carrera objetivo configurada
      (kv "race"): a quien no corre no le sobra una pestaña vacía. */
   if(!S("race",null))hide=hide.concat(["carrera"]);
