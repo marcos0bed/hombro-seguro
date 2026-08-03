@@ -1,5 +1,5 @@
 /* Conteo de entreno de la semana. Ojo: la semana pasó a 3 carreras + 3 días de
-   fuerza (upA lunes, lowB miércoles, carga sábado) el 3-ago-2026, así que el
+   fuerza (lowB miércoles, upA junto al rodaje del jueves, carga sábado) el 3-ago-2026, así que el
    denominador es 2, no 4. */
 var fails = 0;
 function ok(n, c, x) { print((c ? "  ok   " : "  FAIL ") + n + (c ? "" : "   <<< " + (x || ""))); if (!c) fails++; }

@@ -237,6 +237,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
 .foldh .chev{color:var(--mut);font-size:12px}
+.rxplus{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--acc);vertical-align:super;margin-left:1px}
 .pbr{display:flex;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line)}
 .pbr:last-child{border-bottom:0}
 .pbd{font-family:var(--disp);text-transform:uppercase;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--mut);width:52px;flex:none}
@@ -336,7 +337,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v155";
+var APP_VERSION="v156";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -889,7 +890,7 @@ activo:{title:B("Descanso activo","Active recovery"),sub:B("Isométricos + movil
    how:B("90/90 de cadera, dorsiflexión de tobillo contra pared.",
         "90/90 hip work, ankle dorsiflexion against the wall.")}
 ]},
-runEasy:{title:B("Rodaje suave","Easy run"),sub:B("Corto a propósito · el que construye la base","Short on purpose · this is what builds the base"),load:"soft",type:"run",km:"5-7 km",items:[
+runEasy:{title:B("Rodaje suave","Easy run"),sub:B("Con Upper A antes · el que construye la base","With Upper A first · this is what builds the base"),load:"hard",type:"run",km:"5-7 km",items:[
   {n:B("Rodaje suave","Easy run"),m:"cardio",sets:0,reps:"30-35 min",chips:[B("Conversacional","Conversational")],yt:"",
    how:B("Ritmo cómodo, poder decir frases enteras. Aquí NO se busca ritmo: se busca tiempo en pie con el pulso bajo, que es lo que construye la base aeróbica. Con calor manda el pulso, no el reloj.",
         "Comfortable pace, able to speak full sentences. This is NOT about pace: it's time on feet at low HR, which is what builds the aerobic base. In heat, HR rules, not the watch.")},
@@ -1020,8 +1021,8 @@ var WEEK=[
  {d:B("LUN","MON"),name:B("Lunes","Monday"),sid:"descanso"},
  {d:B("MAR","TUE"),name:B("Martes","Tuesday"),sid:"run1"},
  {d:B("MIÉ","WED"),name:B("Miércoles","Wednesday"),sid:"lowB"},
- {d:B("JUE","THU"),name:B("Jueves","Thursday"),sid:"runEasy"},
- {d:B("VIE","FRI"),name:B("Viernes","Friday"),sid:"upA"},
+ {d:B("JUE","THU"),name:B("Jueves","Thursday"),sid:"runEasy",plus:"upA"},
+ {d:B("VIE","FRI"),name:B("Viernes","Friday"),sid:"descanso"},
  {d:B("SÁB","SAT"),name:B("Sábado","Saturday"),sid:"carga"},
  {d:B("DOM","SUN"),name:B("Domingo","Sunday"),sid:"runLong"}
 ];
@@ -1296,15 +1297,27 @@ function rxDoneRow(sid,i,it){
     '<span class="rxv">✓</span><span class="rxt">'+esc(T(it.n))+'</span><span class="rxk">'+esc(det)+"</span></button>";
 }
 function rutinaView(){
+  /* Un día puede llevar dos sesiones (campo `plus` en la semana): fuerza de
+     torso junto al rodaje suave. Concentrar la carga en menos días protege los
+     días de descanso de verdad, en vez de tener seis días a medio gas. El icono
+     del selector lo marca con un punto. */
   var WK=getWeek(),idx=rxIdx(),sid=WK[idx].sid,s=getSession(sid),h="";
   h+='<div class="rxdays">'+WK.map(function(w,i){
       var ws=getSession(w.sid),ic=ws&&ws.type==="run"?"🏃":(ws&&ws.type==="rest"?"😴":"💪");
+      if(w.plus&&getSession(w.plus))ic+='<i class="rxplus"></i>';
       var cls=i===idx?"sel":(isDone(w.sid)?"done":"");
       return '<button data-act="rxday" data-sid="'+w.sid+'"'+(cls?' class="'+cls+'"':"")+
         ' aria-label="'+esc(T(w.name))+'"><span class="rxi">'+ic+"</span>"+esc(T(w.d))+"</button>";
     }).join("")+"</div>";
   if(!s)return h;
-  if(s.type!=="gym")return h+sessionView(sid);
+  var extra=WK[idx].plus&&getSession(WK[idx].plus)?WK[idx].plus:null;
+  /* Las pesas van primero: correr antes deja piernas y core cansados para
+     estabilizar en el press. */
+  var pre=extra?('<div class="card" style="border-left:3px solid var(--acc)"><div class="exhead"><div class="tlab">💪 '+
+      esc(T(getSession(extra).title))+' <span class="snum">'+T(B("primero las pesas, después el rodaje","lift first, then run"))+
+      "</span></div></div></div>"+
+      (getSession(extra).items||[]).map(function(it,i){return exCard(extra,i,it,i,(getSession(extra).items||[]).length)}).join("")):"";
+  if(s.type!=="gym")return h+pre+sessionView(sid);
 
   var c=rxCount(sid),f=rxFocus(sid);
   var pct=c.total?Math.round(c.done/c.total*100):0;
@@ -2863,7 +2876,7 @@ function runplanCard(){
    de la sesión que toca en la rutina, así que si cambia la semana esto la sigue
    sin tocar nada. El backend puede sobrescribirlo con goal.macros. */
 var MACROS={prot:160,soft:{carb:60,fat:75},hard:{carb:110,fat:80},long:{carb:130,fat:80}};
-var DAYLOAD={descanso:"soft",lowA:"hard",upA:"soft",run1:"hard",runEasy:"soft",carga:"long",lowB:"hard",upB:"soft",runLong:"long"};
+var DAYLOAD={descanso:"soft",lowA:"hard",upA:"soft",run1:"hard",runEasy:"hard",carga:"long",lowB:"hard",upB:"soft",runLong:"long"};
 /* Carga del día, en orden de autoridad. Pensado para que al CAMBIAR DE RUTINA
    no haya que tocar nada aquí:
      1) goal.macros.byDay[sid]  — lo que diga el backend, manda
@@ -3063,9 +3076,16 @@ function weekPaceCard(){
      has entrenado. El bloque de manguito no cuenta como sesión: es accesorio. */
   var plan=0,faltan=[],WK=getWeek(),logs=LOGS.data||[],planSid={};
   dias.forEach(function(d,i){
-    var w=WK[i];if(!w)return;var ses=getSession(w.sid);
-    if(!ses||ses.type!=="gym")return;
-    plan++;planSid[w.sid]=String(T(ses.title)).split("·")[0].trim();
+    var w=WK[i];if(!w)return;
+    /* Un día puede llevar fuerza ADEMÁS de la carrera (campo `plus`). Si solo
+       se mirase el sid del día, la sesión de torso del jueves no contaría y el
+       contador diría 2/2 habiendo tres. */
+    [w.sid,w.plus].forEach(function(sd){
+      if(!sd)return;
+      var ses=getSession(sd);
+      if(!ses||ses.type!=="gym")return;
+      plan++;planSid[sd]=String(T(ses.title)).split("·")[0].trim();
+    });
   });
   var conFuerza={};
   logs.forEach(function(l){
