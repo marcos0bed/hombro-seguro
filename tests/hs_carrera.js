@@ -98,4 +98,21 @@ ok("render sin excepción",threw===null,threw?String(threw):"");
 GACT.data=[];
 try{state.tab="carrera";render();carreraView()}catch(e){threw=e}
 ok("sin ninguna carrera tampoco revienta",threw===null,threw?String(threw):"");
+
+
+print("\n== Cinta y calle ==");
+function cinta(n,km,min,hr){var d=dias(n);return {activity_id:800+n,start_time:d,type:"treadmill_running",distance_km:km,duration_min:min,hr_avg:hr}}
+ok("se distingue la cinta",esCinta({type:"treadmill_running"})&&!esCinta({type:"running"}),"");
+var c1=cinta(5,5,40,150), f1=run(5,5,40,150,21);
+ok("una carrera de cinta sin temperatura se corrige como si fuese a 21°",
+   Math.abs(paceCorr(c1)-paceCorr(f1))<0.01,paceCorr(c1)+" vs "+paceCorr(f1));
+ok("y no se queda sin corregir",paceCorr(c1)<paceMin(c1),String(paceCorr(c1))+" vs "+String(paceMin(c1)));
+ok("si la cinta trajera temperatura, mandaría esa",
+   (function(){var x=cinta(5,5,40,150);x.temp_c=30;return paceCorr(x)<paceCorr(c1)})(),"");
+GACT.data=[run(20,10,80,150,15),cinta(13,6,48,150),run(6,8,64,150,15)];
+var v2=volumeCard();
+ok("el volumen dice cuánto fue en cinta",/en cinta|on treadmill/.test(v2),v2.slice(v2.indexOf("snum"),v2.indexOf("snum")+80));
+ok("con los km correctos",/6 en cinta|6 on treadmill/.test(v2),"");
+GACT.data=[run(20,10,80,150,15),run(6,8,64,150,15)];
+ok("sin cinta no lo menciona",!/en cinta|on treadmill/.test(volumeCard()),"");
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));

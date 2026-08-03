@@ -330,7 +330,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v146";
+var APP_VERSION="v147";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1735,6 +1735,10 @@ var PCT_SUAVE = 0.82;        /* por debajo de este % de la FC máx = rodaje suav
                                 Se llamaba RUNEASY y pisaba el ejercicio del mismo
                                 nombre en upB: latente, pero latente hasta que no. */
 var TEMP_REF = 15;           /* temperatura de referencia para normalizar */
+var TEMP_CINTA = 21;         /* una cinta en casa no tiene termómetro, pero tampoco
+                                está a 15°: sin esto sus carreras de cinta salían
+                                con corrección CERO y parecían mejores de lo que son.
+                                Un tercio de sus salidas son en cinta. */
 var TEMP_SEG_GRADO = 1.5;    /* s/km que cuesta cada grado por encima de 15 */
 
 function raceCfg(){return S("race",null)}
@@ -1780,9 +1784,11 @@ function fmtPace(m){
 }
 /* Ritmo corregido a 15 °C. Solo se corrige hacia arriba: por debajo de 15 el
    efecto es despreciable y corregir a la baja inventaría mejoras. */
+function esCinta(a){return /treadmill|indoor/.test(a.type||"")}
 function paceCorr(a){
   var pm=paceMin(a);if(pm==null)return null;
   var t=a.apparent_c!=null?+a.apparent_c:(a.temp_c!=null?+a.temp_c:null);
+  if(t==null&&esCinta(a))t=TEMP_CINTA;
   if(t==null||t<=TEMP_REF)return pm;
   return pm-((t-TEMP_REF)*TEMP_SEG_GRADO)/60;
 }
@@ -1865,9 +1871,11 @@ function volumeCard(){
   var av=(prev>=12&&salto>15)?
     '<div class="macwarn">'+esc(T(B("Has subido el volumen un ","Volume up "))+salto+
       T(B(" % respecto a la semana pasada. Por encima del 10-15 % sube el riesgo de lesión."," % on last week. Above 10-15 % injury risk rises.")))+"</div>":"";
+  var kmC=runs.filter(esCinta).reduce(function(a,b){return a+(b.distance_km||0)},0);
+  var repar=kmC>0?" · "+Math.round(kmC)+" "+T(B("en cinta","on treadmill")):"";
   return '<div class="card"><div class="exhead"><div class="tlab">📏 '+
     T(B("Kilómetros por semana","Weekly volume"))+' <span class="snum">'+Math.round(tot)+" km "+
-    T(B("en 11 semanas","over 11 weeks"))+"</span></div></div>"+
+    T(B("en 11 semanas","over 11 weeks"))+esc(repar)+"</span></div></div>"+
     barChart(pares,{uid:"vol",col:"#F0A63C",fmt:function(v){return v}})+av+"</div>";
 }
 
