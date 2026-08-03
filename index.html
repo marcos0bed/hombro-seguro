@@ -341,7 +341,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v158";
+var APP_VERSION="v159";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1781,6 +1781,14 @@ function planDelDia(dia){
   var R=raceCfg();
   return (R&&R.plan&&R.plan[dia])||null;
 }
+function pasosHTML(t){
+  if(!Array.isArray(t))return '<p style="font-size:15px;margin:2px 4px 0;line-height:1.4">'+esc(t)+"</p>";
+  return t.map(function(paso){
+    if(!Array.isArray(paso))return '<div class="sesr"><span class="sesd">'+esc(String(paso))+"</span></div>";
+    return '<div class="sesr"><span class="sesl">'+esc(T(paso[0]))+'</span><span class="sesd">'+
+           esc(T(paso[1]))+"</span></div>";
+  }).join("");
+}
 function planCard(dia){
   var t=planDelDia(dia);
   if(!t)return "";
@@ -1795,18 +1803,48 @@ function planCard(dia){
   /* El plan puede venir como texto suelto o, mejor, como lista de pasos
      [etiqueta, contenido]. En ficha se lee de un vistazo con las zapatillas
      puestas; en párrafo hay que descifrarlo. */
-  var cuerpo;
-  if(Array.isArray(t)){
-    cuerpo=t.map(function(paso){
-      if(!Array.isArray(paso))return '<div class="sesr"><span class="sesd">'+esc(String(paso))+"</span></div>";
-      return '<div class="sesr"><span class="sesl">'+esc(T(paso[0]))+'</span><span class="sesd">'+
-             esc(T(paso[1]))+"</span></div>";
-    }).join("");
-  }else cuerpo='<p style="font-size:15px;margin:2px 4px 0;line-height:1.4">'+esc(t)+"</p>";
+  var cuerpo=pasosHTML(t);
   return '<div class="card" style="border-left:3px solid var(--acc)"><div class="exhead">'+
     '<div class="tlab">🎯 '+T(B("Hoy toca","Today"))+
     (sem?' <span class="snum">'+T(B("semana","week"))+" "+sem+" "+T(B("de 15","of 15"))+"</span>":"")+
     "</div></div>"+cuerpo+"</div>";
+}
+var MESC=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+/* Los días futuros no se pueden abrir desde Rutina: dayOff solo va hacia atrás,
+   así que la ficha de una sesión solo se veía el día que tocaba. Para organizar
+   la semana eso llega tarde: hace falta ver a qué se enfrenta uno. */
+function proximasCard(){
+  var W=getWeek(),hoy=new Date(),filas=[];
+  for(var k=1;k<=7;k++){
+    var d=new Date(hoy);d.setDate(d.getDate()+k);
+    var ds=iso(d),w=W[(d.getDay()+6)%7];
+    if(!w)continue;
+    var s=getSession(w.sid);if(!s)continue;
+    var pasos=planDelDia(ds),cuerpo="";
+    if(pasos)cuerpo=pasosHTML(pasos);
+    else if(s.items&&s.items.length){
+      cuerpo='<div class="sesr"><span class="sesd">'+
+        esc(s.items.map(function(it){return T(it.n)}).join(" · "))+"</span></div>";
+    }
+    /* El día de rodaje suave lleva además la sesión de fuerza (plus). Sin esto
+       parecería un día ligero cuando son dos entrenos. */
+    var ex=w.plus&&getSession(w.plus)?getSession(w.plus):null;
+    if(ex&&ex.items&&ex.items.length){
+      cuerpo+='<div class="sesr"><span class="sesl">'+esc(T(B("+ fuerza","+ strength")))+
+        '</span><span class="sesd">'+esc(ex.items.map(function(it){return T(it.n)}).join(" · "))+"</span></div>";
+    }
+    filas.push('<div style="margin:14px 4px 0"><div class="tlab" style="color:var(--acc)">'+
+      esc(T(w.d))+" "+d.getDate()+" "+MESC[d.getMonth()]+
+      ' <span class="snum" style="color:var(--mut)">'+esc(T(s.title))+(ex?" + "+esc(T(ex.title)):"")+"</span></div></div>"+
+      (cuerpo||'<div class="sesr"><span class="sesd" style="color:var(--mut)">'+T(B("Descanso","Rest"))+"</span></div>"));
+  }
+  if(!filas.length)return "";
+  var ab=S("fold:proximas",null);if(ab===null||ab===undefined)ab=false;
+  return '<div class="card"><button class="foldh" data-act="fold" data-k="proximas" aria-expanded="'+(ab?"true":"false")+'">'+
+    "<h3>"+T(B("Lo que viene","What's coming"))+"</h3>"+
+    '<span class="foldr"><span class="note" style="color:var(--mut);font-size:11px">'+
+    T(B("7 días","7 days"))+'</span><span class="chev">'+(ab?"▾":"▸")+"</span></span></button>"+
+    (ab?filas.join(""):"")+"</div>";
 }
 function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
 
@@ -2130,7 +2168,7 @@ function racionalCard(){
 function carreraView(){
   if(!cloudOn())return '<p class="note">'+T(B("Inicia sesión para ver tu plan.","Sign in to see your plan."))+"</p>";
   if(GACT.data===null){loadGact();return '<p class="note">'+T(B("Cargando carreras…","Loading runs…"))+"</p>";}
-  return raceHeadCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
+  return raceHeadCard()+proximasCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
 }
 
 /* ---------- dashboard ---------- */
