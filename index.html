@@ -330,7 +330,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v150";
+var APP_VERSION="v151";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1228,6 +1228,10 @@ function sessionView(sid){
     var done=S("done:"+TODAY+":"+sid,false);
     h+='<div class="card runcard"><h3>'+esc(T(s.title))+'</h3><p class="big">'+(s.km||"")+'</p><p class="note" style="margin-top:8px">'+esc(T(s.note)||"")+"</p>"+
        '<button class="donebtn'+(done?" on":"")+'" data-act="run-done" data-sid="'+sid+'">'+(done?u("done"):u("markDone"))+"</button></div>";
+    /* Las sesiones de carrera solo enseñaban los km y el botón: sus bloques
+       —objetivo, calentamiento, series, enfriamiento— nunca llegaban a pintarse
+       porque esta rama no recorría los items. Era escribir el detalle para nadie. */
+    (s.items||[]).forEach(function(it,i){h+=exCard(sid,i,it,i,(s.items||[]).length)});
   }else if(s.type==="rest"){
     h+='<div class="card"><h3>'+esc(T(s.title))+'</h3><p class="note" style="margin-top:6px">'+esc(T(s.note)||"")+"</p></div>";
   }else{

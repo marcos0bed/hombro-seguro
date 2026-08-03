@@ -22,4 +22,20 @@ print("\n== Y en pesas sigue plegado ==");
 print("\n== El botón sigue estando en ambos ==");
 ok("carrera",/data-act="how"/.test(exCard("run1",1,getSession("run1").items[1],1,4)),"");
 ok("pesas",/data-act="how"/.test(exCard("upA",1,getSession("upA").items[1],1,5)),"");
+
+
+print("\n== La vista de sesión pinta los bloques de carrera ==");
+["run1","runEasy","runLong"].forEach(function(sid){
+  var v=sessionView(sid), s=getSession(sid);
+  ok(sid+": salen los "+s.items.length+" bloques",(v.match(/data-act="how"/g)||[]).length===s.items.length,
+     String((v.match(/data-act="how"/g)||[]).length));
+  ok(sid+": y el texto se lee sin tocar",/class="how open"/.test(v),"");
+});
+ok("sigue el botón de marcar hecho",/run-done/.test(sessionView("run1")),"");
+ok("y los km",/6-9 km/.test(sessionView("run1")),"");
+print("\n== El calentamiento y los ritmos están a la vista ==");
+var v1=sessionView("run1");
+ok("calentamiento",/Calentamiento|Warm-up/.test(v1),"");
+ok("ritmos de las series",/5:50-6:10/.test(v1),"");
+ok("y el objetivo de la sesión",/VO₂max/.test(v1),"");
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));
