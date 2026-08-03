@@ -341,7 +341,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v164";
+var APP_VERSION="v165";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1210,7 +1210,10 @@ function exCard(sid,i,it,pos,tot){
   }
   return '<div class="card"><div class="exhead"><h3>'+esc(T(it.n))+'</h3><span style="display:flex;align-items:center;gap:8px"><span class="dose">'+(it.sets?NS+"×":"")+esc(T(it.reps))+"</span>"+mv+"</span></div>"+
     (chips?'<div class="chips">'+chips+"</div>":"")+
-    (it.sets?'<div class="setrow">'+pills+(it.sets?'<span class="nsw"><button class="nsb" data-act="setminus" data-sid="'+sid+'" data-i="'+i+'"'+(NS<=1?" disabled":"")+' aria-label="-1 set">−</button><button class="nsb" data-act="setplus" data-sid="'+sid+'" data-i="'+i+'"'+(NS>=10?" disabled":"")+' aria-label="+1 set">+</button></span>':"")+'<span class="w-wrap"><input class="w-in" style="width:62px" data-key="r:'+TODAY+":"+sid+":"+i+'" inputmode="numeric" placeholder="'+u("repsPh")+'" value="'+esc(String(S("r:"+TODAY+":"+sid+":"+i,""))||estReps(T(it.reps)))+'" aria-label="Reps">×<input class="w-in" data-key="w:'+sid+":"+i+'" inputmode="decimal" placeholder="—" value="'+esc(String(w))+'" aria-label="Weight">'+u("kg")+"</span></div>":"")+
+    (it.sets?'<div class="setrow">'+pills+(it.sets?'<span class="nsw"><button class="nsb" data-act="setminus" data-sid="'+sid+'" data-i="'+i+'"'+(NS<=1?" disabled":"")+' aria-label="-1 set">−</button><button class="nsb" data-act="setplus" data-sid="'+sid+'" data-i="'+i+'"'+(NS>=10?" disabled":"")+' aria-label="+1 set">+</button></span>':"")+'<span class="w-wrap"><input class="w-in" style="width:62px" data-key="r:'+TODAY+":"+sid+":"+i+'" inputmode="numeric" placeholder="'+u("repsPh")+'" value="'+esc(String(S("r:"+TODAY+":"+sid+":"+i,""))||estReps(T(it.reps)))+'" aria-label="Reps">'+
+      /* Correr no se hace con kilos. A Sofi, que solo tiene sesiones de
+         carrera, le salía un campo de peso en el calentamiento. */
+      (esRun?"":'×<input class="w-in" data-key="w:'+sid+":"+i+'" inputmode="decimal" placeholder="—" value="'+esc(String(w))+'" aria-label="Weight">'+u("kg"))+"</span></div>":"")+
     foot+'<div class="how'+(esRun?" open":"")+'">'+esc(T(it.how)||"")+"</div></div>";
 }
 

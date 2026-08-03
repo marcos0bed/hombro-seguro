@@ -48,3 +48,12 @@ ok("calentamiento, ritmos y enfriamiento",n.length===3,n.join(" | "));
 var cal=item("run1","Calentamiento");
 ok("el calentamiento avisa del riesgo con la pierna fría",cal&&/gemelos|calves/.test(T(cal.how)),"");
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));
+
+print("\n== Correr no se hace con kilos ==");
+var cRun=exCard("run1",0,{n:B("Calentamiento","Warm-up"),sets:1,reps:"10 min"},0,3);
+ok("la sesión de carrera no pide peso",!/aria-label="Weight"/.test(cRun),cRun.slice(cRun.indexOf("setrow"),cRun.indexOf("setrow")+200));
+ok("ni pone kg",!/>kg</.test(cRun)&&cRun.indexOf("kg</span>")<0,"");
+ok("pero sí deja apuntar lo hecho",/aria-label="Reps"/.test(cRun),"");
+var cGym=exCard("upA",0,{n:B("Press","Press"),sets:3,reps:"8-12"},0,3);
+ok("la de pesas sigue pidiendo peso",/aria-label="Weight"/.test(cGym),"");
+
