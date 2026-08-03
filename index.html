@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v128";
+var APP_VERSION="v129";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -933,16 +933,25 @@ gomasB:{title:B("Gomas · Full-body B","Bands · Full-body B"),sub:B("Sin gimnas
    how:B("Tumbado boca arriba, extiende el brazo y la pierna contrarios a la vez, lumbar pegada al suelo. Sin apoyo de antebrazo: no repite el gesto que te irritó el hombro con la plancha.",
         "Lying on your back, extend the opposite arm and leg together, lower back pinned to the floor. No forearm loading: it doesn't repeat the move that irritated your shoulder with the plank.")}
 ]},
-manguito:{title:B("Manguito y escápula","Rotator cuff & scapula"),sub:B("3-5 días/semana · ~15 min","3-5 days/week · ~15 min"),type:"gym",items:[
+manguito:{title:B("Manguito y escápula","Rotator cuff & scapula"),sub:B("3-5 días/semana · ~18 min · pauta SERMEF (Ana, 3-ago-2026)","3-5 days/week · ~18 min · SERMEF protocol (Ana, 3 Aug 2026)"),type:"gym",items:[
+  {n:B("Estiramiento capsular posterior","Posterior capsule stretch"),sets:3,reps:"20-30 s",stretch:true,chips:[B("Movilidad","Mobility")],yt:"posterior shoulder capsule cross body stretch",
+   how:B("Brazo cruzado por delante del pecho; con la mano contraria sobre el CODO (no sobre la muñeca) empuja hacia el hombro hasta notar tirantez, sin dolor. Mantén 20-30 segundos. Va primero porque una cápsula posterior rígida empuja la cabeza del húmero hacia arriba, que es parte del mecanismo del pinzamiento.",
+        "Arm across the chest; with the opposite hand on the ELBOW (not the wrist) push toward the shoulder until you feel a stretch, no pain. Hold 20-30 seconds. It goes first because a stiff posterior capsule pushes the humeral head upward, which is part of the impingement mechanism.")},
   {n:B("Rotación externa, codo pegado","External rotation, elbow at side"),sets:3,reps:"15",chips:[B("El más rentable","Best value exercise")],yt:"shoulder external rotation band elbow at side",
-   how:B("Codo a 90° PEGADO al costado (truco: toalla enrollada entre codo y costillas — si se cae, el codo se despegó). Goma anclada al lado contrario, o polea baja con peso mínimo. Gira el antebrazo hacia afuera como abriendo una puerta, solo rango cómodo, vuelta lenta. Fortalece los músculos que centran la cabeza del húmero y le quitan trabajo al supraespinoso.",
-        "Elbow at 90° PINNED to your side (trick: rolled towel between elbow and ribs — if it drops, the elbow drifted). Band anchored on the opposite side, or low cable with minimal weight. Rotate the forearm outward like opening a door, comfortable range only, slow return. Strengthens the muscles that center the humeral head and take work off the supraspinatus.")},
+   how:B("Codo a 90° PEGADO al costado (toalla enrollada entre codo y costillas — si se cae, el codo se despegó). Goma anclada al lado contrario, o polea baja con peso mínimo. Gira el antebrazo hacia afuera unos 45°, MANTÉN 5 SEGUNDOS, vuelta lenta. Fortalece los músculos que centran la cabeza del húmero y le quitan trabajo al supraespinoso.",
+        "Elbow at 90° PINNED to your side (rolled towel between elbow and ribs — if it drops, the elbow drifted). Band anchored on the opposite side, or low cable with minimal weight. Rotate the forearm outward about 45°, HOLD 5 SECONDS, slow return. Strengthens the muscles that center the humeral head and take work off the supraspinatus.")},
   {n:B("Rotación interna, codo pegado","Internal rotation, elbow at side"),sets:3,reps:"12",chips:[],yt:"shoulder internal rotation band",
-   how:B("Mismo setup, goma anclada al mismo lado del brazo: gira el antebrazo hacia el abdomen. Resistencia a tolerancia, sin dolor.",
-        "Same setup, band anchored on the same side as the working arm: rotate the forearm toward your abdomen. Resistance as tolerated, no pain.")},
-  {n:B("Band pull-aparts","Band pull-aparts"),sets:3,reps:"20",chips:[B("Escápula","Scapula")],yt:"band pull apart technique",
-   how:B("Goma frente a ti a la altura del PECHO (no de la cara), brazos estirados. Sepárala hasta el pecho juntando las escápulas. Una escápula estable es la base de todo lo demás.",
-        "Band held out in front at CHEST height (not face height), arms straight. Pull it apart to your chest while squeezing the shoulder blades. A stable scapula is the foundation for everything else.")}
+   how:B("Mismo setup y misma toalla, goma anclada al mismo lado del brazo: gira el antebrazo hacia el abdomen unos 45°, mantén 5 segundos. Resistencia a tolerancia, sin dolor.",
+        "Same setup and same towel, band anchored on the same side as the working arm: rotate the forearm toward your abdomen about 45°, hold 5 seconds. Resistance as tolerated, no pain.")},
+  {n:B("Remo con banda","Band row"),m:"back",sets:3,reps:"10-12",chips:[B("Abre el espacio","Opens the space")],yt:"resistance band row scapular retraction",
+   how:B("Goma anclada al frente a la altura del pecho. Lleva los CODOS HACIA ATRÁS aproximando las escápulas, y mantén 5 segundos apretando. Ana lo señaló como lo que de verdad abre el espacio subacromial: «lo único que abre el espacio se hace con trabajo de remo y rotadores». Sustituye a los band pull-aparts, que separan al frente en vez de llevar los codos atrás.",
+        "Band anchored in front at chest height. Drive your ELBOWS BACK bringing the shoulder blades together, hold 5 seconds squeezing. Ana singled this out as what actually opens the subacromial space. It replaces band pull-aparts, which spread the arms forward rather than driving the elbows back.")},
+  {n:B("Abducción en plano escapular","Scapular-plane abduction"),m:"cuff",sets:3,reps:"10-12",chips:[B("Recuperado 3-ago","Cleared 3 Aug")],yt:"scaption exercise scapular plane raise",
+   how:B("⚠️ Dos límites que NO se negocian, y son lo que la hace segura: el brazo va unos 30° POR DELANTE del cuerpo (plano escapular, nunca lateral puro), y NO se sube por encima de la horizontal. Brazo estirado, goma bajo el pie, sube despacio, mantén 5 segundos, baja controlado. Es la primera abducción cargada autorizada desde hace más de un año: fuera de esos dos límites vuelve a ser una elevación lateral de las prohibidas.",
+        "⚠️ Two limits that are NOT negotiable and are what makes it safe: the arm travels about 30° IN FRONT of the body (scapular plane, never pure lateral), and you do NOT go above horizontal. Straight arm, band under your foot, raise slowly, hold 5 seconds, lower under control. This is the first loaded abduction cleared in over a year — outside those two limits it becomes one of the forbidden lateral raises.")},
+  {n:B("Protracción tumbado","Supine scapular protraction"),m:"back",sets:3,reps:"10-12",chips:[B("En vez de colgarse","Instead of hanging")],yt:"supine scapular protraction serratus punch dumbbell",
+   how:B("Boca arriba, brazo perpendicular al suelo con una mancuerna ligera. Empuja hacia el techo DESPEGANDO el hombro del suelo, sin doblar el codo; mantén 5 segundos. Es la decoaptación: moviliza la escápula y separa la cabeza del húmero abriendo el espacio, pero SIN cargar la acromioclavicular. Ana lo dio explícitamente como la alternativa a colgarse de una barra, que queda prohibido incluso con los pies apoyados.",
+        "Lying face up, arm perpendicular to the floor with a light dumbbell. Push toward the ceiling LIFTING the shoulder off the floor, elbow straight; hold 5 seconds. This is decoaptation: it mobilizes the scapula and separates the humeral head, opening the space WITHOUT loading the AC joint. Ana gave it explicitly as the alternative to hanging from a bar, which is forbidden even with your feet supported.")}
 ]}
 };
 
@@ -971,7 +980,10 @@ var MGROUPS={
   hotelB:["legs","chest","back","core","cuff"],
   gomasA:["legs","chest","back","legs","legs","chest","core","cuff"],
   gomasB:["legs","chest","back","legs","legs","triceps","biceps","core"],
-  manguito:["cuff","cuff","cuff"]};
+  /* manguito ya no está aquí: sus ejercicios llevan `m` propio desde
+     el 3-ago-2026. MGROUPS mapea por ÍNDICE y se desalinea en cuanto
+     se reordena una sesión — cada ejercicio debe traer su grupo. */
+  manguito:[]};
 /* Último recurso para el seguimiento por grupo muscular: deducirlo del nombre.
    Sin esto, una rutina nueva que no traiga `m` en sus ejercicios dejaría de
    contar series en Progreso. El ORDEN de las reglas importa: "curl femoral" es
