@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v126";
+var APP_VERSION="v127";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2037,14 +2037,23 @@ function sColor(v){
 var MEALKEYS=[["b","🍳",["Desayuno","Breakfast"]],["l","🥗",["Comida","Lunch"]],
               ["d","🍽","Cena|Dinner".split("|")],["w","🥤",["Batido","Shake"]],
               ["s","🍫",["Picoteo","Snack"]]];
+/* Para HOY se ofrecen siempre los cajones habituales, aunque MFP no haya
+   sincronizado todavía: la hora se apunta al comer, no media hora después de que
+   llegue el dato. Las calorías aparecen solas cuando el sync las trae.
+   Para días pasados solo se enseña lo que de verdad se comió: preguntar por una
+   cena que no existió sobra. */
+var MEALHOY=["b","l","d","w"];
 function mealsOf(day){
   var r=rowFor(day), m=(r&&r.meals_kcal)||null;
-  if(!m)return [];
+  var hoy=(day===TODAY);
+  if(!m&&!hoy)return [];
   var out=[];
   MEALKEYS.forEach(function(mk){
-    var v=m[mk[0]];
-    if(!v||!v.k)return;
-    out.push({k:mk[0],ic:mk[1],nm:B(mk[2][0],mk[2][1]),kcal:v.k,prot:v.p,
+    var v=(m||{})[mk[0]];
+    var hay=v&&v.k;
+    if(!hay&&!(hoy&&MEALHOY.indexOf(mk[0])>-1))return;
+    out.push({k:mk[0],ic:mk[1],nm:B(mk[2][0],mk[2][1]),
+              kcal:hay?v.k:null,prot:hay?v.p:null,
               t:String(S("meal:"+day+":"+mk[0],""))});
   });
   return out;
@@ -2059,7 +2068,7 @@ function mealsCard(){
         '<div class="mealgrid">';
   ms.forEach(function(m){
     h+='<div class="mealit"><span class="mealic">'+m.ic+"</span>"+
-       '<span class="mealnm">'+esc(T(m.nm))+'<b>'+m.kcal+" kcal · "+m.prot+" g</b></span>"+
+       '<span class="mealnm">'+esc(T(m.nm))+'<b>'+(m.kcal!=null?m.kcal+" kcal · "+m.prot+" g":T(B("sin registrar aún","not logged yet")))+"</b></span>"+
        '<input class="t-in" type="time" data-key="meal:'+day+":"+m.k+'" value="'+esc(m.t)+
        '" aria-label="'+esc(T(m.nm))+'"></div>';
   });
@@ -2118,11 +2127,11 @@ function stressDayCard(){
     var hr=+pr[1], mi=+pr[2];
     if(hr>23||mi>59)return;          /* 12:75 caería en las 13:15 si solo sumáramos */
     var mins=hr*60+mi;
-    var x=(P+(W-2*P)*mins/1440).toFixed(1), rad=(2+Math.min(2.4,m.kcal/450)).toFixed(1);
+    var x=(P+(W-2*P)*mins/1440).toFixed(1), rad=(2+Math.min(2.4,(m.kcal||0)/450)).toFixed(1);
     svg+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BASE+'" stroke="#EFE6D2" stroke-width="0.9" '+
          'stroke-dasharray="2 2.5" opacity=".55"/>'+
          '<circle cx="'+x+'" cy="'+(TOP+3.2)+'" r="'+rad+'" fill="#EFE6D2" opacity=".95"><title>'+
-         esc(m.t+" · "+T(m.nm)+" · "+m.kcal+" kcal · "+m.prot+" g prot")+"</title></circle>";
+         esc(m.t+" · "+T(m.nm)+(m.kcal!=null?" · "+m.kcal+" kcal · "+m.prot+" g prot":""))+"</title></circle>";
   });
   [0,3,6,9,12,15,18,21,24].forEach(function(hh){
     var x=(P+(W-2*P)*hh/24).toFixed(1);
