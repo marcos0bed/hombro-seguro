@@ -341,7 +341,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v163";
+var APP_VERSION="v164";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -564,7 +564,7 @@ function loadGact(){
   if(!cloudOn()||GACT.loading)return;
   GACT.loading=true;
   sb.from("garmin_activities")
-    .select("activity_id,start_time,type,distance_km,duration_min,pace,hr_avg,hr_max,calories,cadence,elevation_m,temp_c,apparent_c")
+    .select("activity_id,start_time,type,distance_km,duration_min,pace,hr_avg,hr_max,calories,cadence,elevation_m,temp_c,apparent_c,raw")
     .order("start_time",{ascending:false}).limit(1200)
     .then(function(r){GACT.loading=false;GACT.data=r.data||[];render();},
           function(){GACT.loading=false;GACT.data=[];render();});
@@ -1366,8 +1366,8 @@ function renderHdr(){
     big=planTitulo(fechaDeIdx(rxJ),sr)||T(sr.title);
     sub=T(wr.name)+(T(sr.sub)?" · "+T(sr.sub):"");
   }
-  else{big={semana:u("tSemana"),progreso:u("progreso"),viaje:u("tViaje"),manguito:u("tManguito"),reglas:u("tReglas"),cuenta:u("acct")}[state.tab];
-       sub={semana:(cx&&cx.subSemana)||u("subSemana"),progreso:u("subProgreso"),viaje:u("subViaje"),manguito:u("subManguito"),reglas:u("subReglas"),cuenta:u("acctSub")}[state.tab]}
+  else{big={semana:u("tSemana"),progreso:u("progreso"),viaje:u("tViaje"),manguito:u("tManguito"),reglas:u("tReglas"),cuenta:u("acct"),carrera:T(B("Carrera","Racing"))}[state.tab]||"";
+       sub={semana:(cx&&cx.subSemana)||u("subSemana"),progreso:u("subProgreso"),viaje:u("subViaje"),manguito:u("subManguito"),reglas:u("subReglas"),cuenta:u("acctSub"),carrera:T(B("El plan y cómo va","The plan and how it's going"))}[state.tab]||""}
   if(state.tab==="progreso"&&LASTUP){
     var du=new Date(LASTUP);
     sub=(sub?sub+" · ":"")+"⟳ "+pad(du.getDate())+"/"+pad(du.getMonth()+1)+" "+pad(du.getHours())+":"+pad(du.getMinutes());
@@ -1876,7 +1876,45 @@ function proximasCard(){
     T(B("7 días","7 days"))+'</span><span class="chev">'+(ab?"▾":"▸")+"</span></span></button>"+
     (ab?filas.join(""):"")+"</div>";
 }
+/* Tramos del reloj. El total de una sesión no distingue una de series de un
+   rodaje del mismo tiempo: 3 km en 25 min sale igual seas quien seas. Los
+   tramos son los que dicen si las series salieron al ritmo pedido. */
+function lapsCard(){
+  var conL=(GACT.data||[]).filter(function(a){
+    return /running/.test(a.type||"")&&a.raw&&a.raw.laps&&a.raw.laps.length>1;
+  });
+  if(!conL.length)return "";
+  conL.sort(function(x,y){return x.start_time<y.start_time?1:-1});
+  var a=conL[0],L=a.raw.laps;
+  /* Rápido = por debajo del 90% del ritmo mediano del propio entreno. Se
+     compara contra uno mismo y ese día, que es lo único justo: el mismo 4:00
+     es serie para uno y calentamiento para otro. */
+  var rit=L.map(function(l){return l.min/l.km}).filter(function(x){return isFinite(x)&&x>0}).sort(function(x,y){return x-y});
+  var med=rit.length?rit[Math.floor(rit.length/2)]:null;
+  var filas=L.map(function(l){
+    var pm=(l.km>0)?l.min/l.km:null;
+    var fuerte=med!=null&&pm!=null&&pm<med*0.9;
+    return '<div class="wkrow"'+(fuerte?' style="color:var(--acc)"':"")+"><span>"+
+      (fuerte?"▶ ":"")+l.i+'</span><span class="note">'+
+      (l.km>=1?l.km.toFixed(2)+" km":Math.round(l.km*1000)+" m")+" · "+fmtMin(l.min)+
+      '</span><span style="font-family:var(--mono)">'+esc(l.ritmo||"—")+
+      "</span><span>"+(l.fc?l.fc+" ppm":"")+"</span></div>";
+  }).join("");
+  var f=a.start_time.slice(8,10)+"/"+a.start_time.slice(5,7);
+  return '<div class="card"><div class="exhead"><div class="tlab">⏱ '+
+    T(B("Tramos del reloj","Watch laps"))+' <span class="snum">'+f+" · "+
+    (a.distance_km||0).toFixed(2)+" km</span></div></div>"+filas+
+    '<p class="note" style="margin:8px 4px 0;color:var(--mut)">'+
+    T(B("En naranja, los tramos fuertes de ese entreno.","In orange, the hard laps of that session."))+"</p></div>";
+}
 function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
+/* Riegel parte de que la marca de referencia fue a tope. Proyectar desde un
+   rodaje suave da un número malísimo y falso: a Sofi le puso 1:27:46 en rojo
+   con una sesión que le había salido bien, y a Marcos 1:19 antes de saber que
+   tenía un 50:36. Sin pulso no se puede saber si apretó, así que no cuenta. */
+function duro(a){
+  return a.hr_avg!=null&&a.hr_avg>=0.85*fcMax();
+}
 
 function runsOf(desde){
   var a=(GACT.data||[]).filter(function(x){
@@ -1932,7 +1970,7 @@ function raceHeadCard(){
   var runs=runsOf(),pred=null,base=null;
   /* Mejor esfuerzo de las últimas 6 semanas: el más rápido de al menos 3 km. */
   var lim=new Date();lim.setDate(lim.getDate()-42);
-  runs.filter(function(a){return a.start_time.slice(0,10)>=iso(lim)&&(a.distance_km||0)>=3})
+  runs.filter(function(a){return a.start_time.slice(0,10)>=iso(lim)&&(a.distance_km||0)>=3&&duro(a)})
       .forEach(function(a){
         var pm=paceCorr(a);
         if(pm!=null&&(base===null||pm<base.pm))base={pm:pm,km:a.distance_km,min:a.duration_min,a:a};
@@ -1954,7 +1992,8 @@ function raceHeadCard(){
          base.km.toFixed(2)+" km a "+fmtPace(base.pm)+" ("+base.a.start_time.slice(8,10)+"/"+base.a.start_time.slice(5,7)+")."+
          (meta_min?(" "+(ok?T(B("Vas por delante del objetivo.","You're ahead of goal.")):
            T(B("Te faltan ","You're "))+Math.abs(dif)+T(B(" min para el objetivo."," min off goal.")))):"");
-  }else nota=T(B("Necesito una carrera reciente de 3 km o más para proyectar.","I need a recent run of 3 km or more to project."));
+  }else nota=T(B("Aún no hay un esfuerzo fuerte con el que proyectar. Un rodaje suave no sirve: Riegel supone que fuiste a tope, así que saldría una cifra mala y falsa. El test de 5 km dará la primera de verdad.",
+                 "No hard effort to project from yet. An easy run won't do: Riegel assumes you went all out, so it would give a bad and false number. The 5 km test will give the first real one."));
   /* La marca personal, sacada del propio histórico: da la escala de si el
      objetivo es una vuelta o un salto. Sin esto, un objetivo de 55 min parece
      una temeridad cuando en realidad ya se ha corrido 50:36. */
@@ -2199,7 +2238,7 @@ function racionalCard(){
 function carreraView(){
   if(!cloudOn())return '<p class="note">'+T(B("Inicia sesión para ver tu plan.","Sign in to see your plan."))+"</p>";
   if(GACT.data===null){loadGact();return '<p class="note">'+T(B("Cargando carreras…","Loading runs…"))+"</p>";}
-  return raceHeadCard()+proximasCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
+  return raceHeadCard()+proximasCard()+lapsCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
 }
 
 /* ---------- dashboard ---------- */

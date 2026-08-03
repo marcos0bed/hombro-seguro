@@ -33,7 +33,16 @@ ok("cuenta los días que faltan",/días|days/.test(h),"");
 ok("muestra el objetivo 1:00:00",/1:00:00/.test(h),"");
 ok("y proyecta un tiempo",/Previsto|Projected/.test(h)&&/0:5\d:\d\d|1:0\d:\d\d/.test(h),h.slice(h.indexOf("Previsto"),h.indexOf("Previsto")+120));
 GACT.data=[run(5,1.5,12,150,15)];
-ok("sin carrera de 3 km no se inventa proyección",/Necesito|I need/.test(raceHeadCard()),"");
+ok("sin carrera de 3 km no se inventa proyección",/esfuerzo fuerte|hard effort/.test(raceHeadCard()),"");
+/* El caso de Sofi: 3,07 km a 8:02 con pulso 149 es un rodaje suave. Riegel lo
+   trataba como si hubiera ido a tope y le escupía 1:27:46 en rojo. */
+GACT.data=[{activity_id:77,start_time:TODAY+"T08:33:00",type:"running",distance_km:3.07,duration_min:25.1,hr_avg:149}];
+var hSuave=raceHeadCard();
+ok("un rodaje suave no da proyección",/esfuerzo fuerte|hard effort/.test(hSuave),"");
+ok("y no enseña ningún tiempo previsto",!/1:2\d:\d\d/.test(hSuave),hSuave.slice(hSuave.indexOf("Previsto"),hSuave.indexOf("Previsto")+90));
+ok("duro() rechaza pulso 149",!duro({hr_avg:149}),"");
+ok("y acepta pulso 180",duro({hr_avg:180}),"");
+ok("sin pulso no se puede saber, así que no",!duro({hr_avg:null}),"");
 
 print("\n== Eficiencia aeróbica ==");
 GACT.data=[run(2,5,41,150,15)];
