@@ -237,6 +237,10 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .foldh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;color:inherit;cursor:pointer}
 .foldr{display:flex;align-items:baseline;gap:9px;flex:none}
 .foldh .chev{color:var(--mut);font-size:12px}
+.sesr{display:flex;align-items:baseline;gap:10px;padding:6px 4px;border-bottom:1px solid var(--line)}
+.sesr:last-child{border-bottom:0}
+.sesl{font-family:var(--disp);text-transform:uppercase;font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--mut);width:78px;flex:none}
+.sesd{font-size:14.5px;line-height:1.35;flex:1}
 .rxplus{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--acc);vertical-align:super;margin-left:1px}
 .pbr{display:flex;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line)}
 .pbr:last-child{border-bottom:0}
@@ -337,7 +341,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v156";
+var APP_VERSION="v157";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1782,10 +1786,21 @@ function planCard(dia){
     var d1=new Date(ini+"T12:00:00"),d2=new Date(dia+"T12:00:00");
     sem=Math.floor((d2-d1)/(7*86400000))+1;
   }
+  /* El plan puede venir como texto suelto o, mejor, como lista de pasos
+     [etiqueta, contenido]. En ficha se lee de un vistazo con las zapatillas
+     puestas; en párrafo hay que descifrarlo. */
+  var cuerpo;
+  if(Array.isArray(t)){
+    cuerpo=t.map(function(paso){
+      if(!Array.isArray(paso))return '<div class="sesr"><span class="sesd">'+esc(String(paso))+"</span></div>";
+      return '<div class="sesr"><span class="sesl">'+esc(T(paso[0]))+'</span><span class="sesd">'+
+             esc(T(paso[1]))+"</span></div>";
+    }).join("");
+  }else cuerpo='<p style="font-size:15px;margin:2px 4px 0;line-height:1.4">'+esc(t)+"</p>";
   return '<div class="card" style="border-left:3px solid var(--acc)"><div class="exhead">'+
     '<div class="tlab">🎯 '+T(B("Hoy toca","Today"))+
     (sem?' <span class="snum">'+T(B("semana","week"))+" "+sem+" "+T(B("de 15","of 15"))+"</span>":"")+
-    "</div></div><p style=\"font-size:15px;margin:2px 4px 0;line-height:1.4\">"+esc(t)+"</p></div>";
+    "</div></div>"+cuerpo+"</div>";
 }
 function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
 

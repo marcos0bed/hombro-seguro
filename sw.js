@@ -1,4 +1,4 @@
-const CACHE = "hombro-v156";
+const CACHE = "hombro-v157";
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", CDN];
 
