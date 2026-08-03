@@ -341,7 +341,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v157";
+var APP_VERSION="v158";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -478,7 +478,13 @@ function flushDirty(){
   try{localStorage.setItem("hs:__dirty","[]")}catch(e){}
   d.forEach(function(k){cloudPush(k,S(k,null))});
 }
+/* Cuándo se bajó por última vez la configuración de la nube. Sin esto, pullAll
+   solo corría al iniciar sesión: si el plan o la rutina cambiaban en el backend,
+   el móvil seguía con la copia vieja hasta cerrar sesión. Pasó con las horas de
+   comida y con el plan de carrera. */
+var ULTPULL=0;
 function pullAll(){
+  ULTPULL=Date.now();
   return sb.from("kv_state").select("k,v").then(function(r){
     if(r.error||!r.data)return;
     r.data.forEach(function(row){try{localStorage.setItem("hs:"+row.k,JSON.stringify(row.v))}catch(e){}});
@@ -3524,6 +3530,10 @@ function doRefresh(){
 /* al volver del segundo plano: recalcular contra el reloj (si venció, suena ya) */
 document.addEventListener("visibilitychange",function(){
   if(document.visibilityState!=="visible")return;
+  /* Al volver a primer plano, si hace más de 5 minutos, se rebaja la
+     configuración: es cuando el backend puede haber cambiado la rutina o el
+     plan mientras la app estaba en segundo plano. */
+  if(cloudOn()&&Date.now()-ULTPULL>300000)pullAll().then(function(){render()},function(){});
   if(refrescaDia())render();      /* se abrió al día siguiente */
   if(!rest.done){wakeOn();restTick();}
   if(isoST.running){wakeOn();isoTick();}
