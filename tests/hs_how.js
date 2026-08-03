@@ -37,5 +37,5 @@ print("\n== El calentamiento y los ritmos están a la vista ==");
 var v1=sessionView("run1");
 ok("calentamiento",/Calentamiento|Warm-up/.test(v1),"");
 ok("ritmos de las series",/5:50-6:10/.test(v1),"");
-ok("y el objetivo de la sesión",/VO₂max/.test(v1),"");
+ok("y el racional NO está en la sesión, sino en Carrera",!/VO₂max/.test(v1),"");
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));

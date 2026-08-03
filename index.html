@@ -336,7 +336,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v153";
+var APP_VERSION="v154";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -898,24 +898,18 @@ runEasy:{title:B("Rodaje suave","Easy run"),sub:B("Corto a propósito · el que 
         "6 accelerations of 20 seconds at the end, fast and relaxed, with full recovery between. They improve form and economy without adding fatigue — too short to build up lactate.")}
 ]},
 run1:{title:B("Calidad","Quality"),sub:B("El día que se corre rápido · 45-55 min","The day you run fast · 45-55 min"),load:"hard",type:"run",km:"6-9 km",items:[
-  {n:B("Objetivo de la sesión","What this session is for"),m:"cardio",sets:0,reps:"",chips:[B("Léelo","Read this")],yt:"",
-   how:B("Subir el VO₂max, mejorar la economía de carrera y enseñarle al músculo a tamponar lactato. Es el único día de la semana en el que se corre por encima del umbral, y por eso los otros dos van suaves de verdad: si los tres días van a medio gas no se estimula ninguna de las dos vías. Aquí sí aprietas.",
-        "Raise VO₂max, improve running economy and teach the muscle to buffer lactate. It's the only day of the week you run above threshold, which is exactly why the other two are genuinely easy: if all three are moderate you stimulate neither pathway. This is the day you push.")},
   {n:B("Calentamiento","Warm-up"),m:"cardio",sets:0,reps:"12-15 min",chips:[],yt:"",
    how:B("Trote a 7:45-8:15 subiendo poco a poco, y 4 rectas de 20 s al final para despertar la pierna. No lo recortes: entrar en series con la pierna fría es como se rompen los gemelos y el sóleo, y tú vienes de meses sin correr rápido.",
         "Jog at 7:45-8:15 easing in, plus 4 strides of 20 s at the end to wake the legs up. Don't cut it: cold legs into intervals is how calves and soleus tear, and you're coming back from months without fast running.")},
   {n:B("Bloque principal","Main set"),m:"cardio",sets:0,reps:"según la semana",chips:[B("Aquí aprietas","Push here")],yt:"",
-   how:B("Semanas 1-2: 6×1 min fuerte / 90 s suave. Semanas 3-5: 8×1 min, o fartlek 10×(1 min fuerte / 1 min suave). Semanas 6-9: 4-5×3 min a umbral / 2 min. Semanas 10-15: bloques de 3 a 5 min a ritmo de carrera.\n\nRitmos de referencia HOY: series cortas 5:50-6:10 · umbral 6:20-6:40. Se recalibran con el test de 5 km de principios de octubre; el ritmo objetivo del 10K sale de ahí.\n\nRegla: si la última repetición sale más lenta que la primera, empezaste demasiado rápido. Mejor terminar pudiendo hacer una más.",
-        "Weeks 1-2: 6×1 min hard / 90 s easy. Weeks 3-5: 8×1 min, or fartlek 10×(1 min hard / 1 min easy). Weeks 6-9: 4-5×3 min at threshold / 2 min. Weeks 10-15: blocks of 3 to 5 min at race pace.\n\nReference paces TODAY: short reps 5:50-6:10 · threshold 6:20-6:40. These get recalibrated by the 5 km test in early October; target 10K pace comes from there.\n\nRule: if the last rep is slower than the first, you started too fast. Better to finish able to do one more.")},
+   how:B("Lo que toca hoy está en la tarjeta de arriba. Ritmos de referencia: series cortas 5:50-6:10 · umbral 6:20-6:40 · ritmo objetivo, el que salga del test de octubre.\n\nRegla: si la última repetición sale más lenta que la primera, empezaste demasiado rápido. Mejor terminar pudiendo hacer una más.",
+        "Today's session is in the card above. Reference paces: short reps 5:50-6:10 · threshold 6:20-6:40 · target pace, whatever the October test gives.\n\nRule: if the last rep is slower than the first, you started too fast. Better to finish able to do one more.")},
   {n:B("Enfriamiento","Cool-down"),m:"cardio",sets:0,reps:"10 min",chips:[],yt:"",
    how:B("Trote muy suave hasta que el pulso baje de 120. Y marca lap al empezar y terminar cada repetición: con eso puedo ver si mantuviste el ritmo en todas y —lo más útil— cuánto te baja el pulso en cada recuperación, que es de los mejores indicadores de que estás cogiendo forma.",
         "Very easy jog until HR drops below 120. And press lap at the start and end of each rep: that lets me see whether you held the pace across all of them and — most useful — how far your HR drops in each recovery, one of the best signs that fitness is coming.")}
 ]},
 
 runLong:{title:B("Tirada larga","Long run"),sub:B("La sesión que más pesa · progresiva, nunca plana","The session that matters most · progressive, never flat"),load:"long",type:"run",km:"10-14 km",items:[
-  {n:B("Objetivo de la sesión","What this session is for"),m:"cardio",sets:0,reps:"",chips:[B("Léelo","Read this")],yt:"",
-   how:B("Construir lo que de verdad sostiene un 10K: densidad mitocondrial, capilarización, volumen sistólico y oxidación de grasas. Todo eso depende del TIEMPO acumulado a intensidad baja, no del esfuerzo — por eso hay que ir suave, para poder durar. Y como cae el día después del día de carga, además entrenas algo específico: correr con las piernas ya cansadas, que es exactamente lo que te va a pasar en el kilómetro 8 de Ponle Freno.",
-        "Build what actually sustains a 10K: mitochondrial density, capillarisation, stroke volume and fat oxidation. All of that depends on accumulated TIME at low intensity, not on effort — that's why you go easy, so you can last. And since it falls the day after the load day, you also train something specific: running on already-tired legs, exactly what happens at km 8 of the race.")},
   {n:B("Tirada progresiva","Progressive long run"),m:"cardio",sets:0,reps:"50-75 min",chips:[B("Empieza lento","Start slow")],yt:"",
    how:B("Divídela en tres tercios. Primero a 8:00-8:15, más lento de lo que te apetece. Segundo a 7:40-8:00. Último a 6:50-7:10, y solo si el ritmo anterior te resulta fácil.\n\nEl error número uno es empezar a tu ritmo cómodo: entonces no queda margen para progresar y el último tercio se convierte en agonía. Debes terminar pensando «podría haber seguido un poco más».\n\nSi la haces fuera, truco: haz el último tercio de vuelta a casa, que acelerar cuesta mucho menos acercándose al final que alejándose.",
         "Split it in thirds. First at 8:00-8:15, slower than you feel like. Second at 7:40-8:00. Last at 6:50-7:10, and only if the previous pace feels easy.\n\nThe number one mistake is starting at your comfortable pace: then there's no room to progress and the last third becomes a grind. You should finish thinking «I could have kept going a bit».\n\nTrick: run the last third heading home. Speeding up is far easier when you're closing in than when you're heading away.")},
@@ -2079,10 +2073,30 @@ function marcasCard(){
     filasA+"</div>";
 }
 
+/* El racional del plan entero: por qué esta estructura y qué hace cada día.
+   Vive aquí, plegable y con la memoria del pliegue, en vez de dentro de cada
+   sesión: con las zapatillas puestas se quiere lo del día, no la teoría. */
+function racionalCard(){
+  var t=T(B(
+"**Los tres días hacen cosas distintas, y esa es toda la idea.**\n\n"+
+"**Martes · calidad.** Sube el VO₂max, mejora la economía de carrera y enseña al músculo a tamponar lactato. Es el ÚNICO día que se corre por encima del umbral, y por eso los otros dos van suaves de verdad: si los tres van a medio gas no se estimula ninguna de las dos vías. Es el error más repetido del corredor popular.\n\n"+
+"**Jueves · suave y corto.** Construye lo que sostiene un 10K: densidad mitocondrial, capilarización, volumen sistólico y oxidación de grasas. Todo eso depende del TIEMPO acumulado a intensidad baja, no del esfuerzo. Las rectas del final son adaptación neuromuscular sin coste metabólico: mejoran la técnica sin añadir fatiga.\n\n"+
+"**Domingo · tirada progresiva.** Empieza suave y termina rápida. Correr rápido con las piernas ya cansadas es específico de competir: es lo que pasa en el kilómetro 8. Y cae justo después del día de carga a propósito.\n\n"+
+"**Los tres bloques.** Semanas 1-4: volver, con series de un minuto. Semanas 5-9: construir, con umbral y cuestas, y el test de 5 km del 4 de octubre que recalibra todos los ritmos. Semanas 10-15: ritmo de carrera, con la sesión clave el 3 de noviembre — cuatro bloques de cinco minutos a ritmo objetivo. Si esa sale bien, la marca está.\n\n"+
+"**Y el peso.** Agosto con déficit, que el volumen aún es bajo. Desde septiembre, cuando la tirada pase de 60-65 minutos, a mantenimiento: con más volumen y déficit el entrenamiento produce fatiga en vez de adaptación.",
+"**The three days do different things, and that's the whole idea.**\n\n"+
+"**Tuesday · quality.** Raises VO₂max, improves running economy and teaches the muscle to buffer lactate. It's the ONLY day above threshold, which is why the other two are genuinely easy.\n\n"+
+"**Thursday · easy and short.** Builds mitochondrial density, capillarisation, stroke volume and fat oxidation — all dependent on accumulated TIME at low intensity. The strides are neuromuscular adaptation with no metabolic cost.\n\n"+
+"**Sunday · progressive long run.** Starts easy, finishes fast. Running fast on tired legs is specific to racing: it's what happens at km 8. And it falls right after the load day on purpose.\n\n"+
+"**The three blocks.** Weeks 1-4: come back. Weeks 5-9: build, with the 5 km test on 4 October recalibrating every pace. Weeks 10-15: race pace, with the key session on 3 November.\n\n"+
+"**And weight.** Deficit through August; from September, maintenance."));
+  return foldCard("racional","🧭 "+T(B("Cómo funciona el plan","How the plan works")),"",t,false);
+}
+
 function carreraView(){
   if(!cloudOn())return '<p class="note">'+T(B("Inicia sesión para ver tu plan.","Sign in to see your plan."))+"</p>";
   if(GACT.data===null){loadGact();return '<p class="note">'+T(B("Cargando carreras…","Loading runs…"))+"</p>";}
-  return raceHeadCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
+  return raceHeadCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
 }
 
 /* ---------- dashboard ---------- */
