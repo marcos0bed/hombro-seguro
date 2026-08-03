@@ -341,7 +341,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v162";
+var APP_VERSION="v163";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1532,7 +1532,7 @@ function render(keepScroll){
     /* La ficha va del día que se ha tocado en el selector, no de hoy. Sofi
        tocaba MAR y le seguía saliendo lo del lunes, o sea nada. */
     var rxI=rxIdx(),wRx=getWeek()[rxI],sRx=wRx&&getSession(wRx.sid);
-    if(sRx&&sRx.type==="run")h+=planCard(fechaDeIdx(rxI));
+    if(sRx&&(sRx.type==="run"||planDelDia(fechaDeIdx(rxI))))h+=planCard(fechaDeIdx(rxI));
     h+=rutinaView();
   }
   else if(state.tab==="cuenta"){
@@ -1797,7 +1797,7 @@ function planDelDia(dia){
    hueco se quedaba con el rótulo de la carrera: el jueves ponía "Rodaje suave
    30 min" encima de Lower B. */
 function planTitulo(dia,ses){
-  if(ses&&ses.type!=="run")return null;
+  if(ses&&ses.type==="gym")return null;
   var R=raceCfg(),d=(R&&R.plan&&R.plan[dia])||null;
   if(d&&!Array.isArray(d)&&typeof d==="object"&&d.t)return T(d.t)||null;
   return null;
@@ -1829,10 +1829,15 @@ function planCard(dia){
      [etiqueta, contenido]. En ficha se lee de un vistazo con las zapatillas
      puestas; en párrafo hay que descifrarlo. */
   var cuerpo=pasosHTML(t);
+  /* Se corre el día que se puede, no el que pone el calendario. Sin esto la
+     sesión se quedaba en su fecha y el día real aparecía como descanso. */
+  var mv=dia!==TODAY?'<button class="abtn ghost" data-act="planhoy" data-d="'+dia+
+    '" style="margin:10px 4px 2px;width:auto;padding:6px 12px;font-size:12px">'+
+    T(B("Lo hice hoy","Did it today"))+"</button>":"";
   return '<div class="card" style="border-left:3px solid var(--acc)"><div class="exhead">'+
-    '<div class="tlab">🎯 '+T(B("Hoy toca","Today"))+
+    '<div class="tlab">🎯 '+(dia===TODAY?T(B("Hoy toca","Today")):T(B("Ese día","That day")))+
     (sem?' <span class="snum">'+T(B("semana","week"))+" "+sem+" "+T(B("de 15","of 15"))+"</span>":"")+
-    "</div></div>"+cuerpo+"</div>";
+    "</div></div>"+cuerpo+mv+"</div>";
 }
 var MESC=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 /* Los días futuros no se pueden abrir desde Rutina: dayOff solo va hacia atrás,
@@ -2111,7 +2116,8 @@ function adherenceCard(){
   var runs=runsOf(lun);
   var hechos={};runs.forEach(function(a){hechos[a.start_time.slice(0,10)]=(hechos[a.start_time.slice(0,10)]||0)+(a.distance_km||0)});
   var ok=0,filas=ks.map(function(d){
-    var plan=R.plan[d],hecho=Math.round((hechos[d]||0)*10)/10;
+    var hecho=Math.round((hechos[d]||0)*10)/10;
+    var plan=planTitulo(d)||T(B("sesión del plan","planned session"));
     var bien=hecho>0;if(bien)ok++;
     return '<div class="wkrow"><span>'+d.slice(8,10)+"/"+d.slice(5,7)+'</span><span style="color:'+
       (bien?"var(--ok)":"var(--mut)")+'">'+(bien?"✓ "+hecho+" km":"—")+'</span><span class="note">'+esc(String(plan))+"</span></div>";
@@ -3667,6 +3673,19 @@ document.addEventListener("click",function(e){
     /* Solo marca adherencia al plan. El registro cardio con datos reales
        (km, ritmo, FC) llega solo desde Garmin vía la sincronización. */
     var k="done:"+TODAY+":"+b.dataset.sid;W(k,!S(k,false));
+    render(true);return;
+  }
+  if(act==="planhoy"){
+    var org=b.dataset.d,R=raceCfg();
+    if(!R||!R.plan||!R.plan[org]){render(true);return}
+    /* Intercambio, no copia: si hoy ya tenía sesión se va al hueco que deja la
+       movida, para no perderla ni contarla dos veces. */
+    var plan={};for(var kk in R.plan)plan[kk]=R.plan[kk];
+    var deHoy=plan[TODAY];
+    plan[TODAY]=plan[org];
+    if(deHoy!==undefined)plan[org]=deHoy;else delete plan[org];
+    R.plan=plan;W("race",R);
+    state.rxSid=null;state.sid=null;
     render(true);return;
   }
   if(act==="savelog"){

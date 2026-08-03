@@ -30,7 +30,9 @@ ok("tarjeta no, porque no hay qué hacer",planCard("2026-08-11")==="","");
 print("\n== Si ese día no se corre, el plan no manda ==");
 W("race",{name:"x",date:"2026-11-15",km:10,plan:plan});
 ok("una sesión de pesas conserva su nombre",planTitulo("2026-08-11",{type:"gym"})===null,String(planTitulo("2026-08-11",{type:"gym"})));
-ok("un descanso también",planTitulo("2026-08-11",{type:"rest"})===null,"");
+/* Un descanso sí lo coge: es donde aterriza una sesión movida con "Lo hice
+   hoy". El veto es solo para las pesas, que tienen nombre propio. */
+ok("un descanso sí, que es donde cae lo que se mueve",planTitulo("2026-08-11",{type:"rest"})==="Series 6 × 1 min","");
 ok("y la de correr sí lo coge",planTitulo("2026-08-11",{type:"run"})==="Series 6 × 1 min","");
 ok("sin decir qué sesión, se comporta como antes",planTitulo("2026-08-11")==="Series 6 × 1 min","");
 
@@ -50,5 +52,20 @@ ok("un día sin plan conserva el suyo",!/Series 6 × 1 min/.test(vOtro),"");
 print("\n== Sin plan de carrera ninguno ==");
 W("race",null);
 ok("no inventa títulos",planTitulo("2026-08-11")===null,"");
+
+
+print("\n== Mover una sesión al día en que se hizo ==");
+var hoy=iso(new Date()),man=iso(new Date(new Date().getTime()+86400000));
+var pl={};pl[man]={t:{es:"Rodaje suave 25 min",en:"Easy run 25 min"},p:[["Rodaje","25 min"]]};
+W("race",{name:"x",date:"2026-11-15",km:10,plan:pl});
+ok("la ficha de mañana ofrece moverla",/data-act="planhoy"/.test(planCard(man)),"");
+ok("la de hoy no, que ya es hoy",!/data-act="planhoy"/.test(planCard(hoy)),"");
+
+var R=raceCfg(),pl2={};for(var k in R.plan)pl2[k]=R.plan[k];
+var deHoy=pl2[hoy];pl2[hoy]=pl2[man];if(deHoy!==undefined)pl2[man]=deHoy;else delete pl2[man];
+R.plan=pl2;W("race",R);
+ok("tras moverla, hoy tiene la sesión",planTitulo(hoy)==="Rodaje suave 25 min",String(planTitulo(hoy)));
+ok("y mañana se queda vacío",planTitulo(man)===null,String(planTitulo(man)));
+ok("no se ha duplicado",Object.keys(raceCfg().plan).length===1,String(Object.keys(raceCfg().plan).length));
 
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
