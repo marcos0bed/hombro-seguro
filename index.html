@@ -324,7 +324,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v141";
+var APP_VERSION="v142";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -885,12 +885,33 @@ runEasy:{title:B("Rodaje suave","Easy run"),sub:B("Corto a propósito · el que 
    how:B("6 aceleraciones de 20 segundos al final, rápidas y sueltas, parando hasta recuperar del todo. Mejoran técnica y economía sin añadir fatiga, porque son demasiado cortas para acumular lactato.",
         "6 accelerations of 20 seconds at the end, fast and relaxed, with full recovery between. They improve form and economy without adding fatigue — too short to build up lactate.")}
 ]},
-run1:{title:B("HIIT o rodaje","Intervals or easy run"),sub:B("La sesión intensa de carrera de la semana","The week's hard running session"),load:"hard",type:"run",km:"5-8 km",
-  note:B("El único hueco de la semana donde el HIIT no le roba recuperación a nada: dos días después del pesado de piernas y tres antes de la tirada larga. Formato: 6-10×400 m, 30/30 o cuestas cortas, en cinta o en calle. Que sea CORRIENDO — nada de circuitos con burpees, battle ropes o thrusters: eso es tren superior encubierto con gestos overhead. El braceo de los sprints no es problema para el hombro. Si vienes justo de recuperación o aún arrastras el catarro, cámbialo por rodaje fácil sin pensarlo.",
-        "The one slot in the week where intervals don't steal recovery from anything else: two days after the heavy leg session and three before the long run. Format: 6-10×400 m, 30/30s or short hills, treadmill or road. Keep it RUNNING — no circuits with burpees, battle ropes or thrusters: that's upper body in disguise with overhead movements. The arm swing of sprinting is no problem for the shoulder. If you're short on recovery or still shaking off a cold, swap it for an easy run without hesitating.")},
-runLong:{title:B("Tirada larga","Long run"),sub:B("La salida de referencia de la semana","The reference run of the week"),load:"long",type:"run",km:"10-12 km",
-  note:B("Ritmo sostenible, brazos relajados. Es la base del 10K, no una carrera. Llegas con el viernes de pierna a dos días de distancia y el sábado sólo de tren superior y rodaje suave: las piernas deberían estar frescas. Mañana lunes descansas.",
-        "Sustainable pace, relaxed arms. It's your 10K base, not a race. You arrive with Friday's leg day two days back and Saturday only upper body plus an easy jog: the legs should be fresh. Tomorrow, Monday, you rest.")},
+run1:{title:B("Calidad","Quality"),sub:B("El día que se corre rápido · 45-55 min","The day you run fast · 45-55 min"),load:"hard",type:"run",km:"6-9 km",items:[
+  {n:B("Objetivo de la sesión","What this session is for"),m:"cardio",sets:0,reps:"",chips:[B("Léelo","Read this")],yt:"",
+   how:B("Subir el VO₂max, mejorar la economía de carrera y enseñarle al músculo a tamponar lactato. Es el único día de la semana en el que se corre por encima del umbral, y por eso los otros dos van suaves de verdad: si los tres días van a medio gas no se estimula ninguna de las dos vías. Aquí sí aprietas.",
+        "Raise VO₂max, improve running economy and teach the muscle to buffer lactate. It's the only day of the week you run above threshold, which is exactly why the other two are genuinely easy: if all three are moderate you stimulate neither pathway. This is the day you push.")},
+  {n:B("Calentamiento","Warm-up"),m:"cardio",sets:0,reps:"12-15 min",chips:[],yt:"",
+   how:B("Trote a 7:45-8:15 subiendo poco a poco, y 4 rectas de 20 s al final para despertar la pierna. No lo recortes: entrar en series con la pierna fría es como se rompen los gemelos y el sóleo, y tú vienes de meses sin correr rápido.",
+        "Jog at 7:45-8:15 easing in, plus 4 strides of 20 s at the end to wake the legs up. Don't cut it: cold legs into intervals is how calves and soleus tear, and you're coming back from months without fast running.")},
+  {n:B("Bloque principal","Main set"),m:"cardio",sets:0,reps:"según la semana",chips:[B("Aquí aprietas","Push here")],yt:"",
+   how:B("Semanas 1-2: 6×1 min fuerte / 90 s suave. Semanas 3-5: 8×1 min, o fartlek 10×(1 min fuerte / 1 min suave). Semanas 6-9: 4-5×3 min a umbral / 2 min. Semanas 10-15: bloques de 3 a 5 min a ritmo de carrera.\n\nRitmos de referencia HOY: series cortas 5:50-6:10 · umbral 6:20-6:40. Se recalibran con el test de 5 km de principios de octubre; el ritmo objetivo del 10K sale de ahí.\n\nRegla: si la última repetición sale más lenta que la primera, empezaste demasiado rápido. Mejor terminar pudiendo hacer una más.",
+        "Weeks 1-2: 6×1 min hard / 90 s easy. Weeks 3-5: 8×1 min, or fartlek 10×(1 min hard / 1 min easy). Weeks 6-9: 4-5×3 min at threshold / 2 min. Weeks 10-15: blocks of 3 to 5 min at race pace.\n\nReference paces TODAY: short reps 5:50-6:10 · threshold 6:20-6:40. These get recalibrated by the 5 km test in early October; target 10K pace comes from there.\n\nRule: if the last rep is slower than the first, you started too fast. Better to finish able to do one more.")},
+  {n:B("Enfriamiento","Cool-down"),m:"cardio",sets:0,reps:"10 min",chips:[],yt:"",
+   how:B("Trote muy suave hasta que el pulso baje de 120. Y marca lap al empezar y terminar cada repetición: con eso puedo ver si mantuviste el ritmo en todas y —lo más útil— cuánto te baja el pulso en cada recuperación, que es de los mejores indicadores de que estás cogiendo forma.",
+        "Very easy jog until HR drops below 120. And press lap at the start and end of each rep: that lets me see whether you held the pace across all of them and — most useful — how far your HR drops in each recovery, one of the best signs that fitness is coming.")}
+]},
+
+runLong:{title:B("Tirada larga","Long run"),sub:B("La sesión que más pesa · progresiva, nunca plana","The session that matters most · progressive, never flat"),load:"long",type:"run",km:"10-14 km",items:[
+  {n:B("Objetivo de la sesión","What this session is for"),m:"cardio",sets:0,reps:"",chips:[B("Léelo","Read this")],yt:"",
+   how:B("Construir lo que de verdad sostiene un 10K: densidad mitocondrial, capilarización, volumen sistólico y oxidación de grasas. Todo eso depende del TIEMPO acumulado a intensidad baja, no del esfuerzo — por eso hay que ir suave, para poder durar. Y como cae el día después del día de carga, además entrenas algo específico: correr con las piernas ya cansadas, que es exactamente lo que te va a pasar en el kilómetro 8 de Ponle Freno.",
+        "Build what actually sustains a 10K: mitochondrial density, capillarisation, stroke volume and fat oxidation. All of that depends on accumulated TIME at low intensity, not on effort — that's why you go easy, so you can last. And since it falls the day after the load day, you also train something specific: running on already-tired legs, exactly what happens at km 8 of the race.")},
+  {n:B("Tirada progresiva","Progressive long run"),m:"cardio",sets:0,reps:"50-75 min",chips:[B("Empieza lento","Start slow")],yt:"",
+   how:B("Divídela en tres tercios. Primero a 8:00-8:15, más lento de lo que te apetece. Segundo a 7:40-8:00. Último a 6:50-7:10, y solo si el ritmo anterior te resulta fácil.\n\nEl error número uno es empezar a tu ritmo cómodo: entonces no queda margen para progresar y el último tercio se convierte en agonía. Debes terminar pensando «podría haber seguido un poco más».\n\nTruco: haz el último tercio de vuelta a casa. Acelerar cuesta mucho menos cuando te acercas al final que cuando te alejas.",
+        "Split it in thirds. First at 8:00-8:15, slower than you feel like. Second at 7:40-8:00. Last at 6:50-7:10, and only if the previous pace feels easy.\n\nThe number one mistake is starting at your comfortable pace: then there's no room to progress and the last third becomes a grind. You should finish thinking «I could have kept going a bit».\n\nTrick: run the last third heading home. Speeding up is far easier when you're closing in than when you're heading away.")},
+  {n:B("Avituallamiento","Fuelling"),m:"cardio",sets:0,reps:"a partir de 60 min",chips:[],yt:"",
+   how:B("Por debajo de una hora no hace falta nada más que agua. A partir de ahí, 30-60 g de carbohidratos por hora — un gel o un plátano — y beber aunque no tengas sed. En agosto y con tu déficit, salir en ayunas a una tirada de más de una hora es la forma más rápida de terminarla arrastrándote y de comerte el resto del día con hambre.",
+        "Under an hour, water is enough. Beyond that, 30-60 g of carbs per hour — a gel or a banana — and drink even if you're not thirsty. In August and on your deficit, heading out fasted for a run over an hour is the fastest way to finish it crawling and to spend the rest of the day starving.")}
+]},
+
 
 hotelA:{title:B("Hotel · Full-body A","Hotel · Full-body A"),sub:B("Con gimnasio de hotel","With a hotel gym"),type:"gym",items:[
   {n:B("Goblet squat","Goblet squat"),sets:3,reps:"10",chips:[B("Agarre neutro","Neutral grip")],yt:"goblet squat technique",how:B("Mancuerna vertical al pecho. Torso erguido, cero implicación del hombro.","Dumbbell held vertical at your chest. Torso upright, zero shoulder involvement.")},
