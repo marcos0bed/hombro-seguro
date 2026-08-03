@@ -319,7 +319,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v132";
+var APP_VERSION="v133";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1282,14 +1282,20 @@ es:{grips:'<div class="card lcard"><h3>Glosario de agarres</h3><ul>'+
   "<li><b>Progresión</b>: 2 sesiones limpias → +1-2 reps → al tope del rango en todas las series → +2,5-5% de peso y vuelta al mínimo.</li>"+
   "<li><b>Post-tratamiento</b>: el hombro puede sentirse mejor de lo que está. Que no duela no autoriza a cargar más ni a probar máximos.</li></ul></div>",
  ban:'<div class="card dcard"><h3>Prohibidos esta fase</h3><ul>'+
-  "<li>Press militar y todo press overhead.</li><li>Banca plana con barra.</li><li>Aperturas/flys con mancuernas.</li>"+
-  "<li>Fondos / dips.</li><li>Elevaciones laterales con carga (es el gesto exacto del conflicto subacromial).</li>"+
+  "<li>Press militar y todo press overhead.</li><li>Aperturas/flys con mancuernas.</li>"+
+  "<li>Fondos / dips.</li>"+
+  "<li>Elevaciones laterales <b>en el plano lateral puro</b> (el gesto exacto del conflicto subacromial). La abducción en plano escapular sí está autorizada — ver abajo.</li>"+
   "<li>Aducción horizontal forzada con carga (cruzar el brazo sobre el pecho): comprime la acromioclavicular, que ya muestra cambios degenerativos en las ecos de 2026. En cruces de polea o goma, las manos se encuentran en la línea media — no la cruzan.</li>"+
   "<li>Contractora / pec-deck (los brazos de mariposa de tu multiestación): fija el brazo a ~90° de abducción y fuerza la aducción horizontal — junta los dos gestos anteriores en uno. Esos brazos, sin usar esta fase.</li>"+
   "<li>Upright row / remo al mentón (el peor gesto posible para este cuadro).</li><li>Extensiones de tríceps overhead.</li>"+
-  "<li>Dead hang, incluso con pies apoyados (la barra queda como anclaje de gomas).</li>"+
+  "<li><b>Colgarse, incluso con los pies apoyados.</b> Ana lo confirmó el 3-ago-2026: no es por el pinzamiento, es porque <b>sobrecarga la acromioclavicular</b> — abre el espacio subacromial pero comprime la AC, y el roce repetido puede provocar artritis y osteofitos. Lo que sí abre el espacio es remo, rotadores y protracciones. La barra queda como anclaje de gomas.</li>"+
   "<li>Sentadilla trasera convencional (rack position = rotación externa + abducción); low-bar en particular. Con la SSB no hay motivo para asumirlo.</li>"+
   "<li>Ab-wheel y core colgado de barra.</li><li>Flexiones profundas (las inclinadas con codos pegados sí valen).</li></ul></div>",
+ ok:'<div class="card lcard"><h3>✅ Autorizado el 3-ago-2026</h3>'+
+  "<p class=\"note\">Tras confirmar por ecografía que la calcificación se ha reabsorbido. Las condiciones son de Ana y no son opcionales.</p><ul>"+
+  "<li><b>Press de banca con barra</b>: <b>muy poco peso</b> para empezar, <b>escápulas juntas</b>, <b>hombros abajo</b> y <b>sin hiperlordosis</b> (nada de arquear como en powerlifting). En máquina no hay problema en ningún caso; lo que preocupa es el balanceo de la barra libre.</li>"+
+  "<li><b>Abducción en plano escapular</b>: brazo <b>30° por delante</b> del cuerpo y <b>sin pasar de la horizontal</b>. Fuera de esos dos límites vuelve a ser una elevación lateral de las prohibidas.</li>"+
+  "<li><b>Carga en general</b>: subir <b>poco a poco</b>. El tendón sigue menos elástico y el Tendovis tarda ~6 meses en actuar (valorar hacia dic-2026).</li></ul></div>",
  exit:'<div class="card lcard"><h3>Salida de fase — llevar a la revisión</h3><ul>'+
   "<li>¿Qué <b>techo de carga</b> me autorizas para press? Y en concreto: ¿qué criterios (dolor, rango, fuerza, imagen) me pones para volver a la <b>banca plana</b>, y en qué plazo realista?</li>"+
   "<li><b>Ondas de choque</b>: rehabilitación y traumatología me habéis dicho cosas opuestas (parar por riesgo para el tendón vs. seguir porque funcionan). ¿En qué dato se apoya cada postura? ¿Cambia algo que la calcificación haya pasado de ~2 cm a 6-7 mm?</li>"+
@@ -1309,14 +1315,20 @@ en:{grips:'<div class="card lcard"><h3>Grip glossary</h3><ul>'+
   "<li><b>Progression</b>: 2 clean sessions → +1-2 reps → top of the range on all sets → +2.5-5% load and back to the bottom of the range.</li>"+
   "<li><b>Post-treatment</b>: the shoulder can feel better than it actually is. No pain is not a licence to load heavier or test maxes.</li></ul></div>",
  ban:'<div class="card dcard"><h3>Banned this phase</h3><ul>'+
-  "<li>Military press and all overhead pressing.</li><li>Flat barbell bench press.</li><li>Dumbbell flys.</li>"+
-  "<li>Dips.</li><li>Loaded lateral raises (the exact impingement movement).</li>"+
+  "<li>Military press and all overhead pressing.</li><li>Dumbbell flys.</li>"+
+  "<li>Dips.</li>"+
+  "<li>Loaded lateral raises <b>in the pure lateral plane</b> (the exact impingement movement). Scapular-plane abduction IS cleared — see below.</li>"+
   "<li>Loaded forced horizontal adduction (crossing the arm over the chest): it compresses the AC joint, which already shows degenerative changes on the 2026 scans. In cable or band flys, hands meet at the midline — they don't cross it.</li>"+
   "<li>Pec-deck (the butterfly arms on your multigym): it pins the arm at ~90° abduction and forces horizontal adduction — both risky gestures combined into one. Those arms stay unused this phase.</li>"+
   "<li>Upright rows (the single worst movement for this condition).</li><li>Overhead triceps extensions.</li>"+
-  "<li>Dead hangs, even with feet supported (the bar stays as a band anchor).</li>"+
+  "<li><b>Hanging, even with feet supported.</b> Confirmed by Dr. Ana on 3 Aug 2026: not because of impingement, but because it <b>overloads the AC joint</b> — it opens the subacromial space but compresses the AC, and repeated rubbing can cause arthritis and osteophytes. What does open the space: rows, rotators and protractions. The bar stays as a band anchor.</li>"+
   "<li>Conventional back squat (rack position = external rotation + abduction); low-bar especially. With an SSB there's no reason to take that risk.</li>"+
   "<li>Ab-wheel and hanging core work.</li><li>Deep push-ups (incline push-ups with tucked elbows are fine).</li></ul></div>",
+ ok:'<div class="card lcard"><h3>✅ Cleared on 3 Aug 2026</h3>'+
+  "<p class=\"note\">After ultrasound confirmed the calcification has resorbed. The conditions are Dr. Ana's and are not optional.</p><ul>"+
+  "<li><b>Barbell bench press</b>: <b>very light weight</b> to start, <b>shoulder blades squeezed</b>, <b>shoulders down</b> and <b>no hyperlordosis</b> (no powerlifting arch). Machines are fine in any case; the concern is the free bar wobbling.</li>"+
+  "<li><b>Scapular-plane abduction</b>: arm <b>30° in front</b> of the body and <b>never above horizontal</b>. Outside those two limits it becomes one of the banned lateral raises.</li>"+
+  "<li><b>Loading in general</b>: build up <b>gradually</b>. The tendon is still less elastic and Tendovis takes ~6 months to act (reassess around Dec 2026).</li></ul></div>",
  exit:'<div class="card lcard"><h3>Phase exit — bring to your review</h3><ul>'+
   "<li>What <b>pressing load ceiling</b> do you authorize? Specifically: what criteria (pain, range, strength, imaging) do you set for returning to the <b>flat bench press</b>, and on what realistic timeline?</li>"+
   "<li><b>Shock waves</b>: rehab and traumatology have told me opposite things (stop for tendon risk vs. continue because they work). What data supports each position? Does the calcification shrinking from ~2 cm to 6-7 mm change anything?</li>"+
@@ -1523,7 +1535,7 @@ function render(keepScroll){
       if(cx2.foot)foot='<p class="note" style="margin:14px 4px;color:var(--mut)">'+esc(cx2.foot)+"</p>";
       if(cx2.history)h+='<div class="card lcard"><h3>'+esc(cx2.historyT||"")+'</h3><p class="note" style="margin-top:6px">'+esc(cx2.history)+"</p></div>";
     }
-    h+=R.grips+rules+R.ban+R.exit+foot;
+    h+=R.grips+rules+(R.ok||"")+R.ban+R.exit+foot;
   }
   v.className=state.tab;
   v.innerHTML=h;
