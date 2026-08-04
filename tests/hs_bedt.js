@@ -5,6 +5,17 @@ function chain(){var o={};["from","select","insert","upsert","update","delete","
 sb={from:function(){return chain()},auth:{signOut:function(){}}}; sbUser={id:"u1"};
 state.dayRange=1; state.dayOff=0; METRICS.data=ROWS; TODAY=ROWS[ROWS.length-1].day;
 
+/* selDay() lee el reloj de verdad, no el TODAY que fija la suite. Mientras el
+   fixture se capturó hoy las dos fechas coincidían y todo pasaba; al día
+   siguiente la tarjeta buscaba datos de una fecha sin datos y fallaba todo.
+   El verde solo valía el día que se grabó el fixture. */
+selDay=function(){var d=new Date(TODAY+"T12:00:00");d.setDate(d.getDate()-(state.dayOff||0));return iso(d)};
+/* refrescaDia() existe para poner TODAY al día real cuando la app lleva
+   abierta desde ayer. En una suite anclada a un fixture es justo lo que no
+   se quiere: cualquier render() intermedio desanclaba la fecha y las
+   comprobaciones posteriores miraban un día sin datos. */
+refrescaDia=function(){return false};
+
 print("\n== Conversión de horas ==");
 ok("23:45 de anoche -> -0,25",bedNorm(23.75)===-0.25,String(bedNorm(23.75)));
 ok("-0,25 se escribe 23:45",bedFmt(-0.25)==="23:45",bedFmt(-0.25));

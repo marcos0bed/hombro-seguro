@@ -4,6 +4,17 @@ function chain(){var o={};["from","select","insert","upsert","update","delete","
 sb={from:function(){return chain()},auth:{signOut:function(){}}}; sbUser={id:"u1"};
 var R=JSON.parse(readFile("/tmp/hs_real.json"));
 state.dayRange=1; state.dayOff=0; TODAY=R.day; LOGS.data=[];
+
+/* selDay() lee el reloj de verdad, no el TODAY que fija la suite. Mientras el
+   fixture se capturó hoy las dos fechas coincidían y todo pasaba; al día
+   siguiente la tarjeta buscaba datos de una fecha sin datos y fallaba todo.
+   El verde solo valía el día que se grabó el fixture. */
+selDay=function(){var d=new Date(TODAY+"T12:00:00");d.setDate(d.getDate()-(state.dayOff||0));return iso(d)};
+/* refrescaDia() existe para poner TODAY al día real cuando la app lleva
+   abierta desde ayer. En una suite anclada a un fixture es justo lo que no
+   se quiere: cualquier render() intermedio desanclaba la fecha y las
+   comprobaciones posteriores miraban un día sin datos. */
+refrescaDia=function(){return false};
 METRICS.data=[{day:R.day,steps:9000,distance_km:6.5,weight_kg:86.6,body_fat_pct:23.7,kcal_in:1900,kcal_out:2900,
                sleep_h:7.6,hrv_ms:29,rhr:57,bed_h:0,sleep_start_h:0.45,sleep_lat_min:28,
                stress_curve:R.stress_curve,rest_win:R.rest_win,meals_kcal:R.meals_kcal}];

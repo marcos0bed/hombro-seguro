@@ -4,6 +4,17 @@ var ROWS=JSON.parse(readFile("/tmp/hs_bed.json"));
 function chain(){var o={};["from","select","insert","upsert","update","delete","eq","gte","lte","order","limit","maybeSingle","single","in","neq"].forEach(function(m){o[m]=function(){return o}});o.then=function(r){try{r&&r({data:[],error:null})}catch(e){}return o};o.catch=function(){return o};return o}
 sb={from:function(){return chain()},auth:{signOut:function(){}}}; sbUser={id:"u1"};
 state.dayRange=1; state.dayOff=0; LOGS.data=[]; METRICS.data=ROWS; TODAY=ROWS[ROWS.length-1].day;
+
+/* selDay() lee el reloj de verdad, no el TODAY que fija la suite. Mientras el
+   fixture se capturó hoy las dos fechas coincidían y todo pasaba; al día
+   siguiente la tarjeta buscaba datos de una fecha sin datos y fallaba todo.
+   El verde solo valía el día que se grabó el fixture. */
+selDay=function(){var d=new Date(TODAY+"T12:00:00");d.setDate(d.getDate()-(state.dayOff||0));return iso(d)};
+/* refrescaDia() existe para poner TODAY al día real cuando la app lleva
+   abierta desde ayer. En una suite anclada a un fixture es justo lo que no
+   se quiere: cualquier render() intermedio desanclaba la fecha y las
+   comprobaciones posteriores miraban un día sin datos. */
+refrescaDia=function(){return false};
 var hoy=ROWS[ROWS.length-1];
 
 print("\n== Los km junto a los pasos ==");
@@ -31,7 +42,8 @@ var m=/· ([\d.]+) km/.exec(h7);
 ok("hay km en la vista de 7 días",!!m,h7.slice(0,60));
 if(m){
   // misma ventana que usa la app: 7 días naturales hacia atrás desde hoy
-  var lim=new Date(); lim.setDate(lim.getDate()-6); lim=iso(lim);
+  // anclado a TODAY, no al reloj: la app calcula la ventana desde el día que mira
+  var lim=new Date(TODAY+"T12:00:00"); lim.setDate(lim.getDate()-6); lim=iso(lim);
   var ult=ROWS.filter(function(r){return r.day>=lim&&r.distance_km!=null}).map(function(r){return +r.distance_km});
   var med=ult.reduce(function(a,b){return a+b},0)/ult.length;
   ok("y es la media real de esos días ("+med.toFixed(2)+")",Math.abs(+m[1]-med)<0.05,m[1]+" vs "+med.toFixed(2));
