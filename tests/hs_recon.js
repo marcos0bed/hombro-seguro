@@ -69,4 +69,17 @@ ok("no hay reconciliación",!/registró el reloj/.test(v2),"");
 ok("ni pliegue: el detalle es lo que se necesita antes",!/Cómo era la sesión/.test(v2),"");
 ok("y las instrucciones están",/Cómo hacerlo|How to do it/.test(v2),"");
 
+
+print("\n== La segunda sesión del día también se reconcilia ==");
+/* El día real de Marcos: rodaje a las 8:46 y tirones a las 9:40. */
+W("ses:"+D,null);
+LOGS.data=[];   /* una sección anterior dejó series registradas; aquí no las hay */
+GACT.data=[{activity_id:20,start_time:D+"T08:46:00",type:"running",distance_km:4.8,duration_min:35.5,hr_avg:145},
+           {activity_id:21,start_time:D+"T09:40:00",type:"strength_training",duration_min:38.9,calories:244,hr_avg:114}];
+var run=hechoCard(D,{type:"run"}), pesas=hechoCard(D,{type:"gym"});
+ok("la carrera trae lo suyo",/4.80 km/.test(run)&&!/244 kcal/.test(run),"");
+ok("la fuerza trae lo suyo",/39 min/.test(pesas)&&/244 kcal/.test(pesas),"");
+ok("y no se mezclan",!/km/.test(pesas),"");
+ok("la fuerza avisa de que faltan las series",/las series no están registradas/.test(pesas),"");
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
