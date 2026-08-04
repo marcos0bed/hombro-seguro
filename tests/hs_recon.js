@@ -52,4 +52,21 @@ GACT.data=[{activity_id:6,start_time:D+"T08:00:00",type:"walking",distance_km:3,
 ok("un paseo no es la sesión de correr",hechoCard(D,{type:"run"})==="","");
 ok("un día de descanso no reconcilia nada",hechoCard(D,{type:"rest"})==="","");
 
+
+print("\n== Hecha la sesión, el detalle se pliega ==");
+GACT.data=[{activity_id:9,start_time:D+"T08:46:00",type:"running",distance_km:4.8,duration_min:35.5,hr_avg:145}];
+var v1=sessionView("run1",D);
+ok("sale la reconciliación",/registró el reloj|watch recorded/.test(v1),"");
+ok("y el detalle queda plegado",/Cómo era la sesión|What the session was/.test(v1),"");
+ok("sin las instrucciones a la vista",!/Cómo hacerlo|How to do it/.test(v1),"");
+W("fold:ses:run1",true);
+ok("al abrirlo, vuelven",/Cómo hacerlo|How to do it/.test(sessionView("run1",D)),"");
+
+print("\n== Sin hacer, manda el detalle ==");
+GACT.data=[];
+var v2=sessionView("run1",D);
+ok("no hay reconciliación",!/registró el reloj/.test(v2),"");
+ok("ni pliegue: el detalle es lo que se necesita antes",!/Cómo era la sesión/.test(v2),"");
+ok("y las instrucciones están",/Cómo hacerlo|How to do it/.test(v2),"");
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

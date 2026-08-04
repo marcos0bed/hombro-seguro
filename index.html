@@ -353,7 +353,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v168";
+var APP_VERSION="v169";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1257,8 +1257,20 @@ function sessionView(sid,dia){
     /* Las sesiones de carrera solo enseñaban los km y el botón: sus bloques
        —objetivo, calentamiento, series, enfriamiento— nunca llegaban a pintarse
        porque esta rama no recorría los items. Era escribir el detalle para nadie. */
-    h+=hechoCard(dia||selDay(),s);
-    (s.items||[]).forEach(function(it,i){h+=exCard(sid,i,it,i,(s.items||[]).length)});
+    /* Antes de entrenar el detalle es lo importante; después estorba. Cuando
+       el reloj ya ha traído la sesión, las instrucciones se pliegan y manda el
+       resultado, que es lo que uno mira al volver. */
+    var rec=hechoCard(dia||selDay(),s);
+    h+=rec;
+    var cuerpoEx=(s.items||[]).map(function(it,i){return exCard(sid,i,it,i,(s.items||[]).length)}).join("");
+    if(rec){
+      var kf="fold:ses:"+sid,ab=S(kf,null);
+      if(ab===null||ab===undefined)ab=false;
+      h+='<div class="card" style="padding:0"><button class="foldh" data-act="fold" data-k="ses:'+sid+'" aria-expanded="'+(ab?"true":"false")+'">'+
+         "<h3>"+T(B("Cómo era la sesión","What the session was"))+"</h3>"+
+         '<span class="foldr"><span class="chev">'+(ab?"▾":"▸")+"</span></span></button></div>"+
+         (ab?cuerpoEx:"");
+    }else h+=cuerpoEx;
   }else if(s.type==="rest"){
     h+='<div class="card"><h3>'+esc(T(s.title))+'</h3><p class="note" style="margin-top:6px">'+esc(T(s.note)||"")+"</p></div>";
   }else{
