@@ -49,3 +49,15 @@ var d=dayCard();
 ok("en Hoy no hay peso ni comida",!/⚖️|🧈|Kcal in|Por comer/.test(d),"");
 ok("pero sí pasos y sueño",/👣/.test(d)&&/😴/.test(d),"");
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));
+
+print("\n== En Progreso no le sale la tarjeta de peso ==");
+/* Dos guiones y un número: no pesa ni mide grasa, y el VO2max ya está en
+   Your body today. */
+METRICS.data=[{day:"2026-08-03",vo2max:45.8,steps:9000,rhr:50,sleep_h:7.3},
+              {day:"2026-08-04",vo2max:45.8,steps:8000,rhr:50,sleep_h:7.0}];
+state.pview="balance";
+var bv=balanceView();
+ok("sin tarjeta de último peso",!/lastWeight|Último peso|Last weight/i.test(bv),bv.slice(0,140));
+ok("y sin grasa corporal en esa tarjeta",!/Grasa corporal|Body fat/i.test(bv.slice(0,600)),"");
+ok("pero la vista sigue existiendo",bv.length>200,String(bv.length));
+

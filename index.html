@@ -353,7 +353,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v172";
+var APP_VERSION="v173";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3622,6 +3622,9 @@ function balanceView(){
 
   var vR=M.filter(function(r){return r.vo2max!=null});
   var lastV=vR[vR.length-1];
+  /* En un perfil solo-running esta tarjeta son dos guiones y un número: no hay
+     peso ni grasa, y el VO2max ya sale en Your body today. */
+  if(!runOnly())
   h+='<div class="card"><div style="display:flex;gap:8px;flex-wrap:nowrap">'+
      '<div style="flex:1;min-width:0"><div class="tlab">'+u("lastWeight")+'</div><div class="big" style="font-size:23px">'+(lastW?(+lastW.weight_kg).toFixed(1)+" kg":"—")+'</div>'+(lastW?'<span class="note" style="color:var(--mut);font-size:10px">'+lastW.day.slice(5)+"</span>":"")+"</div>"+
      '<div style="flex:1;min-width:0"><div class="tlab">'+u("bodyFat")+'</div><div class="big" style="font-size:23px;color:var(--ok)">'+(lastF?(+lastF.body_fat_pct).toFixed(1)+"%":"—")+'</div>'+(lastF?'<span class="note" style="color:var(--mut);font-size:10px">'+lastF.day.slice(5)+"</span>":"")+"</div>"+
