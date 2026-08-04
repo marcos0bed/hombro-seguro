@@ -10,7 +10,7 @@ porqué de cada cambio.
 
 | | |
 |---|---|
-| **Marcos** | 47. Head of Data & Analytics. Entrena **por las mañanas**. |
+| **Marcos** | **50** (9-abr-1976), **1,78 m**. Head of Data & Analytics. Entrena **por las mañanas**. |
 | **Lorena** | 45, su mujer. Usuario `lorena`. |
 | **Lorena Sofía** | 19, su hija. Usuario `sofia`. "Sofi". |
 
@@ -30,6 +30,24 @@ Sofía es perfil **solo running** (`rt.mode==="run"`): nada de comida ni peso.
 - **No mezclar este proyecto con el corpus de OneData**, que es trabajo.
 - **Nunca versionar** `classify/`, `map.json`, cookies de MFP ni datos
   personales. El respaldo del corpus lo hace él con Time Capsule.
+
+## Nutrición de Marcos
+
+Objetivo **83 kg** desde 87 (ago-2026). La tendencia de 43 pesadas da
+**−272 g/semana**, que es justo lo que hace falta para llegar el 15-nov: **no
+hay que tocar las calorías**. El objetivo no es un número fijo, varía con la
+carga del día: 1.555 en día suave, 1.800 en duro, 1.880 en día largo, con la
+proteína siempre en 160 g. Media semanal 1.753. Está en `goal.macros`.
+
+**Registra un 33% menos de lo que come** (2.465 reales contra 1.662
+apuntados), que es la tasa habitual de subregistro. **El objetivo está
+calibrado en esas mismas unidades**, así que funciona mientras siga apuntando
+igual. Si algún día empieza a registrar con precisión, hay que recalibrarlo a
+la vez o creerá que se ha pasado.
+
+El gasto de Garmin (2.764) **sí es bueno**: coincide al 3% con Mifflin-St
+Jeor × 1,55. Lo que nunca hay que hacer es restar el registrado del gasto: esa
+diferencia de 1.100 kcal es ficción.
 
 ## Las carreras
 
