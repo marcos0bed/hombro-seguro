@@ -353,7 +353,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v167";
+var APP_VERSION="v168";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1328,23 +1328,25 @@ function rutinaView(){
      torso junto al rodaje suave. Concentrar la carga en menos días protege los
      días de descanso de verdad, en vez de tener seis días a medio gas. El icono
      del selector lo marca con un punto. */
-  var WK=getWeek(),idx=rxIdx(),sid=WK[idx].sid,s=getSession(sid),h="";
+  var WK=getWeek(),idx=rxIdx(),dia=fechaDeIdx(idx);
+  var wDia=diaDe(dia,WK[idx]),sid=wDia.sid,s=getSession(sid),h="";
   h+='<div class="rxdays">'+WK.map(function(w,i){
-      var ws=getSession(w.sid),ic=ws&&ws.type==="run"?"🏃":(ws&&ws.type==="rest"?"😴":"💪");
-      if(w.plus&&getSession(w.plus))ic+='<i class="rxplus"></i>';
-      var cls=i===idx?"sel":(isDone(w.sid)?"done":"");
-      return '<button data-act="rxday" data-sid="'+w.sid+'"'+(cls?' class="'+cls+'"':"")+
+      var wi=diaDe(fechaDeIdx(i),w);
+      var ws=getSession(wi.sid),ic=ws&&ws.type==="run"?"🏃":(ws&&ws.type==="rest"?"😴":"💪");
+      if(wi.plus&&getSession(wi.plus))ic+='<i class="rxplus"></i>';
+      var cls=i===idx?"sel":(isDone(wi.sid)?"done":"");
+      return '<button data-act="rxday" data-sid="'+wi.sid+'"'+(cls?' class="'+cls+'"':"")+
         ' aria-label="'+esc(T(w.name))+'"><span class="rxi">'+ic+"</span>"+esc(T(w.d))+"</button>";
     }).join("")+"</div>";
   if(!s)return h;
-  var extra=WK[idx].plus&&getSession(WK[idx].plus)?WK[idx].plus:null;
+  var extra=wDia.plus&&getSession(wDia.plus)?wDia.plus:null;
   /* Las pesas van primero: correr antes deja piernas y core cansados para
      estabilizar en el press. */
   var pre=extra?('<div class="card" style="border-left:3px solid var(--acc)"><div class="exhead"><div class="tlab">💪 '+
       esc(T(getSession(extra).title))+' <span class="snum">'+T(B("primero las pesas, después el rodaje","lift first, then run"))+
       "</span></div></div></div>"+
       (getSession(extra).items||[]).map(function(it,i){return exCard(extra,i,it,i,(getSession(extra).items||[]).length)}).join("")):"";
-  if(s.type!=="gym")return h+pre+sessionView(sid,fechaDeIdx(idx));
+  if(s.type!=="gym")return h+pre+sessionView(sid,dia);
 
   var c=rxCount(sid),f=rxFocus(sid);
   var pct=c.total?Math.round(c.done/c.total*100):0;
@@ -1528,7 +1530,8 @@ function render(keepScroll){
     h+=habCard();
     h+=doneTodayBox();
     if(state.sid&&idx!==todayIdx)h+='<button class="backlink" data-act="back">'+u("back")+"</button>";
-    var sS=getSession(WK[idx].sid);
+    var wHoy=diaDe(sdD,WK[idx]);
+    var sS=getSession(wHoy.sid);
     var pastD=(state.dayOff||0)>0&&!state.sid;
     var wkOpen=!!state.wkOpen&&!pastD;
     if(sS){
@@ -1539,7 +1542,7 @@ function render(keepScroll){
       }else{
         h+='<button class="card wkhead" data-act="togglewk" aria-expanded="'+wkOpen+'">'+
            "<span>"+sIc+" "+esc(tS)+'</span><span class="chev">'+(wkOpen?"▾":"▸")+"</span></button>";
-        if(wkOpen)h+=sessionView(WK[idx].sid);
+        if(wkOpen)h+=sessionView(wHoy.sid,sdD);
       }
     }
     h+=briefCard();
@@ -1820,6 +1823,18 @@ function planTitulo(dia,ses){
   return null;
 }
 /* La fecha real que le toca a cada posición de la semana en curso. */
+/* Un día suelto puede llevar otra sesión que la de su plantilla: se adelantó,
+   se cambió de sitio, se hizo otra cosa. La clave "ses:<fecha>" manda sobre el
+   día de la semana, y solo para esa fecha. Sin esto la única forma de mover
+   una sesión era retocar la semana entera, que la cambia para siempre. */
+function diaDe(dia,base){
+  var o=S("ses:"+dia,null);
+  if(!o||!o.sid||!getSession(o.sid))return base;
+  var c={};for(var k in base)c[k]=base[k];
+  c.sid=o.sid;
+  if("plus" in o)c.plus=o.plus||null;
+  return c;
+}
 function fechaDeIdx(i){
   var d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7)+i);return iso(d);
 }
@@ -1864,8 +1879,9 @@ function proximasCard(){
   var W=getWeek(),hoy=new Date(),filas=[];
   for(var k=1;k<=7;k++){
     var d=new Date(hoy);d.setDate(d.getDate()+k);
-    var ds=iso(d),w=W[(d.getDay()+6)%7];
-    if(!w)continue;
+    var ds=iso(d),w0=W[(d.getDay()+6)%7];
+    if(!w0)continue;
+    var w=diaDe(ds,w0);
     var s=getSession(w.sid);if(!s)continue;
     var pasos=planDelDia(ds),cuerpo="";
     if(pasos)cuerpo=pasosHTML(pasos);
