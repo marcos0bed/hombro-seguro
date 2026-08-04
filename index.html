@@ -353,7 +353,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v170";
+var APP_VERSION="v171";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3169,6 +3169,46 @@ function loadOf(sid){
   });
   return (tot&&legs/tot>=.5)?"hard":"soft";
 }
+/* Movimiento que NO es entreno: limpiar, jardín, un día de mucho recado. Su
+   NEAT va de 200 a 1.100 kcal según el día, y un presupuesto fijo lo ignora
+   entero. Se resta el entreno de las calorías activas (descontando la parte
+   basal que Garmin incluye en la actividad) para no pagar dos veces la sesión,
+   que ya está en el objetivo del día. Los paseos con los perros SÍ cuentan
+   como NEAT: son vida cotidiana, no entreno. */
+function neatDe(r){
+  if(!r||r.kcal_active==null)return null;
+  var dia=r.day,ej=0;
+  (GACT.data||[]).forEach(function(a){
+    if((a.start_time||"").slice(0,10)!==dia)return;
+    if((a.type||"")==="walking")return;
+    var basal=(r.kcal_bmr||0)/1440*(a.duration_min||0);
+    ej+=Math.max(0,(a.calories||0)-basal);
+  });
+  return r.kcal_active-ej;
+}
+function neatBase(){
+  var G=S("goal",{})||{};
+  if(G.neatBase!=null)return +G.neatBase;
+  var v=[];
+  (METRICS.data||[]).slice(-45).forEach(function(r){
+    var n=neatDe(r); if(n!=null&&n>0)v.push(n);
+  });
+  if(v.length<10)return null;
+  v.sort(function(a,b){return a-b});
+  return v[Math.floor(v.length/2)];
+}
+/* Solo se devuelve la mitad del exceso: las calorías activas de Garmin tiran
+   al alza, y devolverlo todo convierte "moverse más" en "comer más" y borra
+   el déficit. Con tope, para que un día raro no dispare el presupuesto. */
+function neatExtra(r){
+  var G=S("goal",{})||{};
+  if(G.neat===false)return 0;
+  var b=neatBase(),n=neatDe(r);
+  if(b==null||n==null)return 0;
+  var share=(G.neatShare!=null)?+G.neatShare:0.5;
+  var cap=(G.neatCap!=null)?+G.neatCap:400;
+  return Math.max(0,Math.min(cap,Math.round((n-b)*share)));
+}
 function macroGoal(day){
   var G=S("goal",{})||{};
   /* Los valores por defecto son los del plan integrado. Quien tenga rutina
@@ -3260,7 +3300,9 @@ function macroCard(){
   var g=macroGoal(day);
   if(!g)return "";                               // sin objetivos aplicables a esta cuenta
   var got={prot:+((r&&r.protein_g)||0),carb:+((r&&r.carbs_g)||0),fat:+((r&&r.fat_g)||0)};
-  var kcalG=Math.round(g.prot*4+g.carb*4+g.fat*9);
+  var kcalBase=Math.round(g.prot*4+g.carb*4+g.fat*9);
+  var extra=neatExtra(r);
+  var kcalG=kcalBase+extra;
   /* La etiqueta dice QUÉ cambia (los carbohidratos) y POR QUÉ (la sesión del
      día). "Día suave" no se entendía: no aclaraba si lo suave era el entreno
      o la comida. La proteína no aparece aquí porque nunca varía. */
@@ -3302,8 +3344,11 @@ function macroCard(){
       comido+" / "+kcalG+" kcal</span></div></div>";
   return '<div class="card" style="padding:11px 13px"><div class="exhead" style="margin-bottom:9px">'+
     '<div class="tlab macd">'+sIc+" "+esc(sN)+" · "+esc(T(kindL))+"</div>"+
-    '<span class="macnote">'+kcalG+" kcal</span></div>"+
+    '<span class="macnote">'+kcalG+" kcal"+(extra?" <span style=\"color:var(--ok)\">+"+extra+"</span>":"")+"</span></div>"+
     '<div class="macrow">'+cols+"</div>"+barra+
+    (extra?'<p class="note" style="margin:8px 4px 0;color:var(--mut)">'+
+      T(B("+"+extra+" kcal por moverte más de lo normal hoy (limpieza, jardín, recados). No cuenta el entreno, que ya está en el objetivo del día.",
+          "+"+extra+" kcal for moving more than usual today (cleaning, garden, errands). Training isn't counted: it's already in the day's target."))+"</p>":"")+
     (incompleto?'<p class="macwarn">'+T(B("Registro incompleto: faltan comidas por meter, así que esto no cuadra y el día no cuenta para las medias.","Incomplete log: meals are missing, so this doesn\'t add up and the day won\'t count toward averages."))+"</p>":"")+
     "</div>";
 }
