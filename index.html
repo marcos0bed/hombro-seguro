@@ -353,7 +353,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v166";
+var APP_VERSION="v167";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1257,10 +1257,12 @@ function sessionView(sid,dia){
     /* Las sesiones de carrera solo enseñaban los km y el botón: sus bloques
        —objetivo, calentamiento, series, enfriamiento— nunca llegaban a pintarse
        porque esta rama no recorría los items. Era escribir el detalle para nadie. */
+    h+=hechoCard(dia||selDay(),s);
     (s.items||[]).forEach(function(it,i){h+=exCard(sid,i,it,i,(s.items||[]).length)});
   }else if(s.type==="rest"){
     h+='<div class="card"><h3>'+esc(T(s.title))+'</h3><p class="note" style="margin-top:6px">'+esc(T(s.note)||"")+"</p></div>";
   }else{
+    h+=hechoCard(dia||selDay(),s);
     var ordV=orderedIdx(sid,s.items);
     ordV.forEach(function(oi,pos){h+=exCard(sid,oi,s.items[oi],pos,s.items.length)});
     if(sid!=="manguito"&&sid!=="activo"&&shoulderUser())h+=painBlock();
@@ -1894,13 +1896,18 @@ function proximasCard(){
 /* Tramos del reloj. El total de una sesión no distingue una de series de un
    rodaje del mismo tiempo: 3 km en 25 min sale igual seas quien seas. Los
    tramos son los que dicen si las series salieron al ritmo pedido. */
-function lapsCard(){
-  var conL=(GACT.data||[]).filter(function(a){
-    return /running/.test(a.type||"")&&a.raw&&a.raw.laps&&a.raw.laps.length>1;
-  });
-  if(!conL.length)return "";
-  conL.sort(function(x,y){return x.start_time<y.start_time?1:-1});
-  var a=conL[0],L=a.raw.laps;
+function lapsCard(act){
+  var a=act;
+  if(!a){
+    var conL=(GACT.data||[]).filter(function(x){
+      return /running/.test(x.type||"")&&x.raw&&x.raw.laps&&x.raw.laps.length>1;
+    });
+    if(!conL.length)return "";
+    conL.sort(function(x,y){return x.start_time<y.start_time?1:-1});
+    a=conL[0];
+  }
+  if(!a||!a.raw||!a.raw.laps||a.raw.laps.length<2)return "";
+  var L=a.raw.laps;
   var pm=L.map(function(l){return (l.km>0)?l.min/l.km:null});
   var val=pm.filter(function(x){return x!=null&&isFinite(x)&&x>0});
   if(!val.length)return "";
@@ -1935,6 +1942,80 @@ function lapsCard(){
   return '<div class="card"><div class="exhead"><div class="tlab">\u23f1 '+
     T(B("Tramos del reloj","Watch laps"))+' <span class="snum">'+f+" \u00b7 "+
     (a.distance_km||0).toFixed(2)+" km</span></div></div>"+filas+leg+"</div>";
+}
+/* Reconciliación: lo que pedía la sesión contra lo que registró el reloj.
+   "Completado" no distingue haber rodado a 7:05 de haberlo hecho a 8:00
+   cuando el plan pedía 7:45-8:15, y esa diferencia es justo la que decide si
+   el rodaje construye base o la gasta. */
+/* fmtMin da "0:35:30", que es el formato de un tiempo de carrera. Para la
+   duración de una sesión se lee mucho mejor "35 min" y "1 h 21 min". */
+function fmtDur(m){
+  m=Math.round(m||0);
+  return m>=60?(Math.floor(m/60)+" h "+pad(m%60)+" min"):(m+" min");
+}
+function actsDe(dia){
+  if(GACT.data===null){loadGact();return null}
+  return (GACT.data||[]).filter(function(a){return (a.start_time||"").slice(0,10)===dia});
+}
+function rangoPlan(dia){
+  var t=planDelDia(dia);
+  if(!Array.isArray(t))return null;
+  for(var i=0;i<t.length;i++){
+    var txt=Array.isArray(t[i])?T(t[i][1]):String(t[i]);
+    var m=/(\d+):(\d{2})\s*-\s*(\d+):(\d{2})/.exec(txt);
+    if(m)return {rap:+m[1]*60+ +m[2], len:+m[3]*60+ +m[4], txt:m[0]};
+  }
+  return null;
+}
+function hechoCard(dia,ses){
+  if(!cloudOn()||!ses)return "";
+  var acts=actsDe(dia);
+  if(acts===null)return "";
+  var esRun=ses.type==="run";
+  var mios=acts.filter(function(a){
+    return esRun?/running/.test(a.type||""):(a.type||"")==="strength_training";
+  });
+  if(!mios.length)return "";
+  var km=0,mins=0,fc=[],fcx=0,kcal=0;
+  mios.forEach(function(a){
+    km+=a.distance_km||0; mins+=a.duration_min||0; kcal+=a.calories||0;
+    if(a.hr_avg)fc.push(a.hr_avg);
+    if(a.hr_max&&a.hr_max>fcx)fcx=a.hr_max;
+  });
+  var fcm=fc.length?Math.round(fc.reduce(function(x,y){return x+y},0)/fc.length):null;
+  var filas=[],veredicto="";
+  if(esRun){
+    var pm=km>0?mins/km:null;
+    filas.push([B("Distancia","Distance"),km.toFixed(2)+" km"]);
+    filas.push([B("Tiempo","Time"),fmtDur(mins)]);
+    if(pm)filas.push([B("Ritmo","Pace"),fmtPace(pm)+"/km"]);
+    if(fcm)filas.push([B("Pulso","HR"),fcm+(fcx?" / "+fcx:"")+" ppm"]);
+    var R=rangoPlan(dia);
+    if(R&&pm){
+      var sg=Math.round(pm*60);
+      if(sg<R.rap)veredicto=T(B("Más rápido de lo pedido ("+R.txt+"): ","Faster than asked ("+R.txt+"): "))+
+        Math.round(R.rap-sg)+T(B(" s/km de más."," s/km too quick."));
+      else if(sg>R.len)veredicto=T(B("Más lento de lo pedido ("+R.txt+"): ","Slower than asked ("+R.txt+"): "))+
+        Math.round(sg-R.len)+T(B(" s/km."," s/km."));
+      else veredicto=T(B("Dentro del rango pedido ("+R.txt+").","Within the asked range ("+R.txt+")."));
+    }
+  }else{
+    filas.push([B("Tiempo","Time"),fmtDur(mins)]);
+    if(fcm)filas.push([B("Pulso","HR"),fcm+(fcx?" / "+fcx:"")+" ppm"]);
+    if(kcal)filas.push([B("Calorías","Calories"),kcal+" kcal"]);
+    var hoyL=(LOGS.data||[]).filter(function(l){return l.day===dia&&(l.total_sets||0)>0});
+    var series=hoyL.reduce(function(x,l){return x+(l.total_sets||0)},0);
+    if(series)filas.push([B("Series registradas","Sets logged"),String(series)]);
+    else veredicto=T(B("El reloj tiene el tiempo, pero las series no están registradas: eso solo lo sabe la app.",
+                       "The watch has the time, but the sets aren't logged: only the app knows those."));
+  }
+  var cuerpo=filas.map(function(f){
+    return '<div class="sesr"><span class="sesl">'+esc(T(f[0]))+'</span><span class="sesd">'+esc(f[1])+"</span></div>";
+  }).join("");
+  return '<div class="card" style="border-left:3px solid var(--ok)"><div class="exhead"><div class="tlab">📥 '+
+    T(B("Lo que registró el reloj","What the watch recorded"))+"</div></div>"+cuerpo+
+    (veredicto?'<p class="note" style="margin:8px 4px 0">'+esc(veredicto)+"</p>":"")+"</div>"+
+    (esRun?lapsCard(mios.filter(function(a){return a.raw&&a.raw.laps})[0]):"");
 }
 function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
 /* Riegel parte de que la marca de referencia fue a tope. Proyectar desde un
