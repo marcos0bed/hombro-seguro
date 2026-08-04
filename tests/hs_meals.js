@@ -104,3 +104,17 @@ ok("ayer no hereda la hora de hoy",mealsCard()===""||!/value="14:15"/.test(meals
 state.dayOff=0;
 
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));
+
+print("\n== El aviso de registro incompleto no regaña a media mañana ==");
+/* 405 kcal a las 11:27 no es un registro malo: es que aún no ha comido. */
+METRICS.data=[{day:TODAY,kcal_in:405,protein_g:51,carbs_g:3,fat_g:22}];
+W("goal",{macros:{prot:160,soft:{carb:60,fat:75},hard:{carb:110,fat:80},long:{carb:130,fat:80}}});
+var m=macroCard();
+ok("la tarjeta se pinta",m.length>200,String(m.length));
+var esTarde=new Date().getHours()>=21;
+ok("de día no avisa; de noche sí",/Registro incompleto/.test(m)===esTarde,"hora="+new Date().getHours());
+state.dayOff=1;
+var ayer=macroCard();
+ok("un día cerrado sí avisa",!ayer||!/kcal_in/.test(ayer),"");
+state.dayOff=0;
+
