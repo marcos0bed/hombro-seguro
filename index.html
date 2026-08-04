@@ -353,7 +353,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v171";
+var APP_VERSION="v172";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1357,6 +1357,10 @@ function rutinaView(){
   var pre=extra?('<div class="card" style="border-left:3px solid var(--acc)"><div class="exhead"><div class="tlab">💪 '+
       esc(T(getSession(extra).title))+' <span class="snum">'+T(B("primero las pesas, después el rodaje","lift first, then run"))+
       "</span></div></div></div>"+
+      /* La segunda sesión del día también se hace y también la registra el
+         reloj. Sin esto, quien dobla fuerza sobre un día de correr solo veía
+         reconciliada la carrera. */
+      hechoCard(dia,getSession(extra))+
       (getSession(extra).items||[]).map(function(it,i){return exCard(extra,i,it,i,(getSession(extra).items||[]).length)}).join("")):"";
   if(s.type!=="gym")return h+pre+sessionView(sid,dia);
 
