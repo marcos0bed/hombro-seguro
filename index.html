@@ -253,6 +253,10 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .lapm,.laphr{font-size:10.5px;color:var(--mut);text-align:right}
 .lapleg{display:flex;gap:14px;margin:10px 4px 0;font-size:10.5px;color:var(--mut)}
 .lapleg b{font-family:var(--mono);color:var(--fg);font-weight:600}
+.wakeb{margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}
+.wakes{display:flex;gap:7px;margin-top:8px}
+.wkb{flex:1;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--mut);font-family:var(--mono);font-size:14px}
+.wkb.on{background:var(--acc);border-color:var(--acc);color:#12100C;font-weight:700}
 .rxplus{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--acc);vertical-align:super;margin-left:1px}
 .pbr{display:flex;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line)}
 .pbr:last-child{border-bottom:0}
@@ -353,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v173";
+var APP_VERSION="v174";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3492,7 +3496,24 @@ function habCard(){
     madr:!!(mr&&mr.sleep_start_h!=null&&mr.sleep_start_h>=3&&mr.sleep_start_h<7)};
   return '<div class="card"><h3>'+u("habT")+'</h3><div class="hab">'+HABITS.map(function(hb){
     var on=!!st[hb.k]||!!auto[hb.k];
-    return '<button class="habb'+(on?" on":"")+'" data-act="habit" data-h="'+hb.k+'" aria-label="'+esc(T(hb.n))+'" aria-pressed="'+on+'">'+hb.i+"</button>"}).join("")+"</div></div>";
+    return '<button class="habb'+(on?" on":"")+'" data-act="habit" data-h="'+hb.k+'" aria-label="'+esc(T(hb.n))+'" aria-pressed="'+on+'">'+hb.i+"</button>"}).join("")+"</div>"+
+    despertarBloque(day)+"</div>";
+}
+/* Cómo se levanta, del 1 al 5. En quince días de comparar banda contra reloj,
+   este número resultó ser el mejor instrumento de los tres: correlaciona con
+   las horas dormidas (+0,46) mucho mejor que el score del aparato (+0,20), y
+   los dos aparatos le puntúan de media 12 puntos por debajo de lo que él
+   siente. Estaba en el diario como texto libre; aquí es un toque y entra en
+   las gráficas. */
+function despertarBloque(day){
+  var v=+S("wake:"+day,0);
+  var lab=[B("fatal","awful"),B("flojo","poor"),B("normal","ok"),B("bien","good"),B("perfecto","great")];
+  return '<div class="wakeb"><div class="tlab">'+T(B("¿Cómo te has levantado?","How did you wake up?"))+
+    (v?' <span class="snum">'+T(lab[v-1])+"</span>":"")+"</div><div class=\"wakes\">"+
+    [1,2,3,4,5].map(function(n){
+      return '<button class="wkb'+(v===n?" on":"")+'" data-act="wake" data-v="'+n+
+        '" aria-label="'+n+'/5 · '+esc(T(lab[n-1]))+'" aria-pressed="'+(v===n)+'">'+n+"</button>";
+    }).join("")+"</div></div>";
 }
 
 /* Resumen en Hoy: pasos, sueño, HRV, FC reposo, kcal in/out.
@@ -3902,6 +3923,11 @@ document.addEventListener("click",function(e){
   if(act==="how"){var how=b.closest(".card").querySelector(".how");how.classList.toggle("open");return}
   if(act==="xtoggle"){var xt=document.getElementById(b.dataset.x);if(xt)xt.classList.toggle("open");return}
   if(act==="pain"){W("pain:"+TODAY,+b.dataset.v);render(true);return}
+  if(act==="wake"){
+    var kw="wake:"+selDay(),nv=+b.dataset.v;
+    W(kw,S(kw,0)===nv?0:nv);   /* volver a tocar el mismo lo borra */
+    haptic(1);render(true);return;
+  }
   if(act==="run-done"){
     /* Solo marca adherencia al plan. El registro cardio con datos reales
        (km, ritmo, FC) llega solo desde Garmin vía la sincronización. */
