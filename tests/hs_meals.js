@@ -118,3 +118,5 @@ var ayer=macroCard();
 ok("un día cerrado sí avisa",!ayer||!/kcal_in/.test(ayer),"");
 state.dayOff=0;
 
+
+print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

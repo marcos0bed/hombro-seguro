@@ -78,7 +78,10 @@ la pauta quiere que haga más.
 
 - Cambiar `index.html` obliga a subir **`APP_VERSION` y `CACHE` en `sw.js`**, o
   el móvil sirve la versión cacheada.
-- **`tests/run.sh`** antes de cada commit. 25 suites, JavaScriptCore.
+- **`tests/run.sh`** antes de cada commit. 29 suites, JavaScriptCore. Una
+  suite solo pasa si su última línea es `TODO OK`: mirar solo si pone `FALLOS`
+  daba verde a un fichero que ni siquiera compilaba. Toda suite nueva debe
+  terminar con la línea de resumen.
   Las que usan fixtures anclan `TODAY` y anulan `refrescaDia()`: sin eso el
   verde solo vale el día en que se grabó el fixture.
 - Las sustituciones de texto sobre `index.html` **deben verificarse**
