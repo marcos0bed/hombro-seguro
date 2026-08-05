@@ -98,6 +98,15 @@ El título del plan manda sobre el de la plantilla **salvo en días de pesas**.
 `getSession()` cae a la rutina integrada si `kv.routine` no define ese id, así
 que una rutina personalizada puede traer solo lo que cambia.
 
+## Fuentes de datos: qué es normal y qué no
+
+- **MyFitnessPal: resuelto el 4-ago-2026.** Chrome en el mini con un perfil por
+  persona y renovación semanal automática. **No hay fecha de caducidad que
+  vigilar; no volver a sacarlo.**
+- **Apple Health es MANUAL**, volcando el fichero a mano. Que lleve días sin
+  actualizarse **no es un fallo** del sync ni hay que avisar de ello.
+- Garmin y la báscula sí son automáticos: ahí un hueco sí merece mirarse.
+
 ## Herramientas (`~/corpus-tools`, repo aparte)
 
 `fitmet_sync.sh` orquesta: `mfptool` · `garmintool` (`sync`, `push`,
