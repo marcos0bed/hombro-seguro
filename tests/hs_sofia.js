@@ -61,3 +61,5 @@ ok("sin tarjeta de último peso",!/lastWeight|Último peso|Last weight/i.test(bv
 ok("y sin grasa corporal en esa tarjeta",!/Grasa corporal|Body fat/i.test(bv.slice(0,600)),"");
 ok("pero la vista sigue existiendo",bv.length>200,String(bv.length));
 
+
+print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

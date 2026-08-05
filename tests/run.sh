@@ -16,6 +16,9 @@ for f in "$D"/hs_*.js; do
   [ "$n" = "hs_harness" ] && continue
   out=$("$JSC" "$D/hs_harness.js" "$APP" "$f" 2>&1 | tail -1)
   printf "%-12s %s\n" "$n" "$out"
-  [[ "$out" == *FALLOS* ]] && fallos=1
+  # Cualquier cosa que no sea "TODO OK" es un fallo. Antes solo se miraba si
+  # ponía FALLOS, así que una suite que ni siquiera compilaba pasaba por buena:
+  # el error de sintaxis no lleva esa palabra. Tres veces dio verde en falso.
+  [[ "$out" == *"TODO OK"* ]] || fallos=1
 done
 exit $fallos

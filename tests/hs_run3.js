@@ -57,3 +57,5 @@ ok("pero sí deja apuntar lo hecho",/aria-label="Reps"/.test(cRun),"");
 var cGym=exCard("upA",0,{n:B("Press","Press"),sets:3,reps:"8-12"},0,3);
 ok("la de pesas sigue pidiendo peso",/aria-label="Weight"/.test(cGym),"");
 
+
+print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

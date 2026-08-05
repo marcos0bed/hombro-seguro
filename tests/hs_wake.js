@@ -13,7 +13,7 @@ ok("ninguno marcado al principio",!/wkb on/.test(c),"");
 /* Las cinco etiquetas SÍ están en los aria-label de los botones, que es lo
    correcto para un lector de pantalla. Lo que no debe salir es el rótulo de la
    cabecera, que resume lo elegido. */
-ok("y sin rótulo en la cabecera hasta que eliges",!/class=\snum\/.test(c),"");
+ok("y sin rótulo en la cabecera hasta que eliges",c.indexOf("snum")<0,"");
 
 print("\n== Al elegir ==");
 W("wake:"+hoy,4);
