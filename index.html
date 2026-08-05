@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v174";
+var APP_VERSION="v175";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1606,7 +1606,11 @@ function render(keepScroll){
       var rp=runplanCard();
       h+=rp||'<div class="card"><p class="note">'+T(B("Aún no hay plan de running asignado.","No running plan assigned yet."))+"</p></div>";
     }else{
-      getWeek().forEach(function(w,i){
+      getWeek().forEach(function(w0,i){
+        /* La semana también respeta las excepciones por fecha. Sin esto, mover
+           una sesión de día se veía en Hoy y en Rutina pero no aquí, y la
+           pantalla que uno mira para orientarse era la única que mentía. */
+        var w=diaDe(fechaDeIdx(i),w0);
         var s=getSession(w.sid);var done=isDone(w.sid);
         var tPlan=planTitulo(fechaDeIdx(i),s);
         h+='<button class="dayrow'+(i===todayIdx?" today":"")+'" data-act="day" data-sid="'+w.sid+'">'+

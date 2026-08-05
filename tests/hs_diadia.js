@@ -37,4 +37,17 @@ var threw=null;
 try{["hoy","rutina","semana"].forEach(function(t){state.tab=t;render()})}catch(e){threw=e}
 ok("render sin excepción",threw===null,threw?String(threw):"");
 
+
+print("\n== La pestaña Semana también respeta la excepción ==");
+var lunI=iso(new Date(new Date().getTime()-((new Date().getDay()+6)%7)*86400000));
+W("ses:"+lunI,{sid:"lowB"});
+state.tab="semana";state.wview="week";
+var threw=null,html="";
+try{render();html=document.getElementById("view").innerHTML||""}catch(e){threw=e}
+ok("render sin excepción",threw===null,threw?String(threw):"");
+ok("el lunes muestra la sesión puesta a mano",/Lower B/.test(html),html.slice(0,200));
+W("ses:"+lunI,null);
+try{render();html=document.getElementById("view").innerHTML||""}catch(e){threw=e}
+ok("y al quitarla vuelve la plantilla",!/Lower B/.test(html)||/Descanso/.test(html),"");
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
