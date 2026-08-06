@@ -49,6 +49,10 @@ El gasto de Garmin (2.764) **sí es bueno**: coincide al 3% con Mifflin-St
 Jeor × 1,55. Lo que nunca hay que hacer es restar el registrado del gasto: esa
 diferencia de 1.100 kcal es ficción.
 
+**Marcos NO cena, por norma.** Come en ventana ~10:00-15:30 (ayuno 18/6). Que
+falte la hora de la cena **no es un hueco de registro**: es que no cenó. No
+pedirla ni contarla como dato ausente. Lo mismo con días sin batido.
+
 ## Las carreras
 
 **Ponle Freno 10K, 15-nov-2026.** Corren los tres. Objetivos: Marcos 55 min,
