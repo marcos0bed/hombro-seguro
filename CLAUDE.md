@@ -152,3 +152,10 @@ reloj), `stravatool.py`, `weathertool.py`, `fitmet_notify.py`.
 - **Las rectas tienen dos usos**: dentro del calentamiento antes de calidad, y
   **al final de un rodaje suave**. Decir que "nunca van al final" es falso.
 - **Nunca sobrescribir datos buenos con nulos** al sincronizar Garmin.
+- **Leer el journal ANTES de interpretar los sensores.** El 7-ago se montó una
+  teoría de deshidratación para un HRV de 20 cuando en su journal ponía vino,
+  siesta larga y carrera con 34 °C. Los sensores dicen qué pasó; el journal,
+  por qué.
+- **El hábito 🍷 no guarda la dosis.** Mezcla una copa con 700 ml, así que la
+  media histórica de "días con alcohol" no mide lo que parece. La cantidad la
+  escribe él en el journal: buscarla ahí.
