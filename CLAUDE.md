@@ -31,6 +31,24 @@ Sofía es perfil **solo running** (`rt.mode==="run"`): nada de comida ni peso.
 - **Nunca versionar** `classify/`, `map.json`, cookies de MFP ni datos
   personales. El respaldo del corpus lo hace él con Time Capsule.
 
+## La semana de Marcos (fijada el 7-ago-2026)
+
+| | |
+|---|---|
+| Lun | 😴 Descanso |
+| Mar | 🏃 Calidad · **solo correr** |
+| Mié | 💪 Lower B |
+| Jue | 🏃 Rodaje suave + 💪 Upper A |
+| Vie | 😴 Descanso |
+| Sáb | 💪 Carga · pierna + Upper B *(sin tope de tiempo)* |
+| Dom | 🏃 Tirada larga |
+
+**Dos días de descanso, lunes y viernes** — el "solo descansa el lunes" es de
+Lorena, no suya. Seis sesiones en cinco días, así que una va doble: **la doble
+cae en el día de rodaje suave, NUNCA en el de calidad.** La fuerza no compite
+con la sesión que decide el 10K. Su rutina vive en `kv_state.routine`, no en la
+WEEK integrada.
+
 ## Nutrición de Marcos
 
 Objetivo **83 kg** desde 87 (ago-2026). La tendencia de 43 pesadas da
