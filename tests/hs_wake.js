@@ -33,4 +33,23 @@ print("\n== No estorba a los hábitos ==");
 ok("los hábitos siguen ahí",/data-act="habit"/.test(habCard()),"");
 ok("y el bloque va debajo",habCard().indexOf('data-act="habit"')<habCard().indexOf('data-act="wake"'),"");
 
+
+print("\n== El resumen de la última sesión ==");
+W("lastnotif",{id:"1",day:hoy,title:{es:"🏃 Sesión registrada",en:"🏃 Session logged"},
+  body:{es:"5,37 km · 43 min · 8:02/km · 149 ppm · Por encima de tu media del mes, y sin forzar.",
+        en:"5.37 km · 43 min · 8:02/km · 149 bpm · Above your monthly average."}});
+var av=avisoCard();
+ok("se pinta",/Sesión registrada|Session logged/.test(av),av.slice(0,90));
+ok("con los números",/5,37 km/.test(av)&&/8:02\/km/.test(av),"");
+ok("y la frase aparte, en color",/Por encima de tu media/.test(av)&&/var\(--acc\)/.test(av),"");
+ok("con su fecha",av.indexOf(hoy.slice(8,10)+"/"+hoy.slice(5,7))>0,"");
+
+print("\n== No se queda pegado días ==");
+W("lastnotif",{id:"2",day:"2026-01-01",title:{es:"x",en:"x"},body:{es:"viejo",en:"old"}});
+ok("un resumen viejo no se enseña",avisoCard()==="","");
+W("lastnotif",null);
+ok("sin resumen, sin tarjeta",avisoCard()==="","");
+W("lastnotif",{id:"3",day:hoy});
+ok("sin cuerpo tampoco",avisoCard()==="","");
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

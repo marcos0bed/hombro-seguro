@@ -33,8 +33,14 @@ print("\n== Conserva su fuerza ==");
 print("\n== Su carrera ==");
 ok("objetivo 58 min",RC.goal_min===58,String(RC.goal_min));
 ok("45 sesiones fechadas",Object.keys(RC.plan).length===45,String(Object.keys(RC.plan).length));
-ok("el test el 4-oct",/TEST DE 5 KM/.test(RC.plan["2026-10-04"]||""),"");
-ok("y la carrera el 15-nov",/PONLE FRENO/.test(RC.plan["2026-11-15"]||""),"");
+/* Desde el 3-ago cada día del plan es {t,p}, no una cadena. Este test seguía
+   comprobando el formato viejo y pasaba solo porque el fichero de /tmp estaba
+   congelado en la versión anterior. */
+function tit(d){var x=RC.plan[d];return (x&&x.t&&(x.t.es||x.t))||String(x||"")}
+ok("el test el 4-oct",/Test 5 km/i.test(tit("2026-10-04")),tit("2026-10-04"));
+ok("y la carrera el 15-nov",/Ponle Freno/i.test(tit("2026-11-15")),tit("2026-11-15"));
+ok("y los 45 días están en ficha",Object.keys(RC.plan).every(function(d){
+  var x=RC.plan[d];return x&&x.p&&x.p.length}),"");
 ok("la pestaña de carrera le aparece",visibleTabs().indexOf("carrera")>-1,visibleTabs().join(","));
 
 print("\n== Nada se rompe ==");

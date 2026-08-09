@@ -10,6 +10,10 @@ import re,pathlib
 s=pathlib.Path('$D/../index.html').read_text()
 pathlib.Path('$APP').write_text(re.search(r'<script>\n\"use strict\";(.*)</script>', s, re.S).group(1))
 "
+# Los datos de prueba viven en /tmp (llevan métricas reales y no se versionan)
+# y macOS los borra. Sin esto, seis suites dejaban de compilar cada pocos días.
+python3 "$D/fixtures.py" || exit 1
+
 fallos=0
 for f in "$D"/hs_*.js; do
   n=$(basename "$f" .js)

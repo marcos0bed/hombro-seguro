@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v175";
+var APP_VERSION="v176";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1540,6 +1540,7 @@ function render(keepScroll){
     var lblD=dOff===0?T(B("Hoy","Today")):dOff===1?T(B("Ayer","Yesterday")):sdD.slice(8,10)+"/"+sdD.slice(5,7);
     h+='<div class="dnav"><button data-act="daynav" data-d="1"'+(dOff>=90?" disabled":"")+' aria-label="'+T(B("Día anterior","Previous day"))+'">‹</button><b>'+lblD+'</b><button data-act="daynav" data-d="-1"'+(dOff===0?" disabled":"")+' aria-label="'+T(B("Día siguiente","Next day"))+'">›</button></div>';
     h+=dayCard();
+    h+=avisoCard();
     h+=macroCard();
     h+=bedCard();
     h+=weekPaceCard();
@@ -2056,6 +2057,25 @@ function hechoCard(dia,ses){
     T(B("Lo que registró el reloj","What the watch recorded"))+"</div></div>"+cuerpo+
     (veredicto?'<p class="note" style="margin:8px 4px 0">'+esc(veredicto)+"</p>":"")+"</div>"+
     (esRun?lapsCard(mios.filter(function(a){return a.raw&&a.raw.laps})[0]):"");
+}
+/* Resumen de la última sesión que trajo el reloj, con una frase que sale de
+   comparar la sesión con el propio histórico. Lo genera fitmet_notify.py en
+   cada sync. Vive aquí porque el aviso push no puede llevar texto: la función
+   del servidor manda el push vacío y el service worker no recibe contenido. */
+function avisoCard(){
+  var a=S("lastnotif",null);
+  if(!a||!a.body)return "";
+  /* Solo el del día en curso o el de ayer: un resumen de hace tres días en la
+     pantalla de hoy confunde más que informa. */
+  var ayer=new Date();ayer.setDate(ayer.getDate()-1);
+  if((a.day||"")<iso(ayer))return "";
+  var txt=T(a.body)||"";if(!txt)return "";
+  var i=txt.lastIndexOf(" · ");
+  var datos=i>0?txt.slice(0,i):txt, frase=i>0?txt.slice(i+3):"";
+  return '<div class="card" style="border-left:3px solid var(--ok)"><div class="exhead"><div class="tlab">'+
+    esc(T(a.title)||"")+'</div><span class="snum">'+esc(a.day.slice(8,10)+"/"+a.day.slice(5,7))+"</span></div>"+
+    '<p style="font-size:15px;margin:2px 4px 0;font-family:var(--mono)">'+esc(datos)+"</p>"+
+    (frase?'<p class="note" style="margin:6px 4px 0;color:var(--acc)">'+esc(frase)+"</p>":"")+"</div>";
 }
 function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
 /* Riegel parte de que la marca de referencia fue a tope. Proyectar desde un

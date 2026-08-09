@@ -1,4 +1,4 @@
-const CACHE = "hombro-v175";
+const CACHE = "hombro-v176";
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", CDN];
 
@@ -63,7 +63,10 @@ self.addEventListener("push", (e) => {
     } catch (err) {}
     // Sin payload: distinguimos por contexto. Meta de temporizador reciente
     // (±10 min) → aviso de descanso; si no, es el parte del día/semana.
-    let body = "☀️ Parte del día listo · Daily brief ready";
+    // Neutro a propósito: el push llega SIN contenido y aquí no hay forma de
+    // saber si lo dispara el parte del día o una sesión recién sincronizada.
+    // Decir "parte listo" cuando acabas de correr es peor que no decir nada.
+    let body = "Hay algo nuevo · Something new";
     if (meta && meta.endAt) {
       const now = Date.now();
       if (now < meta.endAt - 5000) body = "⏳ +30 s";
