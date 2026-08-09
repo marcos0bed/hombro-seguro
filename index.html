@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v177";
+var APP_VERSION="v178";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2092,6 +2092,71 @@ function avisoCard(){
     '<p style="font-size:15px;margin:2px 4px 0;font-family:var(--mono)">'+esc(datos)+"</p>"+
     (frase?'<p class="note" style="margin:6px 4px 0;color:var(--acc)">'+esc(frase)+"</p>":"")+"</div>";
 }
+/* ¿Voy camino del objetivo? La adherencia dice si haces las sesiones, pero no
+   si están sirviendo. Esto compara dónde estás con dónde tocaría estar, sobre
+   la recta que une el punto de partida con la meta. La recta es una REFERENCIA,
+   no una ley: la mejora real llega a saltos, y el test de 5 km es el juez. */
+/* Pendiente ritmo-pulso de la persona (s/km por ppm), medida de su histórico
+   y guardada en race.base.slope. Negativa: más pulso = más rápido. */
+function efSlope(){var R=raceCfg();return (R&&R.base&&R.base.slope)||-3;}
+function efDe(a){
+  if(!a||!a.hr_avg||!a.distance_km||a.distance_km<2||!a.duration_min)return null;
+  if(a.hr_avg<135||a.hr_avg>165)return null;   /* sin extrapolar lejos del ancla */
+  var p=paceCorr(a);            /* corregido por temperatura */
+  if(p==null)return null;
+  /* A MENOS pulso, MEJOR cifra. La primera versión multiplicaba al revés y el
+     test lo cazó: la misma inversión que arrastraba efficiencyCard. */
+  return p*60+(150-a.hr_avg)*efSlope();
+}
+function trayectoriaCard(){
+  var R=raceCfg(),B=R&&R.base;
+  if(!B)return "";
+  if(GACT.data===null){loadGact();return ""}
+  var hoy=new Date(),ini=new Date(B.day+"T12:00:00"),meta=new Date(R.date+"T12:00:00");
+  var sem=Math.floor((hoy-ini)/(7*86400000))+1;
+  var totalSem=Math.max(1,Math.round((meta-ini)/(7*86400000)));
+  var frac=Math.min(1,Math.max(0,(hoy-ini)/(meta-ini)));
+
+  /* eficiencia: las tres últimas semanas, para que una carrera rara no mande */
+  var lim=new Date(hoy);lim.setDate(lim.getDate()-21);
+  var vs=[];
+  (GACT.data||[]).forEach(function(a){
+    if(!/running/.test(a.type||""))return;
+    if(a.start_time.slice(0,10)<iso(lim))return;
+    var e=efDe(a);if(e)vs.push(e);
+  });
+  var filas=[];
+  function fila(ico,etq,ahora,deb,fmt,mejorMenos){
+    if(ahora==null)return;
+    var bien=mejorMenos?ahora<=deb:ahora>=deb;
+    var dif=Math.abs(ahora-deb);
+    filas.push('<div class="wkrow"><span class="wki">'+ico+'</span><span class="wkl">'+esc(etq)+
+      '</span><span class="wkv" style="color:'+(bien?"var(--ok)":"var(--warn)")+'">'+esc(fmt(ahora))+
+      '</span><span class="wks">'+T(B2("toca ","should be "))+esc(fmt(deb))+
+      " · "+(bien?"✓":"+"+fmt(dif).replace(/^0:/,""))+"</span></div>");
+  }
+  var B2=B_ALIAS;
+  if(vs.length>=3){
+    vs.sort(function(a,b){return a-b});
+    var ef=vs[Math.floor(vs.length/2)];
+    var debe=B.ef_s-(B.ef_s-B.meta_ef_s)*frac;
+    fila("⚡",T(B2("Eficiencia","Efficiency")),ef,debe,function(x){
+      var t=Math.round(x);return Math.floor(t/60)+":"+pad(t%60)},true);
+  }
+  var r=rowFor(selDay())||{},w=null;
+  (METRICS.data||[]).slice(-14).forEach(function(x){if(x.weight_kg)w=+x.weight_kg});
+  if(w!=null&&B.kg&&B.meta_kg){
+    fila("⚖️",T(B2("Peso","Weight")),w,B.kg-(B.kg-B.meta_kg)*frac,function(x){return x.toFixed(1)+" kg"},true);
+  }
+  if(!filas.length)return "";
+  return '<div class="card"><div class="exhead"><div class="tlab">🎯 '+
+    T(B2("¿Voy a tiempo?","On track?"))+' <span class="snum">'+T(B2("semana","week"))+" "+
+    Math.min(sem,totalSem)+" "+T(B2("de","of"))+" "+totalSem+"</span></div></div>"+filas.join("")+
+    '<p class="note" style="margin:8px 4px 0;color:var(--mut)">'+
+    T(B2("La referencia es una recta entre el punto de partida y la meta. La mejora real llega a saltos: el test de 5 km es el que manda.",
+        "The reference is a straight line from start to goal. Real progress comes in steps: the 5 km test is what counts."))+"</p></div>";
+}
+var B_ALIAS=B;
 function fcMax(){var r=raceCfg();return (r&&r.hr_max)||195}
 /* Riegel parte de que la marca de referencia fue a tope. Proyectar desde un
    rodaje suave da un número malísimo y falso: a Sofi le puso 1:27:46 en rojo
@@ -2241,9 +2306,12 @@ function efficiencyCard(){
     var ss=0,n=0;
     sem[k].forEach(function(a){
       var pm=paceCorr(a);
-      if(pm!=null&&a.hr_avg)  {ss+=pm/a.hr_avg;n++;}
+      /* pace/pulso×150 escalaba AL REVÉS: a menos pulso daba peor cifra. Los
+         años de rodajes suaves (2024-26) salían ~55 s/km peores de lo real y
+         fabricaron un "desplome" de 74 s/km que era mitad artefacto. */
+      if(pm!=null&&a.hr_avg)  {ss+=pm*60+(150-a.hr_avg)*efSlope();n++;}
     });
-    return n?[k.slice(8,10)+"/"+k.slice(5,7),Math.round(ss/n*150*60)]:null;
+    return n?[k.slice(8,10)+"/"+k.slice(5,7),Math.round(ss/n)]:null;
   }).filter(Boolean);
   if(pares.length<2)return "";
   var pri=pares[0][1],ult=pares[pares.length-1][1];
@@ -2423,7 +2491,7 @@ function racionalCard(){
 function carreraView(){
   if(!cloudOn())return '<p class="note">'+T(B("Inicia sesión para ver tu plan.","Sign in to see your plan."))+"</p>";
   if(GACT.data===null){loadGact();return '<p class="note">'+T(B("Cargando carreras…","Loading runs…"))+"</p>";}
-  return raceHeadCard()+proximasCard()+lapsCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
+  return raceHeadCard()+trayectoriaCard()+proximasCard()+lapsCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
 }
 
 /* ---------- dashboard ---------- */
