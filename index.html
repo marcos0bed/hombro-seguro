@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v176";
+var APP_VERSION="v177";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -451,7 +451,21 @@ function ensurePushSub(){
     }).then(function(s){
       PUSHSUB=s;
       if(s&&s.endpoint)W("pushsub",{endpoint:s.endpoint});
+      cacheNotice();
     },function(){});
+  }catch(e){}
+}
+/* El push llega SIN contenido, así que el service worker no puede saber qué
+   pasó. Aquí se le dejan en la caché las credenciales mínimas para que lo
+   consulte él mismo: la clave del aviso (una por persona) y la clave pública
+   de la API. Con eso solo puede leer SU último resumen, nada más. */
+function cacheNotice(){
+  try{
+    var t=S("notice_token",null);
+    if(!t||!window.caches)return;
+    caches.open("fitmet-push").then(function(c){
+      c.put("/push-notice",new Response(JSON.stringify({t:t,url:SB_URL,key:SB_KEY})));
+    });
   }catch(e){}
 }
 function pushMeta(endAt,msg){
@@ -501,6 +515,7 @@ function flushDirty(){
 var ULTPULL=0;
 function pullAll(){
   ULTPULL=Date.now();
+  setTimeout(cacheNotice,1500);   /* tras aplicar lo que venga de la nube */
   return sb.from("kv_state").select("k,v").then(function(r){
     if(r.error||!r.data)return;
     r.data.forEach(function(row){try{localStorage.setItem("hs:"+row.k,JSON.stringify(row.v))}catch(e){}});
