@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v179";
+var APP_VERSION="v180";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2181,46 +2181,52 @@ function cargaDe(a){
 function cargaCard(){
   if(GACT.data===null){loadGact();return ""}
   var hoy=new Date();
+  /* cargas diarias de los últimos 56 días: hacen falta 28 de colchón para que
+     el primer punto de la curva tenga su ventana crónica completa */
   var dias={};
   (GACT.data||[]).forEach(function(a){
     var d=(a.start_time||"").slice(0,10);if(!d)return;
     var edad=(hoy-new Date(d+"T12:00:00"))/86400000;
-    if(edad<0||edad>28)return;
+    if(edad<0||edad>56)return;
     dias[d]=(dias[d]||0)+cargaDe(a);
   });
-  var ks=Object.keys(dias);
-  if(ks.length<4)return "";
-  var aguda=0,cronica=0;
-  ks.forEach(function(d){
-    var edad=(hoy-new Date(d+"T12:00:00"))/86400000;
-    cronica+=dias[d];
-    if(edad<=7)aguda+=dias[d];
-  });
-  cronica=cronica/4;                       /* media semanal del mes */
-  if(cronica<5)return "";                  /* sin historia aún: el ratio mentiría */
-  var ratio=aguda/cronica;
+  if(Object.keys(dias).length<4)return "";
+  function cargaEn(fin,ventana){
+    var t=0;
+    for(var k in dias){
+      var edad=(fin-new Date(k+"T12:00:00"))/86400000;
+      if(edad>=0&&edad<ventana)t+=dias[k];
+    }
+    return t;
+  }
+  /* la curva: el ratio de cada uno de los últimos 28 días. No es "cómo estoy
+     hoy" sino "cómo he venido cargando": las subidas bruscas se VEN venir. */
+  var pares=[],ratio=null;
+  for(var i=27;i>=0;i--){
+    var d=new Date(hoy);d.setDate(d.getDate()-i);
+    var cr=cargaEn(d,28)/4;
+    if(cr<5)continue;                       /* sin historia ese día: no se pinta */
+    var r=cargaEn(d,7)/cr;
+    var ds=iso(d);
+    pares.push([ds.slice(8,10)+"/"+ds.slice(5,7),Math.round(r*100)/100]);
+    ratio=r;
+  }
+  if(pares.length<5||ratio==null)return "";
   var st=ratio>1.5?["#E5484D",B("FRENA: mucho más que tu mes. Aquí es donde se rompe la gente.","BRAKE: way above your month. This is where people break.")]
         :ratio>1.3?["#E8963E",B("Ojo: por encima de tu costumbre. Vigila las sensaciones.","Careful: above your usual. Watch how you feel.")]
         :ratio>=0.8?["#46C08A",B("Zona buena: cargas lo que tu cuerpo tiene asimilado.","Sweet spot: loading what your body has absorbed.")]
         :["#7BA1D9",B("Semana suave respecto a tu mes. Recuperando o descargando.","Light week vs your month. Recovering or deloading.")];
-  var pct=Math.min(100,Math.round(ratio/2*100));
   return '<div class="card"><div class="exhead"><div class="tlab">🏋️ '+
     T(B("Carga de entrenamiento","Training load"))+' <span class="snum">'+
-    T(B("última semana contra tu mes","last week vs your month"))+"</span></div></div>"+
-    '<div class="macb" style="height:10px;margin:6px 0 4px;position:relative">'+
-      '<i style="width:'+pct+'%;background:'+st[0]+'"></i>'+
-      '<span style="position:absolute;left:'+Math.min(96,Math.round(0.8/2*100))+'%;top:-2px;bottom:-2px;width:1px;background:#2B3442"></span>'+
-      '<span style="position:absolute;left:'+Math.round(1.3/2*100)+'%;top:-2px;bottom:-2px;width:1px;background:#2B3442"></span>'+
-      '<span style="position:absolute;left:'+Math.round(1.5/2*100)+'%;top:-2px;bottom:-2px;width:1px;background:#5A2430"></span>'+
-    "</div>"+
+    T(B("cada semana contra su mes","each week vs its month"))+"</span></div></div>"+
     '<div class="eatv"><b style="color:'+st[0]+'">'+ratio.toFixed(2)+"</b> <span>"+
-    T(B("agudo : crónico","acute : chronic"))+"</span></div>"+
+    T(B("agudo : crónico hoy","acute : chronic today"))+"</span></div>"+
+    areaChart(pares,{uid:"acwr",col:st[0],fmt:function(v){return v.toFixed(2)},
+      refs:[{v:0.8,label:"0,8",col:"#5A6478"},
+            {v:1.3,label:T(B("ojo 1,3","care 1.3")),col:"#E8963E"},
+            {v:1.5,label:T(B("frena 1,5","brake 1.5")),col:"#E5484D"}]})+
     '<p class="note" style="margin:7px 4px 0">'+T(st[1])+"</p></div>";
 }
-/* Riegel parte de que la marca de referencia fue a tope. Proyectar desde un
-   rodaje suave da un número malísimo y falso: a Sofi le puso 1:27:46 en rojo
-   con una sesión que le había salido bien, y a Marcos 1:19 antes de saber que
-   tenía un 50:36. Sin pulso no se puede saber si apretó, así que no cuenta. */
 function duro(a){
   return a.hr_avg!=null&&a.hr_avg>=0.85*fcMax();
 }

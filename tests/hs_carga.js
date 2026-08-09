@@ -22,6 +22,8 @@ ok("hay tarjeta",/Carga de entrenamiento|Training load/.test(c),c.slice(0,90));
 var m=c.match(/<b[^>]*>([\d.]+)<\/b>/);
 ok("ratio cerca de 1",m&&Math.abs(+m[1]-1)<0.2,m&&m[1]);
 ok("zona buena",/Zona buena|Sweet spot/.test(c),"");
+ok("es una curva, no un semáforo",/<svg/.test(c)&&/<path/.test(c),"");
+ok("con los umbrales dibujados",/frena 1,5|brake 1.5/.test(c)&&/ojo 1,3|care 1.3/.test(c),"");
 
 print("\n== Semana desbocada: avisa ==");
 GACT.data=[run(1,1,60,165),run(2,2,60,165),run(3,3,60,165),run(4,4,60,165),run(5,6,60,165),
