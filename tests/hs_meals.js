@@ -119,4 +119,20 @@ ok("un día cerrado sí avisa",!ayer||!/kcal_in/.test(ayer),"");
 state.dayOff=0;
 
 
+
+print("\n== 'Esta semana' mira la semana del día seleccionado ==");
+/* viendo el domingo pasado, la tarjeta debe cerrar ESA semana */
+state.dayOff=1;
+var wp=weekPaceCard();
+var ayer=selDay();
+ok("el rango es el de la semana de ayer",wp.indexOf(mondayOf(ayer).slice(8,10)+"/")>0,wp.slice(wp.indexOf("macnote"),wp.indexOf("macnote")+60));
+ok("sin 'hoy aparte' en una semana cerrada",ayer<mondayOf(TODAY)? !/hoy aparte|today separate/.test(wp):true,"");
+state.dayOff=0;
+
+print("\n== Las tres filas siempre están ==");
+var wp2=weekPaceCard();
+ok("calorías siempre",/Calorías|Calories/.test(wp2),"");
+ok("proteína siempre",/Proteína|Protein/.test(wp2),"");
+ok("entreno siempre",/Entreno|Training/.test(wp2),"");
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v182";
+var APP_VERSION="v183";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3557,7 +3557,10 @@ function weekPaceCard(){
   if(runOnly())return "";      /* pendiente: versión de carrera */
   if(!cloudOn()||!macroGoal(TODAY))return "";
   var M=METRICS.data;if(!M||!M.length)return "";
-  var lun=mondayOf(TODAY);
+  /* Anclada al día que se MIRA, no a hoy: en la vista de ayer domingo debe
+     salir cómo cerró esa semana, no la que acaba de empezar. */
+  var lun=mondayOf(selDay());
+  var semanaActual=(lun===mondayOf(TODAY));
   var dias=[];for(var i=0;i<7;i++){var d=new Date(lun+"T12:00:00");d.setDate(d.getDate()+i);dias.push(iso(d))}
   /* Comida: solo días CERRADOS. Un día en curso no se compara con un objetivo
      diario — a media mañana diría que vas en déficit enorme, y es falso. El día
@@ -3618,12 +3621,16 @@ function weekPaceCard(){
   var fil=[];
   if(nK)fil.push(['🍽️',T(B("Calorías","Calories")),
     '<b style="color:'+col+'">'+(difK>0?"+":"")+Math.round(difK)+"</b> kcal",
-    nK+" "+T(B("días cerrados","closed days"))+(incompletos?" · "+incompletos+" "+T(B("incompleto","incomplete"))+(incompletos>1?"s":""):"")+" · "+T(B("hoy aparte","today separate"))]);
-  /* Lunes por la mañana: cero días cerrados y la tarjeta quedaba muda sobre
-     la comida, como si faltara algo. Se dice, en vez de callarlo. */
-  if(!nK&&plan)fil.push(['🍽️',T(B("Calorías","Calories")),
+    nK+" "+T(B("días cerrados","closed days"))+(incompletos?" · "+incompletos+" "+T(B("incompleto","incomplete"))+(incompletos>1?"s":""):"")+(semanaActual?" · "+T(B("hoy aparte","today separate")):"")]);
+  /* Las tres filas SIEMPRE visibles: que aparezcan y desaparezcan según haya
+     datos hace creer que falta algo. Sin datos: guion y porqué. */
+  if(!nK)fil.push(['🍽️',T(B("Calorías","Calories")),
     '<span style="color:var(--mut)">—</span>',
-    T(B("semana recién empezada: aparece al cerrar el primer día","week just started: shows once the first day closes"))]);
+    semanaActual?T(B("semana recién empezada: aparece al cerrar el primer día","week just started: shows once the first day closes"))
+                :T(B("sin registro esa semana","no log that week"))]);
+  if(!nP)fil.push(['🥩',T(B("Proteína","Protein")),
+    '<span style="color:var(--mut)">—</span>',
+    T(B("suelo ","floor "))+g0.prot+" g"]);
   if(nP)fil.push(['🥩',T(B("Proteína","Protein")),
     '<b style="color:'+(protOK===nP?"var(--ok)":(protOK>=nP*0.6?"var(--acc)":"var(--warn)"))+'">'+protOK+"/"+nP+"</b> "+T(B("días","days")),
     T(B("suelo ","floor "))+g0.prot+" g · "+T(B("no se compensa","no catching up"))]);
