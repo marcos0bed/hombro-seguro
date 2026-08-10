@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v186";
+var APP_VERSION="v187";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2566,6 +2566,11 @@ function marcasCard(){
    Vive aquí, plegable y con la memoria del pliegue, en vez de dentro de cada
    sesión: con las zapatillas puestas se quiere lo del día, no la teoría. */
 function racionalCard(){
+  /* Cada corredor tiene su porqué: el de Marcos habla de déficit y peso, y eso
+     es justo lo que Sofía no debe ver (perfil solo running). Si la cuenta trae
+     race.racional, manda; el texto integrado queda de respaldo. */
+  var R=raceCfg();
+  if(R&&R.racional&&T(R.racional))return foldCard("racional","🧭 "+T(B("Cómo funciona el plan","How the plan works")),"",T(R.racional),false);
   var t=T(B(
 "**Los tres días hacen cosas distintas, y esa es toda la idea.**\n\n"+
 "**Martes · calidad.** Sube el VO₂max, mejora la economía de carrera y enseña al músculo a tamponar lactato. Es el ÚNICO día que se corre por encima del umbral, y por eso los otros dos van suaves de verdad: si los tres van a medio gas no se estimula ninguna de las dos vías. Es el error más repetido del corredor popular.\n\n"+

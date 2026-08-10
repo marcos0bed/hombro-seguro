@@ -136,3 +136,14 @@ ok("y el año",/\(20\d\d\)/.test(hp),"");
 GACT.data=[run(30,5,38,150,20)];
 ok("sin una carrera de esa distancia no inventa marca",!/Tu mejor|Your best/.test(raceHeadCard()),"");
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));
+
+print("\n== El racional es de cada cuenta ==");
+W("race",{name:"x",date:"2026-11-15",km:10,goal_min:55,hr_max:195,plan:{},racional:{es:"**Mi porqué propio** sin pesos",en:"my own why"}});
+W("fold:racional",true);
+var rc=racionalCard();
+ok("con racional propio, se enseña ese",/Mi porqué propio/.test(rc),rc.slice(0,120));
+ok("y no el integrado",!/déficit|mantenimiento/.test(rc),"");
+W("race",{name:"x",date:"2026-11-15",km:10,goal_min:55,hr_max:195,plan:{}});
+ok("sin él, el integrado de siempre",/tres días hacen cosas distintas|three days do different/.test(racionalCard()),"");
+
+print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

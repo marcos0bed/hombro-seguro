@@ -34,11 +34,17 @@ ok("y explica qué hacer en las cuestas",/cuesta|hills/i.test(T(lg.items[0].how)
 print("\n== El plan fechado ==");
 var ks=Object.keys(RC.plan);
 ok("45 sesiones",ks.length===45,String(ks.length));
-ok("empieza el martes 4-ago",ks.sort()[0]==="2026-08-04","");
+/* Desde el 4-ago cada día es {t,p} y su plan empieza el LUNES 3: movió la
+   sesión del martes al día que de verdad corrió. Estas comprobaciones iban
+   contra el formato antiguo y el fixture congelado las tapaba. */
+function tit(d){var x=RC.plan[d];return (x&&x.t&&(x.t.es||x.t))||String(x||"")}
+ok("empieza el lunes 3-ago (sesión movida)",ks.sort()[0]==="2026-08-03","");
 ok("y acaba el día de la carrera",ks[ks.length-1]==="2026-11-15","");
-ok("el último es Ponle Freno",/PONLE FRENO/.test(RC.plan["2026-11-15"]),"");
-ok("el test de 5 km está el 4-oct",/TEST DE 5 KM/.test(RC.plan["2026-10-04"]||""),RC.plan["2026-10-04"]);
-ok("la sesión clave, el 3-nov",/la clave/.test(RC.plan["2026-11-03"]||""),RC.plan["2026-11-03"]);
+ok("el último es Ponle Freno",/Ponle Freno/i.test(tit("2026-11-15")),tit("2026-11-15"));
+ok("el test de 5 km está el 4-oct",/Test 5 km/i.test(tit("2026-10-04")),tit("2026-10-04"));
+ok("la sesión clave, el 3-nov",/🔑/.test(tit("2026-11-03")),tit("2026-11-03"));
+ok("los jueves rotan de formato",/Fartlek musical|Cuestas jugadas|Técnica/.test(tit("2026-08-13")+tit("2026-08-20")),"");
+ok("y su racional propio existe, sin hablar de peso",!!RC.racional&&!/peso|déficit/i.test(RC.racional.es),"");
 
 print("\n== Se pinta todo sin romperse ==");
 var threw=null;
