@@ -25,13 +25,23 @@ ok("zona buena",/Zona buena|Sweet spot/.test(c),"");
 ok("es una curva, no un semáforo",/<svg/.test(c)&&/<path/.test(c),"");
 ok("con los umbrales dibujados",/frena 1,5|brake 1.5/.test(c)&&/ojo 1,3|care 1.3/.test(c),"");
 
-print("\n== Semana desbocada: avisa ==");
-GACT.data=[run(1,1,60,165),run(2,2,60,165),run(3,3,60,165),run(4,4,60,165),run(5,6,60,165),
-           run(6,12,30,145),run(7,19,30,145),run(8,26,30,145)];
+print("\n== Semana desbocada CON base sólida: frena de verdad ==");
+/* mes previo serio (dos sesiones largas/semana) y semana disparada */
+GACT.data=[run(1,1,60,170),run(2,2,60,170),run(3,3,60,170),run(4,4,60,170),run(5,6,60,170),
+           run(6,9,60,165),run(7,12,60,165),run(8,16,60,165),run(9,19,60,165),run(10,23,60,165),run(11,26,60,165)];
 var c2=cargaCard();
 var m2=c2.match(/<b[^>]*>([\d.]+)<\/b>/);
 ok("ratio alto",m2&&+m2[1]>1.5,m2&&m2[1]);
 ok("dice FRENA",/FRENA|BRAKE/.test(c2),"");
+
+print("\n== La misma subida ARRANCANDO no manda parar ==");
+/* el caso de Lorena: mes casi vacío y primera semana del plan */
+GACT.data=[run(1,1,45,150),run(2,3,40,150),run(3,5,45,150),run(4,6,35,145),
+           run(5,14,20,140),run(6,24,20,140)];
+var c3=cargaCard();
+ok("no dice FRENA",!/FRENA|BRAKE/.test(c3),"");
+ok("dice que es normal al arrancar",/arrancar|starting/.test(c3),"");
+ok("y que NO hay que parar",/NO hay que parar|Do NOT stop/.test(c3),"");
 
 print("\n== Sin historia no se inventa ==");
 GACT.data=[run(1,1,40,150),run(2,3,40,150)];

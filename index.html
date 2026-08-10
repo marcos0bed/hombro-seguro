@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v184";
+var APP_VERSION="v185";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2212,7 +2212,15 @@ function cargaCard(){
     ratio=r;
   }
   if(pares.length<5||ratio==null)return "";
-  var st=ratio>1.5?["#E5484D",B("FRENA: mucho más que tu mes. Aquí es donde se rompe la gente.","BRAKE: way above your month. This is where people break.")]
+  /* El mismo ratio alto significa dos cosas OPUESTAS según la base. Con mes
+     sólido detrás: te estás pasando, frena. Con mes casi vacío (empezar un
+     plan, volver de enfermedad): es la subida inevitable del arranque — el
+     consejo es seguir el plan SIN añadir nada, no parar. Lorena leyó "FRENA"
+     y preguntó si tenía que dejar de correr: el mensaje era el equivocado. */
+  var cronicaHoy=cargaEn(hoy,28)/4;
+  var arrancando=cronicaHoy<60;
+  var st=(ratio>1.5&&arrancando)?["#E8963E",B("Subida grande, pero porque tu mes anterior era casi vacío: es lo normal al arrancar un plan. NO hay que parar — sigue el plan tal cual, no añadas nada extra, y cualquier molestia va en serio.","Big jump, but only because last month was nearly empty: normal when starting a plan. Do NOT stop — follow the plan as written, add nothing extra, and take any niggle seriously.")]
+        :ratio>1.5?["#E5484D",B("FRENA: mucho más que tu mes, y tu mes ya era serio. Aquí es donde se rompe la gente: recorta esta semana.","BRAKE: way above an already solid month. This is where people break: cut back this week.")]
         :ratio>1.3?["#E8963E",B("Ojo: por encima de tu costumbre. Vigila las sensaciones.","Careful: above your usual. Watch how you feel.")]
         :ratio>=0.8?["#46C08A",B("Zona buena: cargas lo que tu cuerpo tiene asimilado.","Sweet spot: loading what your body has absorbed.")]
         :["#7BA1D9",B("Semana suave respecto a tu mes. Recuperando o descargando.","Light week vs your month. Recovering or deloading.")];
