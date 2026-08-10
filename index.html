@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v185";
+var APP_VERSION="v186";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1776,10 +1776,21 @@ function areaChart(pares,opts){
     var y=(TOP+(BASE-TOP)*f).toFixed(1);
     h+='<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="#2B3442" stroke-width="0.6" opacity=".55"/>';
   });
-  (opts.refs||[]).forEach(function(r){
-    var y=Y(r.v).toFixed(1);
-    h+='<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="'+(r.col||"#8A93A6")+'" stroke-width="1" stroke-dasharray="4 3" opacity=".8"/>'+
-       '<text x="'+(W-PR)+'" y="'+(y-3)+'" text-anchor="end" font-size="8.5" fill="'+(r.col||"#8A93A6")+'">'+r.label+"</text>";
+  /* Las etiquetas de las referencias se reparten entre izquierda y derecha y,
+     si aun así coinciden en el mismo lado, se separan en vertical: con la
+     salida y la meta a pocos segundos, se pisaban una a otra. */
+  var _refs=(opts.refs||[]).map(function(r){return {r:r,y:Y(r.v)}});
+  _refs.sort(function(a,b){return a.y-b.y});
+  var _lado={start:-99,end:-99};
+  _refs.forEach(function(o,i){
+    var y=o.y.toFixed(1);
+    h+='<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="'+(o.r.col||"#8A93A6")+'" stroke-width="1" stroke-dasharray="4 3" opacity=".8"/>';
+    var lado=i%2?"start":"end";
+    var ly=o.y-3;
+    if(ly-_lado[lado]<9)ly=_lado[lado]+9;
+    ly=Math.max(8,Math.min(BASE-2,ly));
+    _lado[lado]=ly;
+    h+='<text x="'+(lado==="start"?PL:(W-PR))+'" y="'+ly.toFixed(1)+'" text-anchor="'+lado+'" font-size="8.5" fill="'+(o.r.col||"#8A93A6")+'">'+o.r.label+"</text>";
   });
   h+='<path d="'+area+'" fill="url(#ar'+uid+')"/>'+
      '<path d="'+linea+'" fill="none" stroke="'+col+'" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>';
