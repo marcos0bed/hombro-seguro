@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v181";
+var APP_VERSION="v182";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2089,10 +2089,10 @@ function hechoCard(dia,ses){
 function avisoCard(){
   var a=S("lastnotif",null);
   if(!a||!a.body)return "";
-  /* Solo el del día en curso o el de ayer: un resumen de hace tres días en la
-     pantalla de hoy confunde más que informa. */
-  var ayer=new Date();ayer.setDate(ayer.getDate()-1);
-  if((a.day||"")<iso(ayer))return "";
+  /* SOLO el día en curso. Enseñaba también el de ayer y un lunes por la mañana
+     salía la tirada del domingo encima del parte que ya la contaba: ruido
+     duplicado. La tarjeta es feedback post-entreno, no historial. */
+  if((a.day||"")!==TODAY)return "";
   var txt=T(a.body)||"";if(!txt)return "";
   var i=txt.lastIndexOf(" · ");
   var datos=i>0?txt.slice(0,i):txt, frase=i>0?txt.slice(i+3):"";
@@ -3619,6 +3619,11 @@ function weekPaceCard(){
   if(nK)fil.push(['🍽️',T(B("Calorías","Calories")),
     '<b style="color:'+col+'">'+(difK>0?"+":"")+Math.round(difK)+"</b> kcal",
     nK+" "+T(B("días cerrados","closed days"))+(incompletos?" · "+incompletos+" "+T(B("incompleto","incomplete"))+(incompletos>1?"s":""):"")+" · "+T(B("hoy aparte","today separate"))]);
+  /* Lunes por la mañana: cero días cerrados y la tarjeta quedaba muda sobre
+     la comida, como si faltara algo. Se dice, en vez de callarlo. */
+  if(!nK&&plan)fil.push(['🍽️',T(B("Calorías","Calories")),
+    '<span style="color:var(--mut)">—</span>',
+    T(B("semana recién empezada: aparece al cerrar el primer día","week just started: shows once the first day closes"))]);
   if(nP)fil.push(['🥩',T(B("Proteína","Protein")),
     '<b style="color:'+(protOK===nP?"var(--ok)":(protOK>=nP*0.6?"var(--acc)":"var(--warn)"))+'">'+protOK+"/"+nP+"</b> "+T(B("días","days")),
     T(B("suelo ","floor "))+g0.prot+" g · "+T(B("no se compensa","no catching up"))]);
