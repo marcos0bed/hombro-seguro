@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v180";
+var APP_VERSION="v181";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4220,6 +4220,24 @@ function relayoutFixed(){
 document.addEventListener("focusout",relayoutFixed,true);
 window.addEventListener("orientationchange",relayoutFixed);
 if(window.visualViewport)window.visualViewport.addEventListener("resize",relayoutFixed);
+/* El 10-ago reapareció SIN teclado ("no he editado nada"), así que adivinar
+   disparadores no basta. Autodiagnóstico: si la barra no está pintada donde
+   dice el CSS (pegada abajo), se recoloca. Se mide el síntoma, no la causa.
+   El chequeo es un getBoundingClientRect: gratis. */
+function navDesviada(){
+  try{
+    var el=document.querySelector("nav");
+    if(!el||document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))return false;
+    var r=el.getBoundingClientRect();
+    return (window.innerHeight-r.bottom)>4||r.bottom>window.innerHeight+4;
+  }catch(e){return false}
+}
+function vigilaNav(){if(navDesviada())relayoutFixed()}
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")setTimeout(vigilaNav,300)});
+window.addEventListener("pageshow",function(){setTimeout(vigilaNav,300)});
+var _scrT=null;
+window.addEventListener("scroll",function(){clearTimeout(_scrT);_scrT=setTimeout(vigilaNav,400)},{passive:true});
+setInterval(vigilaNav,4000);
 
 /* ---------- migración única a la rutina v96 ----------
    La semana pasó a sids nuevos (lowA/upA/lowB/upB) para que un peso guardado no
