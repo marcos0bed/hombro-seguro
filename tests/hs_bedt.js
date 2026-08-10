@@ -28,8 +28,10 @@ ok("mediana de vacío",medianaDe([])===null,"");
 print("\n== Con sus datos reales ==");
 var h=bedCard(), hoy=ROWS[ROWS.length-1];
 ok("hay tarjeta",h.length>200,h.slice(0,80));
-ok("tres columnas",(h.match(/class="macg"/g)||[]).length===3,"");
-ok("dice acostarse Y dormirse",/acostaste|in bed/i.test(h)&&/dormiste|asleep/i.test(h),"");
+/* cuatro desde el 10-ago: cama · a dormir · dormido · tardaste */
+ok("cuatro columnas",(h.match(/class="macg"/g)||[]).length===4,String((h.match(/class="macg"/g)||[]).length));
+ok("dice cama Y dormirse",/A la cama|To bed/i.test(h)&&/Dormido|Asleep/i.test(h),"");
+ok("y el momento de ponerse a dormir",/A dormir|Lights out/.test(h),"");
 ok("muestra la hora de dormirse real",h.indexOf(bedFmt(bedNorm(hoy.sleep_start_h)))>-1,"");
 ok("enseña la referencia 'normal'",/bedm/.test(h)&&/normal/i.test(h),"");
 

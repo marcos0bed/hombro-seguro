@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v183";
+var APP_VERSION="v184";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3439,6 +3439,9 @@ function bedCard(){
   var on=r?bedNorm(r.sleep_start_h):null;
   if(on==null)return "";
   var ac=r?bedNorm(r.bed_h):null, lat=r&&r.sleep_lat_min!=null?+r.sleep_lat_min:null;
+  /* "A dormir": el momento de ponerse a ello, del journal. Entre la cama y
+     este caben la serie o el libro; la latencia real se mide desde aquí. */
+  var tryH=r?bedNorm(r.sleep_try_h):null;
   var M=(METRICS.data||[]).filter(function(x){return x.day<=day});
   var acM=medianaDe(M.filter(function(x){return x.bed_h!=null}).map(function(x){return bedNorm(x.bed_h)}));
   var latM=medianaDe(M.filter(function(x){return x.sleep_lat_min!=null}).map(function(x){return +x.sleep_lat_min}));
@@ -3446,14 +3449,16 @@ function bedCard(){
   var acCls=(ac!=null&&acM!=null)?(ac>=acM+1?"bad":(ac<=acM-0.5?"ok":"")):"";
   var latCls=(lat!=null&&latM!=null)?(lat>=latM+30?"bad":(lat<=latM?"ok":"")):"";
   var cols=[
-    [B("Te acostaste","In bed"),bedFmt(ac),acCls,acM!=null?bedFmt(acM):null],
-    [B("Te dormiste","Asleep"),bedFmt(on),"",null],
+    [B("A la cama","To bed"),bedFmt(ac),acCls,acM!=null?bedFmt(acM):null],
+    [B("A dormir","Lights out"),tryH!=null?bedFmt(tryH):"—","",null],
+    [B("Dormido","Asleep"),bedFmt(on),"",null],
     [B("Tardaste","Took"),lat!=null?lat+" min":"—",latCls,latM!=null?Math.round(latM)+" min":null]
   ].map(function(c){
     return '<div class="macg"><div class="macl">'+esc(T(c[0]))+"</div>"+
            '<div class="bedv '+c[2]+'">'+esc(c[1])+"</div>"+
            (c[3]?'<div class="bedm">'+T(B("normal ","usual "))+esc(c[3])+"</div>":"")+"</div>";
   }).join("");
+  var grid4=' style="grid-template-columns:repeat(4,1fr);gap:8px"';
   /* El aviso nombra la CAUSA, porque el remedio de cada una es distinto. */
   var av="";
   if(ac!=null&&acM!=null&&lat!=null&&latM!=null){
@@ -3478,7 +3483,7 @@ function bedCard(){
   }
   return '<div class="card"><div class="exhead"><div class="tlab">🛏 '+
     T(B("Sueño","Sleep"))+"</div></div>"+
-    '<div class="macrow">'+cols+"</div>"+
+    '<div class="macrow"'+grid4+'>'+cols+"</div>"+
     (av?'<div class="macwarn">'+esc(av)+"</div>":"")+"</div>";
 }
 function macroCard(){
