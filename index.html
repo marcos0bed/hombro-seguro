@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v188";
+var APP_VERSION="v189";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -569,14 +569,15 @@ function authMsg(ok,msg){
 
 /* ---------- registro de sesiones (workout_logs) ---------- */
 var LOGS={data:null,loading:false};
+var ULTLOGS=0;
 function loadLogs(){
   if(!cloudOn()||LOGS.loading)return;
   LOGS.loading=true;
   var since=new Date();since.setDate(since.getDate()-90);
   sb.from("workout_logs").select("day,session_id,title,entries,total_sets,est_volume,created_at,note")
     .gte("day",iso(since)).order("day",{ascending:true})
-    .then(function(r){LOGS.loading=false;LOGS.data=r.data||[];render();},
-          function(){LOGS.loading=false;LOGS.data=[];render();});
+    .then(function(r){LOGS.loading=false;LOGS.data=r.data||[];ULTLOGS=Date.now();render();},
+          function(){LOGS.loading=false;LOGS.data=[];ULTLOGS=Date.now();render();});
 }
 /* ---------- última actualización de datos (header del dashboard) ---------- */
 var LASTUP=null,LASTUPloading=false;
@@ -591,25 +592,27 @@ function loadLastUp(){
 
 /* ---------- últimas actividades Garmin ---------- */
 var GACT={data:null,loading:false};
+var ULTGACT=0;
 function loadGact(){
   if(!cloudOn()||GACT.loading)return;
   GACT.loading=true;
   sb.from("garmin_activities")
     .select("activity_id,start_time,type,distance_km,duration_min,pace,hr_avg,hr_max,calories,cadence,elevation_m,temp_c,apparent_c,raw")
     .order("start_time",{ascending:false}).limit(1200)
-    .then(function(r){GACT.loading=false;GACT.data=r.data||[];render();},
-          function(){GACT.loading=false;GACT.data=[];render();});
+    .then(function(r){GACT.loading=false;GACT.data=r.data||[];ULTGACT=Date.now();render();},
+          function(){GACT.loading=false;GACT.data=[];ULTGACT=Date.now();render();});
 }
 
 /* ---------- métricas diarias (balance energético) ---------- */
 var METRICS={data:null,loading:false};
+var ULTMETRICS=0;
 function loadMetrics(){
   if(!cloudOn()||METRICS.loading)return;
   METRICS.loading=true;
   var since=new Date();since.setDate(since.getDate()-180);
   sb.from("daily_metrics").select("*").gte("day",iso(since)).order("day",{ascending:true})
-    .then(function(r){METRICS.loading=false;METRICS.data=r.data||[];render();},
-          function(){METRICS.loading=false;METRICS.data=[];render();});
+    .then(function(r){METRICS.loading=false;METRICS.data=r.data||[];ULTMETRICS=Date.now();render();},
+          function(){METRICS.loading=false;METRICS.data=[];ULTMETRICS=Date.now();render();});
 }
 
 /* Estimación de reps para precargar: rango "8-12" → el mayor (12);
@@ -4087,6 +4090,14 @@ document.addEventListener("visibilitychange",function(){
      configuración: es cuando el backend puede haber cambiado la rutina o el
      plan mientras la app estaba en segundo plano. */
   if(cloudOn()&&Date.now()-ULTPULL>300000)pullAll().then(function(){render()},function(){});
+  /* METRICS/LOGS/GACT solo se piden la primera vez (data===null): sin esto, la
+     app se quedaba con las curvas de hoy (pasos, sueño, HRV, ESTRÉS…) congeladas
+     en el momento en que se abrió, aunque siguiera horas en segundo plano —
+     detectado el 11-ago-2026 con la curva de estrés parada en las 8 de la mañana
+     mientras Supabase ya tenía datos de las 20:30. Mismo umbral de 5 min que pullAll. */
+  if(cloudOn()&&METRICS.data!==null&&Date.now()-ULTMETRICS>300000)loadMetrics();
+  if(cloudOn()&&LOGS.data!==null&&Date.now()-ULTLOGS>300000)loadLogs();
+  if(cloudOn()&&GACT.data!==null&&Date.now()-ULTGACT>300000)loadGact();
   if(refrescaDia())render();      /* se abrió al día siguiente */
   if(!rest.done){wakeOn();restTick();}
   if(isoST.running){wakeOn();isoTick();}
