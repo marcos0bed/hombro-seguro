@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v187";
+var APP_VERSION="v188";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -884,6 +884,9 @@ carga:{title:B("Carga · pierna + upper","Load day · legs + upper"),sub:B("El d
   {n:B("Floor press con mancuernas","Dumbbell floor press"),m:"chest",sets:4,reps:"6-10",chips:[B("Tu empuje","Your press")],yt:"dumbbell floor press",
    how:B("Alterna con la sentadilla para ganar tiempo: mientras descansan las piernas, empuja. El suelo limita el rango y protege el hombro. Desde el 3-ago la banca con barra está autorizada a muy poco peso, con escápulas juntas y sin hiperlordosis.",
         "Superset it with the squat to save time: press while your legs recover. The floor limits the range and protects the shoulder. Since 3 Aug barbell bench is cleared at very light weight, shoulder blades squeezed, no hyperlordosis.")},
+  {n:B("Flexiones inclinadas","Incline push-ups"),m:"chest",sets:3,reps:"8-12",chips:[B("Codos pegados","Elbows tucked"),B("Escalón de altura","Height step")],yt:"incline push ups technique",
+   how:B("Manos en el borde del banco o en la encimera, cuerpo en línea recta, codos pegados. Baja sin pasar de la línea de la espalda y sube sin rebote. La altura de las manos ES el peso: encimera (~90 cm) ≈ un tercio de tu peso, banco (~45 cm) ≈ la mitad, suelo ≈ dos tercios. Bajas un escalón con 3×12 limpias a dolor 0-1/10; el suelo espera a que el floor press ande por los 50-55 kg. Es la misma escalera que el press, medida en centímetros en vez de en kilos.",
+        "Hands on the edge of the bench or on the kitchen counter, body in a straight line, elbows tucked. Lower without dipping past the line of your back and press up without bouncing. Hand height IS the weight: counter (~90 cm) ≈ a third of your bodyweight, bench (~45 cm) ≈ half, floor ≈ two thirds. You drop a step on a clean 3×12 at 0-1/10 pain; the floor waits until your floor press is around 50-55 kg. Same ladder as the press, measured in centimetres instead of kilos.")},
   {n:B("Peso muerto rumano","Romanian deadlift"),m:"legs",sets:3,reps:"6-8",chips:[],yt:"romanian deadlift technique",
    how:B("Bisagra de cadera, espalda neutra. Es lo que protege el isquiotibial en la carrera.",
         "Hip hinge, neutral spine. This is what protects the hamstring when you run.")},
@@ -900,8 +903,8 @@ carga:{title:B("Carga · pierna + upper","Load day · legs + upper"),sub:B("El d
 upB:{title:"Upper B",sub:B("Floor press + tracción vertical","Floor press + vertical pulling"),load:"soft",type:"gym",items:[
   WARMUP,
   {n:B("Floor press con mancuernas","Dumbbell floor press"),sets:4,reps:"6-10",chips:[B("Agarre neutro","Neutral grip"),B("Tu press progresable","Your progressable press")],yt:"dumbbell floor press neutral grip",
-   how:B("Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas, codos pegados. Baja hasta que los tríceps tocan el suelo y ahí paras (pausa de 1 s). El suelo corta el recorrido justo donde empieza la zona de riesgo — por eso ESTE es el press que sí puedes cargar progresivamente mientras la banca sigue vetada. Aquí es donde recuperas masa y dureza de pecho: aplica la progresión sin miedo, el rango protegido lo permite. Entra y sal de la posición con el truco de las rodillas. Cuando el equipo médico autorice, la vuelta será: floor press → press plano con mancuernas → banca con barra.",
-        "Lying on the floor, knees bent, palms facing, elbows tucked. Lower until the triceps touch the floor and stop there (1 s pause). The floor cuts the range right where the risk zone starts — which is why THIS is the press you can load progressively while the bench stays off-limits. This is where you rebuild chest mass and density: apply the progression without fear, the protected range allows it. Get in and out with the knee-kick trick. When your medical team clears you, the way back runs: floor press → flat dumbbell press → barbell bench.")},
+   how:B("Tumbado en el suelo, rodillas flexionadas, palmas enfrentadas, codos pegados. Baja hasta que los tríceps tocan el suelo y ahí paras (pausa de 1 s). El suelo corta el recorrido justo donde empieza la zona de riesgo — por eso ESTE es el press donde progresas sin pensártelo. Aquí es donde recuperas masa y dureza de pecho: aplica la progresión sin miedo, el rango protegido lo permite. Entra y sal de la posición con el truco de las rodillas. Desde el 3-ago la banca con barra también está autorizada, pero a muy poco peso: el orden de vuelta sigue siendo floor press → press plano con mancuernas → banca con barra, y de momento el que manda es este.",
+        "Lying on the floor, knees bent, palms facing, elbows tucked. Lower until the triceps touch the floor and stop there (1 s pause). The floor cuts the range right where the risk zone starts — which is why THIS is the press you progress on without second-guessing. This is where you rebuild chest mass and density: apply the progression without fear, the protected range allows it. Get in and out with the knee-kick trick. Since 3 Aug barbell bench is cleared too, but at very light weight: the way back still runs floor press → flat dumbbell press → barbell bench, and for now this one is the driver.")},
   {n:B("Jalón al pecho, agarre neutro estrecho","Lat pulldown, close neutral grip"),sets:3,reps:"8-12",chips:[B("Agarre neutro","Neutral grip"),B("Tracción","Pulling")],yt:"neutral grip lat pulldown",
    how:B("Maneral de asas paralelas, separación de hombros o menos. Tira hacia la parte alta del pecho llevando los codos abajo y atrás, pecho alto, sin balanceo. El brazo arriba está en TRACCIÓN: descomprime el hombro, y por eso esto sí y el press militar no. Si molesta en el estiramiento superior, acorta el rango. Nada de dead hang, ni con los pies apoyados.",
         "Parallel-handle attachment, shoulder width or narrower. Pull to the upper chest driving the elbows down and back, chest up, no swinging. The arm overhead is under TRACTION: it decompresses the shoulder, which is why this is allowed and overhead press is not. If the top stretch bothers you, shorten the range. No dead hangs, not even with feet supported.")},
@@ -1461,11 +1464,13 @@ es:{grips:'<div class="card lcard"><h3>Glosario de agarres</h3><ul>'+
   "<li>Upright row / remo al mentón (el peor gesto posible para este cuadro).</li><li>Extensiones de tríceps overhead.</li>"+
   "<li><b>Colgarse, incluso con los pies apoyados.</b> Ana lo confirmó el 3-ago-2026: no es por el pinzamiento, es porque <b>sobrecarga la acromioclavicular</b> — abre el espacio subacromial pero comprime la AC, y el roce repetido puede provocar artritis y osteofitos. Lo que sí abre el espacio es remo, rotadores y protracciones. La barra queda como anclaje de gomas.</li>"+
   "<li>Sentadilla trasera convencional (rack position = rotación externa + abducción); low-bar en particular. Con la SSB no hay motivo para asumirlo.</li>"+
-  "<li>Ab-wheel y core colgado de barra.</li><li>Flexiones profundas (las inclinadas con codos pegados sí valen).</li></ul></div>",
+  "<li>Ab-wheel y core colgado de barra.</li>"+
+  "<li><b>Flexión completa en el suelo: todavía no.</b> Y el motivo ya no es el hombro — el veto se levantó el 3-ago — sino la carga: son ≈ dos tercios de tu peso corporal sobre el pecho, más del doble de tu floor press de hoy. Esto se gana bajando la altura de las manos, no esperando: la escalera está en la tarjeta de autorizados.</li></ul></div>",
  ok:'<div class="card lcard"><h3>✅ Autorizado el 3-ago-2026</h3>'+
   "<p class=\"note\">Tras confirmar por ecografía que la calcificación se ha reabsorbido. Las condiciones son de Ana y no son opcionales.</p><ul>"+
   "<li><b>Press de banca con barra</b>: <b>muy poco peso</b> para empezar, <b>escápulas juntas</b>, <b>hombros abajo</b> y <b>sin hiperlordosis</b> (nada de arquear como en powerlifting). En máquina no hay problema en ningún caso; lo que preocupa es el balanceo de la barra libre.</li>"+
   "<li><b>Abducción en plano escapular</b>: brazo <b>30° por delante</b> del cuerpo y <b>sin pasar de la horizontal</b>. Fuera de esos dos límites vuelve a ser una elevación lateral de las prohibidas.</li>"+
+  "<li><b>Flexiones, por escalones de altura</b>: encimera (~90 cm, ≈ un tercio de tu peso) → banco (~45 cm, ≈ la mitad) → suelo (≈ dos tercios). La altura de las manos es el dial de carga. Se baja un escalón con <b>3×12 limpias a dolor 0-1/10</b>; el suelo entra cuando el floor press ande por los <b>50-55 kg</b>.</li>"+
   "<li><b>Carga en general</b>: subir <b>poco a poco</b>. El tendón sigue menos elástico y el Tendovis tarda ~6 meses en actuar (valorar hacia dic-2026).</li></ul></div>",
  exit:'<div class="card lcard"><h3>Salida de fase — llevar a la revisión</h3><ul>'+
   "<li>¿Qué <b>techo de carga</b> me autorizas para press? Y en concreto: ¿qué criterios (dolor, rango, fuerza, imagen) me pones para volver a la <b>banca plana</b>, y en qué plazo realista?</li>"+
@@ -1494,11 +1499,13 @@ en:{grips:'<div class="card lcard"><h3>Grip glossary</h3><ul>'+
   "<li>Upright rows (the single worst movement for this condition).</li><li>Overhead triceps extensions.</li>"+
   "<li><b>Hanging, even with feet supported.</b> Confirmed by Dr. Ana on 3 Aug 2026: not because of impingement, but because it <b>overloads the AC joint</b> — it opens the subacromial space but compresses the AC, and repeated rubbing can cause arthritis and osteophytes. What does open the space: rows, rotators and protractions. The bar stays as a band anchor.</li>"+
   "<li>Conventional back squat (rack position = external rotation + abduction); low-bar especially. With an SSB there's no reason to take that risk.</li>"+
-  "<li>Ab-wheel and hanging core work.</li><li>Deep push-ups (incline push-ups with tucked elbows are fine).</li></ul></div>",
+  "<li>Ab-wheel and hanging core work.</li>"+
+  "<li><b>Full push-ups on the floor: not yet.</b> And the reason is no longer the shoulder — the ban was lifted on 3 Aug — but the load: that's ≈ two thirds of your bodyweight on the chest, more than double your current floor press. You earn it by lowering your hands, not by waiting: the ladder is in the cleared card.</li></ul></div>",
  ok:'<div class="card lcard"><h3>✅ Cleared on 3 Aug 2026</h3>'+
   "<p class=\"note\">After ultrasound confirmed the calcification has resorbed. The conditions are Dr. Ana's and are not optional.</p><ul>"+
   "<li><b>Barbell bench press</b>: <b>very light weight</b> to start, <b>shoulder blades squeezed</b>, <b>shoulders down</b> and <b>no hyperlordosis</b> (no powerlifting arch). Machines are fine in any case; the concern is the free bar wobbling.</li>"+
   "<li><b>Scapular-plane abduction</b>: arm <b>30° in front</b> of the body and <b>never above horizontal</b>. Outside those two limits it becomes one of the banned lateral raises.</li>"+
+  "<li><b>Push-ups, by height steps</b>: counter (~90 cm, ≈ a third of your bodyweight) → bench (~45 cm, ≈ half) → floor (≈ two thirds). Hand height is the load dial. You drop a step on a <b>clean 3×12 at 0-1/10 pain</b>; the floor comes in when your floor press is around <b>50-55 kg</b>.</li>"+
   "<li><b>Loading in general</b>: build up <b>gradually</b>. The tendon is still less elastic and Tendovis takes ~6 months to act (reassess around Dec 2026).</li></ul></div>",
  exit:'<div class="card lcard"><h3>Phase exit — bring to your review</h3><ul>'+
   "<li>What <b>pressing load ceiling</b> do you authorize? Specifically: what criteria (pain, range, strength, imaging) do you set for returning to the <b>flat bench press</b>, and on what realistic timeline?</li>"+
