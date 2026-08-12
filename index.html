@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v189";
+var APP_VERSION="v190";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2973,7 +2973,10 @@ function pickSeries(rows,key){
 }
 
 /* Casa un workout_log con su actividad Garmin: runs por id exacto; fuerza por
-   mismo día, tipo no-running, la más cercana en hora al momento del guardado. */
+   mismo día, tipo strength_training, la más cercana en hora al momento del
+   guardado. Antes filtraba solo "no-running", así que un paseo con los perros
+   (walking) sincronizado antes que la sesión de pesas se colaba como si fuera
+   ella — mismo criterio que hechoCard(), que ya exige strength_training. */
 function garminFor(l){
   var acts=GACT.data||[];
   var sid=l.session_id||"";
@@ -2982,7 +2985,7 @@ function garminFor(l){
     for(var a=0;a<acts.length;a++)if(String(acts[a].activity_id)===id)return acts[a];
     return null;
   }
-  var day=acts.filter(function(x){return (x.start_time||"").slice(0,10)===l.day&&(x.type||"").indexOf("running")<0});
+  var day=acts.filter(function(x){return (x.start_time||"").slice(0,10)===l.day&&(x.type||"")==="strength_training"});
   if(!day.length)return null;
   if(day.length===1||!l.created_at)return day[0];
   var ct=+new Date(l.created_at);
