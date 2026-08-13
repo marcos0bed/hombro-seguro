@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v193";
+var APP_VERSION="v194";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4296,14 +4296,23 @@ document.addEventListener("change",function(e){
   if(/^(journal|meal):/.test(inp.dataset.key))render(true);
 });
 /* El botón nativo de borrar de <input type="time"> en iOS deja el campo
-   vacío pero no siempre dispara "change" — el borrado se quedaba sin guardar
-   y la hora volvía a aparecer en el siguiente render. "input" sí llega. */
-document.addEventListener("input",function(e){
-  var inp=e.target.closest(".t-in");
-  if(!inp||inp.value!=="")return;
-  W(inp.dataset.key,"");
-  if(/^(journal|meal):/.test(inp.dataset.key))render(true);
-});
+   vacío pero no dispara NINGÚN evento fiable — ni "change" ni "input" (probado
+   el 13-ago: el intento con "input" tampoco funcionó). Sin un evento del que
+   colgarse, se vigila por sondeo: cada pocos segundos se compara lo que hay
+   en pantalla contra lo guardado, y si no coincide (el usuario lo ha vaciado
+   o editado sin que saltara ningún evento) se guarda. */
+function syncTimeInputs(){
+  var els=document.querySelectorAll(".t-in");
+  for(var i=0;i<els.length;i++){
+    var inp=els[i],cur=String(S(inp.dataset.key,""));
+    if(inp.value===cur)continue;
+    W(inp.dataset.key,inp.value.trim());
+    if(/^(journal|meal):/.test(inp.dataset.key))render(true);
+    return true;   // el render reconstruye el resto de campos; no seguir mirando nodos que va a reemplazar
+  }
+  return false;
+}
+setInterval(syncTimeInputs,1500);
 /* ---------- iOS: recolocar los elementos fijos tras cerrar el teclado ----------
    En iOS el teclado encoge el viewport visual. Al cerrarse, los elementos con
    position:fixed (la nav y el sheet del temporizador) pueden quedarse anclados a
