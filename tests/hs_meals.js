@@ -135,4 +135,17 @@ ok("calorías siempre",/Calorías|Calories/.test(wp2),"");
 ok("proteína siempre",/Proteína|Protein/.test(wp2),"");
 ok("entreno siempre",/Entreno|Training/.test(wp2),"");
 
+print("\n== El botón nativo de borrar de la hora sí guarda (13-ago) ==");
+LOGS.data=[];GACT.data=[];   // el handler llama a render(true); sin esto intenta ir a red
+/* En iOS, tocar la "x" del <input type="time"> deja el campo vacío pero no
+   siempre dispara "change": la hora se quedaba guardada y volvía a
+   aparecer en el siguiente render. "input" sí llega; se simula tal cual lo
+   entrega el navegador. */
+W("meal:"+R.day+":l","14:15");
+ok("arranca con hora puesta",S("meal:"+R.day+":l",null)==="14:15","");
+document._h.input({target:{closest:function(sel){
+  return sel===".t-in"?{value:"",dataset:{key:"meal:"+R.day+":l"}}:null;
+}}});
+ok("el borrado nativo limpia la hora guardada",S("meal:"+R.day+":l",null)==="","");
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

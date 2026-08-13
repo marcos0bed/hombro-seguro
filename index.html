@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v192";
+var APP_VERSION="v193";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4293,6 +4293,15 @@ document.addEventListener("click",function(e){
 document.addEventListener("change",function(e){
   var inp=e.target.closest(".w-in,.note-in,.t-in");if(!inp)return;
   W(inp.dataset.key,inp.value.trim());
+  if(/^(journal|meal):/.test(inp.dataset.key))render(true);
+});
+/* El botón nativo de borrar de <input type="time"> en iOS deja el campo
+   vacío pero no siempre dispara "change" — el borrado se quedaba sin guardar
+   y la hora volvía a aparecer en el siguiente render. "input" sí llega. */
+document.addEventListener("input",function(e){
+  var inp=e.target.closest(".t-in");
+  if(!inp||inp.value!=="")return;
+  W(inp.dataset.key,"");
   if(/^(journal|meal):/.test(inp.dataset.key))render(true);
 });
 /* ---------- iOS: recolocar los elementos fijos tras cerrar el teclado ----------
