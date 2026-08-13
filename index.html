@@ -357,7 +357,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v191";
+var APP_VERSION="v192";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -685,14 +685,16 @@ function flushLogs(){
 var LANG=S("lang",((navigator.language||"es").slice(0,2)==="en")?"en":"es");
 function B(es,en){return{es:es,en:en}}
 function T(v){return (v&&typeof v==="object"&&("es" in v))?(v[LANG]||v.es):v}
-/* Id estable por ejercicio, a partir del nombre en español (no cambia si se
+/* Id estable por ejercicio, a partir del nombre en inglés (no cambia si se
    reordena o se borra otro ejercicio del array). Antes el peso y las series
    se guardaban bajo el índice del array (w:sid:i): quitar o insertar un
    ejercicio en el código desplazaba los índices siguientes y el peso de uno
    aparecía pegado a otro (pasó el 03-ago al quitar los cruces en polea de
    Upper A: el curl heredó el peso del tríceps en polea). */
 function exId(it){
-  var n=(it&&it.n&&it.n.es)||"";
+  /* En inglés, no en español: es el texto que menos se retoca (Marcos escribe
+     y ajusta en español; el inglés es la traducción, más estable). */
+  var n=(it&&it.n&&it.n.en)||"";
   return String(n).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
     .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
@@ -1406,14 +1408,13 @@ function rutinaView(){
   var extra=wDia.plus&&getSession(wDia.plus)?wDia.plus:null;
   /* Las pesas van primero: correr antes deja piernas y core cansados para
      estabilizar en el press. */
+  /* sessionView ya trae hechoCard + nota + "Guardar sesión": la sesión plus
+     es una sesión de verdad y necesita las mismas herramientas para
+     registrarla, no una lista de ejercicios sin forma de guardarla. */
   var pre=extra?('<div class="card" style="border-left:3px solid var(--acc)"><div class="exhead"><div class="tlab">💪 '+
       esc(T(getSession(extra).title))+' <span class="snum">'+T(B("primero las pesas, después el rodaje","lift first, then run"))+
       "</span></div></div></div>"+
-      /* La segunda sesión del día también se hace y también la registra el
-         reloj. Sin esto, quien dobla fuerza sobre un día de correr solo veía
-         reconciliada la carrera. */
-      hechoCard(dia,getSession(extra))+
-      (getSession(extra).items||[]).map(function(it,i){return exCard(extra,i,it,i,(getSession(extra).items||[]).length)}).join("")):"";
+      sessionView(extra,dia)):"";
   if(s.type!=="gym")return h+pre+sessionView(sid,dia);
 
   var c=rxCount(sid),f=rxFocus(sid);
@@ -1617,6 +1618,17 @@ function render(keepScroll){
            "<span>"+sIc+" "+esc(tS)+'</span><span class="chev">'+(wkOpen?"▾":"▸")+"</span></button>";
         if(wkOpen)h+=sessionView(wHoy.sid,sdD);
       }
+    }
+    /* Un día puede llevar dos sesiones (campo `plus`, p. ej. jueves = rodaje +
+       Upper A). Antes solo se pintaba en la pestaña Rutina, y encima sin nota
+       ni botón de guardar: en Hoy no había ni rastro de esa segunda sesión. */
+    var sPlus=wHoy.plus&&getSession(wHoy.plus);
+    if(sPlus&&!pastD){
+      var wkOpenPlus=!!state.wkOpenPlus;
+      var tP=planTitulo(sdD,sPlus)||T(sPlus.title)||"";
+      h+='<button class="card wkhead" data-act="togglewkplus" aria-expanded="'+wkOpenPlus+'">'+
+         "<span>💪 "+esc(tP)+'</span><span class="chev">'+(wkOpenPlus?"▾":"▸")+"</span></button>";
+      if(wkOpenPlus)h+=sessionView(wHoy.plus,sdD);
     }
     h+=briefCard();
     h+=journalCard();
@@ -4244,6 +4256,7 @@ document.addEventListener("click",function(e){
   if(act==="day"){state.sid=b.dataset.sid;state.tab="hoy";state.wkOpen=true;render();return}
   if(act==="fold"){var fk="fold:"+b.dataset.k;W(fk,!S(fk,true));render(true);return}
   if(act==="togglewk"){state.wkOpen=!state.wkOpen;render(true);return}
+  if(act==="togglewkplus"){state.wkOpenPlus=!state.wkOpenPlus;render(true);return}
   if(act==="back"){state.sid=null;render();return}
   if(act==="vmode"){state.viaje=b.dataset.m;W("viajeMode",state.viaje);render();return}
   if(act==="pview"){state.pview=b.dataset.pv;render();return}
@@ -4381,11 +4394,11 @@ setInterval(vigilaNav,4000);
   try{
     if(S("migr_upa0803",false))return;
     var up=EX.upA.items,triceps=up[3],curl=up[4];
-    if(triceps&&exId(triceps)==="triceps-en-polea-cuerda"&&S(wKey("upA",triceps),null)===null){
+    if(triceps&&exId(triceps)==="triceps-rope-pushdown"&&S(wKey("upA",triceps),null)===null){
       var vT=S("w:upA:4","");   // peso real del tríceps, antes de que los cruces se fueran
       if(vT!=="")W(wKey("upA",triceps),vT);
     }
-    if(curl&&exId(curl)==="curl-con-barra"&&S(wKey("upA",curl),null)===null){
+    if(curl&&exId(curl)==="barbell-curl"&&S(wKey("upA",curl),null)===null){
       var vC=S("w:upA:5","");   // peso real del curl, huérfano desde el 03-ago
       if(vC!=="")W(wKey("upA",curl),vC);
     }

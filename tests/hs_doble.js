@@ -23,6 +23,21 @@ ok("también los del rodaje",/Rectas|Strides/.test(v),"");
 var iF=v.indexOf("Press inclinado"), iR=v.indexOf("Rodaje suave");
 ok("las pesas van ANTES del rodaje",iF>-1&&iR>-1&&iF<iR,iF+" vs "+iR);
 ok("el selector marca el día doble",/rxplus/.test(v),"");
+/* Antes la sesión plus era solo una lista de ejercicios: no había forma de
+   guardarla. Sin esto un "Guardar sesión" ausente no lo detectaba nadie. */
+ok("Upper A trae botón de guardar",/data-act="savelog" data-sid="upA"/.test(v),"");
+ok("y su propia nota",/data-key="note:[^"]*:upA"/.test(v),"");
+
+print("\n== Hoy: la sesión plus también se pinta, con nota y botón de guardar ==");
+/* En Hoy antes no aparecía ni rastro de la sesión plus. state.sid fija el día
+   sin depender de qué día real sea al lanzar los tests. */
+state.tab="hoy";state.sid="runEasy";state.dayOff=0;state.wkOpen=true;state.wkOpenPlus=true;
+render();
+var vHoy=document.getElementById("view").innerHTML;
+ok("aparece la tarjeta de Upper A",/Upper A/.test(vHoy),"");
+ok("con su botón de guardar",/data-act="savelog" data-sid="upA"/.test(vHoy),"");
+ok("y también el rodaje suave",/Rodaje suave|Easy run/.test(vHoy),"");
+state.sid=null;state.wkOpenPlus=false;
 
 print("\n== Un día normal no cambia ==");
 state.rxSid="run1";

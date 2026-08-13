@@ -2,10 +2,11 @@ var fails=0;
 function ok(n,c,x){print((c?"  ok   ":"  FAIL ")+n+(c?"":"   <<< "+String(x||"").slice(0,140)));if(!c)fails++}
 var LS={};W=function(k,v){LS[k]=v};S=function(k,d){return LS[k]===undefined?d:LS[k]};
 
-print("\n== exId: id estable a partir del nombre en español ==");
-ok("curl con barra",exId({n:{es:"Curl con barra",en:"Barbell curl"}})==="curl-con-barra","");
-ok("acentos y paréntesis fuera",exId({n:{es:"Tríceps en polea (cuerda)",en:"x"}})==="triceps-en-polea-cuerda","");
-ok("mismo nombre, mismo id sin importar el orden",exId(EX.upA.items[4])===exId({n:{es:"Curl con barra"}}),"");
+print("\n== exId: id estable a partir del nombre en inglés (el que menos se retoca) ==");
+ok("curl con barra",exId({n:{es:"Curl con barra",en:"Barbell curl"}})==="barbell-curl","");
+ok("acentos y paréntesis fuera",exId({n:{es:"x",en:"Triceps rope pushdown (cable)"}})==="triceps-rope-pushdown-cable","");
+ok("mismo nombre, mismo id sin importar el orden",exId(EX.upA.items[4])===exId({n:{en:"Barbell curl"}}),"");
+ok("retocar solo el español no cambia el id",exId({n:{es:"Curl con barra, de pie",en:"Barbell curl"}})==="barbell-curl","");
 
 print("\n== getW: si no hay nada bajo el id, recupera lo que hubiera bajo el índice actual ==");
 LS={};
