@@ -277,6 +277,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .mealnm{font-size:12.5px;color:var(--text);min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mealnm b{font:400 11px var(--mono);color:var(--mut);margin-left:6px}
 .t-in{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:5px 6px;font:13px var(--mono);flex:none;min-width:0;width:88px}
+.tclear{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:var(--mut);font-size:11px;line-height:1;padding:0}
 .t-in:focus{outline:none;border-color:var(--acc)}
 .lgds{display:flex;flex-wrap:wrap;gap:11px;padding:3px 4px 0}
 .lgd{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--mut)}
@@ -357,7 +358,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v194";
+var APP_VERSION="v195";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3215,10 +3216,18 @@ function mealsCard(){
         T(B("Horas de comida","Meal times"))+' <span class="snum">'+puestas+"/"+ms.length+"</span></div></div>"+
         '<div class="mealgrid">';
   ms.forEach(function(m){
+    var mk="meal:"+day+":"+m.k;
     h+='<div class="mealit"><span class="mealic">'+m.ic+"</span>"+
        '<span class="mealnm">'+esc(T(m.nm))+'<b>'+(m.kcal!=null?m.kcal+" kcal · "+m.prot+" g":T(B("sin registrar aún","not logged yet")))+"</b></span>"+
-       '<input class="t-in" type="time" data-key="meal:'+day+":"+m.k+'" value="'+esc(m.t)+
-       '" aria-label="'+esc(T(m.nm))+'"></div>';
+       '<input class="t-in" type="time" data-key="'+mk+'" value="'+esc(m.t)+
+       '" aria-label="'+esc(T(m.nm))+'">'+
+       /* El "Reset" del selector nativo de hora en iOS no vacía el campo: solo
+          deshace lo que se ha girado en esa apertura del selector, así que si
+          la hora ya estaba puesta desde antes, Reset la deja igual — parece
+          que "no hace nada". Un botón propio, fuera del selector nativo, es
+          la única forma fiable de vaciarlo de verdad. */
+       (m.t?'<button class="tclear" data-act="clearmeal" data-key="'+mk+'" aria-label="'+T(B("Borrar hora","Clear time"))+'">✕</button>':"")+
+       "</div>";
   });
   return h+"</div></div>";
 }
@@ -4206,6 +4215,7 @@ document.addEventListener("click",function(e){
   if(act==="how"){var how=b.closest(".card").querySelector(".how");how.classList.toggle("open");return}
   if(act==="xtoggle"){var xt=document.getElementById(b.dataset.x);if(xt)xt.classList.toggle("open");return}
   if(act==="pain"){W("pain:"+TODAY,+b.dataset.v);render(true);return}
+  if(act==="clearmeal"){W(b.dataset.key,"");render(true);return}
   if(act==="wake"){
     var kw="wake:"+selDay(),nv=+b.dataset.v;
     W(kw,S(kw,0)===nv?0:nv);   /* volver a tocar el mismo lo borra */
@@ -4295,24 +4305,6 @@ document.addEventListener("change",function(e){
   W(inp.dataset.key,inp.value.trim());
   if(/^(journal|meal):/.test(inp.dataset.key))render(true);
 });
-/* El botón nativo de borrar de <input type="time"> en iOS deja el campo
-   vacío pero no dispara NINGÚN evento fiable — ni "change" ni "input" (probado
-   el 13-ago: el intento con "input" tampoco funcionó). Sin un evento del que
-   colgarse, se vigila por sondeo: cada pocos segundos se compara lo que hay
-   en pantalla contra lo guardado, y si no coincide (el usuario lo ha vaciado
-   o editado sin que saltara ningún evento) se guarda. */
-function syncTimeInputs(){
-  var els=document.querySelectorAll(".t-in");
-  for(var i=0;i<els.length;i++){
-    var inp=els[i],cur=String(S(inp.dataset.key,""));
-    if(inp.value===cur)continue;
-    W(inp.dataset.key,inp.value.trim());
-    if(/^(journal|meal):/.test(inp.dataset.key))render(true);
-    return true;   // el render reconstruye el resto de campos; no seguir mirando nodos que va a reemplazar
-  }
-  return false;
-}
-setInterval(syncTimeInputs,1500);
 /* ---------- iOS: recolocar los elementos fijos tras cerrar el teclado ----------
    En iOS el teclado encoge el viewport visual. Al cerrarse, los elementos con
    position:fixed (la nav y el sheet del temporizador) pueden quedarse anclados a

@@ -135,25 +135,22 @@ ok("calorías siempre",/Calorías|Calories/.test(wp2),"");
 ok("proteína siempre",/Proteína|Protein/.test(wp2),"");
 ok("entreno siempre",/Entreno|Training/.test(wp2),"");
 
-print("\n== El botón nativo de borrar de la hora sí guarda, por sondeo (13-ago) ==");
-/* En iOS, tocar la "x" del <input type="time"> deja el campo vacío en
-   pantalla sin disparar NINGÚN evento fiable (ni "change" ni "input": el
-   primer intento con "input" tampoco funcionó). syncTimeInputs() compara
-   sin depender de eventos, así que se prueba llamándola directamente con
-   los nodos que devolvería document.querySelectorAll. */
-LOGS.data=[];GACT.data=[];   // si detecta un cambio llama a render(true); sin esto intenta ir a red
-W("meal:"+R.day+":l","14:15");
-ok("arranca con hora puesta",S("meal:"+R.day+":l",null)==="14:15","");
-var qsaOrig=document.querySelectorAll;
-document.querySelectorAll=function(sel){
-  return sel===".t-in"?[{value:"",dataset:{key:"meal:"+R.day+":l"}}]:[];
-};
-ok("el sondeo detecta el borrado y guarda",syncTimeInputs()===true,"");
-ok("la hora guardada queda vacía",S("meal:"+R.day+":l",null)==="","");
-document.querySelectorAll=function(sel){
-  return sel===".t-in"?[{value:"",dataset:{key:"meal:"+R.day+":l"}}]:[];
-};
-ok("si coincide con lo guardado, no toca nada",syncTimeInputs()===false,"");
-document.querySelectorAll=qsaOrig;
+print("\n== Botón propio para borrar la hora (13-ago) ==");
+/* El "Reset" del selector nativo de hora en iOS no vacía el campo: solo
+   deshace lo girado en esa apertura del picker, así que si la hora ya
+   estaba puesta, Reset la deja tal cual — parece que no hace nada (dos
+   intentos previos con eventos del navegador tampoco servían de nada,
+   porque el problema nunca fue un evento que no llegara). Botón propio,
+   fuera del picker nativo, con guardado directo. */
+LOGS.data=[];GACT.data=[];   // clearmeal llama a render(true); sin esto intenta ir a red
+ok("sin hora puesta, no hay botón de borrar",!/data-act="clearmeal"[^>]*meal:[^:]*:d/.test(mealsCard()),"");
+W("meal:"+R.day+":d","21:32");
+var cD=mealsCard();
+ok("con hora puesta, sí aparece",new RegExp('data-act="clearmeal" data-key="meal:'+R.day+':d"').test(cD),cD.slice(cD.indexOf("Cena"),cD.indexOf("Cena")+220));
+document._h.click({target:{closest:function(sel){
+  return sel==="[data-act],[data-tab]"?{getAttribute:function(a){return a==="data-act"?"clearmeal":null},dataset:{key:"meal:"+R.day+":d"}}:null;
+}}});
+ok("al tocarlo, la hora queda vacía",S("meal:"+R.day+":d",null)==="","");
+ok("y el botón desaparece",!new RegExp('data-act="clearmeal" data-key="meal:'+R.day+':d"').test(mealsCard()),"");
 
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
