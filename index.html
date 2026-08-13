@@ -278,6 +278,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .mealnm b{font:400 11px var(--mono);color:var(--mut);margin-left:6px}
 .t-in{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:5px 6px;font:13px var(--mono);flex:none;min-width:0;width:88px}
 .tclear{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:var(--mut);font-size:11px;line-height:1;padding:0}
+.tclear.ph{visibility:hidden}
 .t-in:focus{outline:none;border-color:var(--acc)}
 .lgds{display:flex;flex-wrap:wrap;gap:11px;padding:3px 4px 0}
 .lgd{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--mut)}
@@ -358,7 +359,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v195";
+var APP_VERSION="v196";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3226,7 +3227,11 @@ function mealsCard(){
           la hora ya estaba puesta desde antes, Reset la deja igual — parece
           que "no hace nada". Un botón propio, fuera del selector nativo, es
           la única forma fiable de vaciarlo de verdad. */
-       (m.t?'<button class="tclear" data-act="clearmeal" data-key="'+mk+'" aria-label="'+T(B("Borrar hora","Clear time"))+'">✕</button>':"")+
+       /* Un botón menos también es 22px menos: sin él, mealnm (flex:1)
+          crecía y desalineaba la fila vacía frente a las que sí lo llevan.
+          Se reserva el hueco siempre y solo se hace invisible. */
+       (m.t?'<button class="tclear" data-act="clearmeal" data-key="'+mk+'" aria-label="'+T(B("Borrar hora","Clear time"))+'">✕</button>'
+           :'<span class="tclear ph" aria-hidden="true"></span>')+
        "</div>";
   });
   return h+"</div></div>";

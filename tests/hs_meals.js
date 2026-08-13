@@ -144,6 +144,9 @@ print("\n== Botón propio para borrar la hora (13-ago) ==");
    fuera del picker nativo, con guardado directo. */
 LOGS.data=[];GACT.data=[];   // clearmeal llama a render(true); sin esto intenta ir a red
 ok("sin hora puesta, no hay botón de borrar",!/data-act="clearmeal"[^>]*meal:[^:]*:d/.test(mealsCard()),"");
+/* Sin el botón, mealnm (flex:1) crecía y desalineaba esa fila frente a las
+   demás: se reserva el hueco con un span invisible en vez de quitarlo. */
+ok("pero sí se reserva su hueco, para no desalinear la fila",/class="tclear ph"/.test(mealsCard()),"");
 W("meal:"+R.day+":d","21:32");
 var cD=mealsCard();
 ok("con hora puesta, sí aparece",new RegExp('data-act="clearmeal" data-key="meal:'+R.day+':d"').test(cD),cD.slice(cD.indexOf("Cena"),cD.indexOf("Cena")+220));
