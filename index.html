@@ -257,6 +257,8 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 .wakes{display:flex;gap:7px;margin-top:8px}
 .wkb{flex:1;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--mut);font-family:var(--mono);font-size:14px}
 .wkb.on{background:var(--acc);border-color:var(--acc);color:#12100C;font-weight:700}
+.bedtapb{font-size:11px;color:var(--mut);background:var(--surface2);border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-family:var(--mono);white-space:nowrap}
+.bedtapb.on{color:#12100C;background:var(--acc);border-color:var(--acc);font-weight:700}
 .rxplus{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--acc);vertical-align:super;margin-left:1px}
 .pbr{display:flex;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line)}
 .pbr:last-child{border-bottom:0}
@@ -359,7 +361,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v196";
+var APP_VERSION="v197";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3522,6 +3524,18 @@ function medianaDe(v){
   if(!a.length)return null;
   return a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2;
 }
+/* Toque de "me voy a dormir": más fiable que el proxy de pasos o que escribir
+   una frase en el journal que el regex tenga que reconocer. Guarda la hora
+   real del toque en kv_state (bedtap:<día>); balancetool la lee con prioridad
+   sobre journal_bed() para sleep_try_h. Solo tiene sentido para HOY: no se
+   puede marcar "ahora" en un día pasado. */
+function bedTapBtn(day){
+  if(day!==TODAY)return "";
+  var v=S("bedtap:"+day,"");
+  return '<button class="bedtapb'+(v?" on":"")+'" data-act="bedtap" aria-label="'+
+    esc(T(B("Registrar que te vas a dormir ahora","Log that you’re going to sleep now")))+'">'+
+    (v?"😴 "+esc(v):"😴 "+T(B("ahora","now")))+"</button>";
+}
 function bedCard(){
   if(!cloudOn())return "";
   if((state.dayRange||1)!==1)return "";
@@ -3572,7 +3586,7 @@ function bedCard(){
     }
   }
   return '<div class="card"><div class="exhead"><div class="tlab">🛏 '+
-    T(B("Sueño","Sleep"))+"</div></div>"+
+    T(B("Sueño","Sleep"))+"</div>"+bedTapBtn(day)+"</div>"+
     '<div class="macrow"'+grid4+'>'+cols+"</div>"+
     (av?'<div class="macwarn">'+esc(av)+"</div>":"")+"</div>";
 }
@@ -4224,6 +4238,13 @@ document.addEventListener("click",function(e){
   if(act==="wake"){
     var kw="wake:"+selDay(),nv=+b.dataset.v;
     W(kw,S(kw,0)===nv?0:nv);   /* volver a tocar el mismo lo borra */
+    haptic(1);render(true);return;
+  }
+  if(act==="bedtap"){
+    /* Sin toggle-a-borrar: si se toca por error, tocar otra vez a la hora
+       real simplemente sobrescribe — el último toque de la noche es el bueno. */
+    var kb="bedtap:"+TODAY,now=new Date();
+    W(kb,pad(now.getHours())+":"+pad(now.getMinutes()));
     haptic(1);render(true);return;
   }
   if(act==="run-done"){
