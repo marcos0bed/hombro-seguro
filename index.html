@@ -361,7 +361,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v197";
+var APP_VERSION="v198";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1601,6 +1601,7 @@ function render(keepScroll){
     h+=macroCard();
     h+=bedCard();
     h+=weekPaceCard();
+    h+=lastWeekCard();
     h+=daybriefCard();
     h+=stressDayCard();
     h+=mealsCard();
@@ -3655,26 +3656,23 @@ function macroCard(){
 /* ---------- ritmo de la semana ----------
    Cada métrica se comporta distinto y se mide como toca:
    · CALORÍAS: presupuesto SEMANAL. Un día de más lo absorbe la semana; lo que
-     importa es el acumulado, no compensar al día siguiente.
+     importa es el acumulado, no compensar al día siguiente. El objetivo de
+     cada día incluye el extra de NEAT (neatExtra), igual que la tarjeta
+     diaria de macros — si no, un día de jardín aparece como exceso.
    · PROTEÍNA: suelo DIARIO. La síntesis proteica es un proceso del día — lo que
      falta hoy no se recupera mañana. Por eso se cuentan días cumplidos, no medias:
      una media esconde justo los días malos.
    · ENTRENO: objetivo SEMANAL, pero sin amontonar. Se muestra qué falta, no para
      meterlo en otra sesión sino para saber dónde estás.
    Solo cuentan los días con el registro de comida completo. */
-function weekPaceCard(){
-  if(runOnly())return "";      /* pendiente: versión de carrera */
-  if(!cloudOn()||!macroGoal(TODAY))return "";
+function weekCardFor(lun,semanaActual,tit){
   var M=METRICS.data;if(!M||!M.length)return "";
-  /* Anclada al día que se MIRA, no a hoy: en la vista de ayer domingo debe
-     salir cómo cerró esa semana, no la que acaba de empezar. */
-  var lun=mondayOf(selDay());
-  var semanaActual=(lun===mondayOf(TODAY));
   var dias=[];for(var i=0;i<7;i++){var d=new Date(lun+"T12:00:00");d.setDate(d.getDate()+i);dias.push(iso(d))}
   /* Comida: solo días CERRADOS. Un día en curso no se compara con un objetivo
      diario — a media mañana diría que vas en déficit enorme, y es falso. El día
      de hoy ya lo cubre la fila de macros. El entreno sí cuenta hoy: o está hecho
-     o no lo está. */
+     o no lo está. Para una semana ya pasada esto no filtra nada: sus 7 días
+     son siempre anteriores a hoy. */
   var hasta=dias.filter(function(d){return d<TODAY});
   var porDia={};M.forEach(function(r){porDia[r.day]=r});
 
@@ -3683,7 +3681,7 @@ function weekPaceCard(){
     var r=porDia[d],g=macroGoal(d);if(!g)return;
     if(!r||r.kcal_in==null)return;
     if(!logOK(r)){incompletos++;return}
-    difK+=(+r.kcal_in)-(g.prot*4+g.carb*4+g.fat*9);nK++;
+    difK+=(+r.kcal_in)-(g.prot*4+g.carb*4+g.fat*9)-neatExtra(r);nK++;
     nP++;if((+r.protein_g||0)>=g.prot)protOK++;
   });
 
@@ -3750,12 +3748,33 @@ function weekPaceCard(){
        (plan-hechas)+" "+T(B("por hacer","to go")))]);
 
   return '<div class="card" style="padding:11px 13px"><div class="exhead" style="margin-bottom:8px">'+
-    '<div class="tlab">'+T(B("Esta semana","This week"))+'</div><span class="macnote">'+
+    '<div class="tlab">'+T(tit)+'</div><span class="macnote">'+
     lun.slice(8,10)+"/"+lun.slice(5,7)+" – "+dias[6].slice(8,10)+"/"+dias[6].slice(5,7)+"</span></div>"+
     fil.map(function(f){
       return '<div class="wkrow"><span class="wki">'+f[0]+'</span><span class="wkl">'+esc(f[1])+
         '</span><span class="wkv">'+f[2]+'</span><span class="wks">'+esc(f[3])+"</span></div>";
     }).join("")+"</div>";
+}
+function weekPaceCard(){
+  if(runOnly())return "";      /* pendiente: versión de carrera */
+  if(!cloudOn()||!macroGoal(TODAY))return "";
+  /* Anclada al día que se MIRA, no a hoy: en la vista de ayer domingo debe
+     salir cómo cerró esa semana, no la que acaba de empezar. */
+  var lun=mondayOf(selDay());
+  var semanaActual=(lun===mondayOf(TODAY));
+  return weekCardFor(lun,semanaActual,B("Esta semana","This week"));
+}
+/* Cierre de la semana anterior a la real (no a la que se esté mirando con las
+   flechas de día): un recordatorio fijo de cómo quedó, sin tener que navegar
+   7+ días hacia atrás para verlo. Solo en la vista de hoy — al navegar a un
+   día de la semana pasada, weekPaceCard ya la muestra como "Esta semana" y
+   duplicaría la tarjeta. */
+function lastWeekCard(){
+  if(runOnly())return "";
+  if(!cloudOn()||!macroGoal(TODAY))return "";
+  if(state.dayOff)return "";
+  var lun=new Date(mondayOf(TODAY)+"T12:00:00");lun.setDate(lun.getDate()-7);
+  return weekCardFor(iso(lun),false,B("Semana pasada","Last week"));
 }
 
 /* Logros del día: 10k pasos, sueño 80+, déficit calórico */

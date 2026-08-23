@@ -44,4 +44,43 @@ METRICS.data=ROWS.slice(0,5);
 ok("con 5 días no hay base",neatBase()===null,String(neatBase()));
 ok("y por tanto no hay extra",neatExtra({day:"x",kcal_active:1000,kcal_bmr:2160})===0,"");
 
+print("\n== La tarjeta semanal descuenta el NEAT, no solo la diaria ==");
+GACT.data=[];
+METRICS.data=ROWS; /* base 400 otra vez, 45 días limpios */
+W("goal",{macros:{prot:160,soft:{carb:60,fat:75},hard:{carb:110,fat:80},long:{carb:130,fat:80}}});
+state.dayOff=0;LOGS.data=[];
+var lunHoy=new Date(mondayOf(TODAY)+"T12:00:00");
+var diasEstaSemana=[];for(var i=0;i<7;i++){var dd=new Date(lunHoy);dd.setDate(dd.getDate()+i);diasEstaSemana.push(iso(dd))}
+/* Un solo día cerrado de esta semana, con NEAT muy por encima de la base
+   (jardín): kcal_in exactamente igual al objetivo base, así que sin el
+   descuento de NEAT el ritmo marcaría 0 y con él debe marcar el extra en
+   negativo (bajo el objetivo real, más alto por el NEAT). */
+var diaCerrado=diasEstaSemana[0]===TODAY?null:diasEstaSemana[0];
+if(diaCerrado){
+  var g=macroGoal(diaCerrado);
+  var kcalBase=g.prot*4+g.carb*4+g.fat*9;
+  /* ROWS cubre los últimos 45 días y por tanto pisa varios días de "esta
+     semana" con su propio kcal_in: hay que quitarlos para que el único día
+     cerrado que cuente sea el controlado de este test. */
+  var base45=ROWS.filter(function(r){return diasEstaSemana.indexOf(r.day)<0});
+  METRICS.data=base45.concat([{day:diaCerrado,kcal_active:1000,kcal_bmr:2160,kcal_in:kcalBase,protein_g:g.prot,carbs_g:g.carb,fat_g:g.fat}]);
+  var extraEsperado=neatExtra({day:diaCerrado,kcal_active:1000,kcal_bmr:2160});
+  ok("hay margen de NEAT que probar",extraEsperado>0,String(extraEsperado));
+  var html=weekPaceCard();
+  ok("comiendo justo el objetivo base, el ritmo baja por el NEAT (no se queda en 0)",
+     html.indexOf("-"+extraEsperado+"</b> kcal")>-1,html.replace(/\n/g," ").slice(0,300));
+}
+
+print("\n== Semana pasada: tarjeta fija, no la que se esté mirando ==");
+METRICS.data=ROWS;
+state.dayOff=0;
+var htmlHoy=lastWeekCard();
+ok("con hoy a la vista, aparece la tarjeta de la semana pasada",/Semana pasada|Last week/.test(htmlHoy),htmlHoy.slice(0,200));
+var lunPasada=new Date(mondayOf(TODAY)+"T12:00:00");lunPasada.setDate(lunPasada.getDate()-7);
+ok("y su rango de fechas es 7 días antes de esta semana",
+   htmlHoy.indexOf(iso(lunPasada).slice(8,10)+"/"+iso(lunPasada).slice(5,7))>-1,htmlHoy.slice(0,200));
+state.dayOff=10;
+ok("al navegar a un día viejo no se duplica con weekPaceCard",lastWeekCard()==="","");
+state.dayOff=0;
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
