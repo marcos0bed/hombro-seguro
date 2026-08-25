@@ -169,4 +169,25 @@ ok("y sus etiquetas no se pisan",
    "hoy y="+(yHoy&&yHoy[1])+" 100% y="+(y100&&y100[1]));
 TODAY=HOY1;
 
+print("\n== Progresión: tres curvas a la vez (hoy + adherencia + velocidad) ==");
+/* Con las tres cosas encima de "hoy" —el punto de adherencia arriba y el de
+   velocidad abajo, digamos— no hay hueco vertical libre: "hoy" tiene que
+   irse al lado en vez de solaparse con cualquiera de los dos. */
+var HOY2=TODAY;TODAY="2026-08-24";
+W("race",{name:"x",date:"2026-11-15",km:10,goal_min:55,hr_max:195,plan:planP});
+GACT.data=[
+  {activity_id:502,start_time:"2026-08-09T09:00:00",type:"running",distance_km:5,duration_min:42,hr_avg:145},
+  {activity_id:503,start_time:"2026-08-23T09:00:00",type:"running",distance_km:5,duration_min:38,hr_avg:138}
+];
+var h3=progresionCard();
+ok("con las tres curvas presentes",/>hoy</.test(h3)&&/100%/.test(h3)&&/velocidad real|real speed/.test(h3),"");
+var yHoy3=/y="([\d.]+)"[^>]*>hoy</.exec(h3);
+var yPts3=[].concat(
+  [].slice.call(h3.match(/y="([\d.]+)"[^>]*font-weight="700"[^>]*>[\d:]+%?</g)||[]).map(function(s){return +(/y="([\d.]+)"/.exec(s)[1])})
+);
+ok("hoy no se pisa con ninguno de los dos puntos finales",
+   !!yHoy3&&yPts3.every(function(y){return Math.abs(y-+yHoy3[1])>=13}),
+   "hoy y="+(yHoy3&&yHoy3[1])+" puntos="+yPts3.join(","));
+TODAY=HOY2;
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
