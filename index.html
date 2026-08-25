@@ -361,7 +361,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v202";
+var APP_VERSION="v203";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2449,6 +2449,17 @@ function raceHeadCard(){
     '<div class="macrow">'+cols+'</div><div class="macwarn" style="color:var(--mut);border-top-color:var(--line)">'+esc(nota)+"</div></div>";
 }
 
+/* Muestra de leyenda con el trazo REAL de la curva (sólido/punteado/rayado),
+   no solo un cuadradito de color): con tres líneas compartiendo el mismo
+   recuadro y cada una con su propia escala, el color solo no basta para
+   saber cuál es cuál de un vistazo. */
+function leyendaLinea(col,dash,texto){
+  return '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 10px 2px 0">'+
+    '<svg width="16" height="8" style="flex:none"><line x1="1" y1="4" x2="15" y2="4" stroke="'+col+
+    '" stroke-width="2" stroke-dasharray="'+(dash||"100")+'" stroke-linecap="round"/></svg>'+
+    '<span style="font-size:10.5px;color:'+col+'">'+esc(texto)+"</span></span>";
+}
+
 /* Progresión de la tirada larga (domingo) de hoy al día de la carrera: es la
    sesión que decide si aguantas el ritmo objetivo una hora entera, y su
    duración está fijada de antemano en el plan entero —pasado y futuro—, así
@@ -2551,10 +2562,17 @@ function progresionCard(){
     areaChart(pares,{uid:"prog",col:"#7BA1D9",fmt:function(v){return v+" min"},vline:vline,
       serie2:adh.length>=2?{pares:adh,col:"#B57BD9",fmt:function(v){return v+"%"},min:0,max:100}:null,
       serie3:vel.length>=2?{pares:vel,col:colVel,fmt:fp}:null})+
-    (adh.length>=2?'<p class="note" style="margin:4px 4px 0;color:#B57BD9">'+
-      T(B("┈ adherencia semanal (sesiones hechas / planificadas)","┈ weekly adherence (sessions done / planned)"))+"</p>":"")+
-    (vel.length>=2?'<p class="note" style="margin:2px 4px 0;color:'+colVel+'">'+
-      T(B("╌ velocidad real (ritmo a 150 ppm, no el objetivo de la ficha)","╌ real speed (pace at 150 bpm, not the sheet's target)"))+"</p>":"")+
+    '<div style="margin:4px 4px 0">'+
+    leyendaLinea("#7BA1D9","100",T(B("tirada larga (min)","long run (min)")))+
+    (adh.length>=2?leyendaLinea("#B57BD9","1 3.6",T(B("adherencia (%)","adherence (%)"))):"")+
+    (vel.length>=2?leyendaLinea(colVel,"4 2.5",T(B("velocidad real","real speed"))):"")+
+    "</div>"+
+    (adh.length>=2||vel.length>=2?'<p class="note" style="margin:2px 4px 0;color:var(--mut)">'+
+      T(B("Cada línea tiene su propia escala arriba-abajo: no compares alturas entre colores, solo la tendencia de cada una.",
+          "Each line has its own top-to-bottom scale: don't compare heights across colors, only each one's own trend."))+"</p>":"")+
+    (vel.length>=2?'<p class="note" style="margin:2px 4px 0;color:var(--mut)">'+
+      T(B("La velocidad es tu rendimiento real (ritmo a 150 ppm), no el ritmo objetivo de la ficha.",
+          "Speed is your real performance (pace at 150 bpm), not the sheet's target pace."))+"</p>":"")+
     (hitos.length?'<p class="note" style="margin:6px 4px 0;color:var(--mut)">'+
       esc(T(B("Entre medias: ","In between: ")))+esc(hitos.join(" · "))+"</p>":"")+"</div>";
 }
