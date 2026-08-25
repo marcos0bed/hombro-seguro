@@ -146,4 +146,27 @@ ok("y no el integrado",!/déficit|mantenimiento/.test(rc),"");
 W("race",{name:"x",date:"2026-11-15",km:10,goal_min:55,hr_max:195,plan:{}});
 ok("sin él, el integrado de siempre",/tres días hacen cosas distintas|three days do different/.test(racionalCard()),"");
 
+print("\n== Progresión: hoy no se come la etiqueta de adherencia ==");
+/* "hoy" cae casi siempre pegado al último punto de adherencia -es por
+   definición la semana más reciente ya cerrada-, así que si las dos
+   etiquetas comparten posición salen ilegibles ("100hoy"). Aquí se fuerza
+   justo ese caso: la última semana cerrada al 100 % (arriba del todo) y hoy
+   un día después de su domingo. */
+function diaLarga(min){return {t:{es:"Tirada progresiva "+min+" min",en:"x"},p:[]}}
+var planP={};
+planP["2026-08-09"]=diaLarga(45);
+planP["2026-08-16"]=diaLarga(50);
+planP["2026-08-23"]=diaLarga(55);
+planP["2026-08-30"]=diaLarga(60);
+var HOY1=TODAY;TODAY="2026-08-24";
+W("race",{name:"x",date:"2026-11-15",km:10,goal_min:55,hr_max:195,plan:planP});
+GACT.data=[{activity_id:501,start_time:"2026-08-23T09:00:00",type:"running",distance_km:5,duration_min:40,hr_avg:140}];
+var hp=progresionCard();
+ok("dibuja hoy y la adherencia a la vez",/>hoy</.test(hp)&&/100%/.test(hp),"");
+var yHoy=/y="([\d.]+)"[^>]*>hoy</.exec(hp),y100=/y="([\d.]+)"[^>]*>100%</.exec(hp);
+ok("y sus etiquetas no se pisan",
+   !!yHoy&&!!y100&&Math.abs(+yHoy[1]-+y100[1])>=15,
+   "hoy y="+(yHoy&&yHoy[1])+" 100% y="+(y100&&y100[1]));
+TODAY=HOY1;
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
