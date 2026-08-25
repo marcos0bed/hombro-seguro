@@ -361,7 +361,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v198";
+var APP_VERSION="v199";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -2398,6 +2398,43 @@ function raceHeadCard(){
     '<div class="macrow">'+cols+'</div><div class="macwarn" style="color:var(--mut);border-top-color:var(--line)">'+esc(nota)+"</div></div>";
 }
 
+/* Progresión de la tirada larga (domingo) de hoy al día de la carrera: es la
+   sesión que decide si aguantas el ritmo objetivo una hora entera, y su
+   duración está fijada de antemano en el plan entero —pasado y futuro—, así
+   que se dibuja de un tirón en vez de solo el histórico como las demás
+   tarjetas. El resto de días (martes/jueves) no entra: mezclarlos con la
+   tirada da un zigzag de duraciones que no cuenta una progresión, sino dos
+   sesiones distintas. */
+function progresionCard(){
+  var R=raceCfg();if(!R||!R.plan)return "";
+  var dias=Object.keys(R.plan).sort();
+  if(dias.length<4)return "";
+  var pares=[],hitos=[];
+  dias.forEach(function(d){
+    var p=R.plan[d];
+    var raw=(p&&!Array.isArray(p)&&typeof p==="object")?p.t:null;
+    var tit=raw?T(raw):"";
+    if(!tit)return;
+    if(new Date(d+"T12:00:00").getDay()===0){
+      var m=/(\d+)\s*min/.exec(tit);
+      if(m)pares.push([d.slice(8,10)+"/"+d.slice(5,7),+m[1]]);
+    }
+    if(/test|ensayo/i.test(tit)||d===R.date)
+      hitos.push(d.slice(8,10)+"/"+d.slice(5,7)+" "+tit);
+  });
+  if(pares.length<3)return "";
+  var meta=R.goal_min?Math.round(R.goal_min):null;
+  return '<div class="card"><div class="exhead"><div class="tlab">🚀 '+
+    T(B("Progresión","Progress"))+
+    ' <span class="snum">'+T(B("tirada larga · min","long run · min"))+"</span></div></div>"+
+    '<p class="note" style="margin:0 0 2px 4px">'+
+    esc(T(B("La sesión que decide el sub-"+(meta||55)+": construye en bloques de tres semanas con recorte en la cuarta, y pica antes del taper de las dos últimas.",
+            "The session that decides sub-"+(meta||55)+": builds in three-week blocks with a cutback week, peaking before the last two weeks' taper.")))+"</p>"+
+    areaChart(pares,{uid:"prog",col:"#7BA1D9",fmt:function(v){return v+" min"}})+
+    (hitos.length?'<p class="note" style="margin:6px 4px 0;color:var(--mut)">'+
+      esc(T(B("Entre medias: ","In between: ")))+esc(hitos.join(" · "))+"</p>":"")+"</div>";
+}
+
 function volumeCard(){
   var R=raceCfg();
   var desde=new Date();desde.setDate(desde.getDate()-77);      /* 11 semanas */
@@ -2644,7 +2681,7 @@ function racionalCard(){
 function carreraView(){
   if(!cloudOn())return '<p class="note">'+T(B("Inicia sesión para ver tu plan.","Sign in to see your plan."))+"</p>";
   if(GACT.data===null){loadGact();return '<p class="note">'+T(B("Cargando carreras…","Loading runs…"))+"</p>";}
-  return raceHeadCard()+trayectoriaCard()+cargaCard()+proximasCard()+lapsCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
+  return raceHeadCard()+progresionCard()+trayectoriaCard()+cargaCard()+proximasCard()+lapsCard()+racionalCard()+adherenceCard()+efficiencyCard()+volumeCard()+intensityCard()+marcasCard();
 }
 
 /* ---------- dashboard ---------- */
