@@ -4092,22 +4092,25 @@ function dayCard(){
      si falta movimiento y compensarlo andando o subiendo escaleras.
      Sale del MISMO objetivo de comida que la fila de macros (así la app no cuenta
      dos historias distintas) más un margen fijo de déficit.
-     El margen es 1.200 y no los ~425 de déficit que se buscan porque hay un
-     offset empírico: medido sobre los 18 días de registro completo de agosto-2026,
-     un déficit aparente de 776 kcal/día (kcal_out de Garmin menos kcal_in de MFP)
-     produjo una pérdida de peso de CERO. El "cero real" está por tanto en ~776, y
-     el déficit que se quiere se suma encima: 776 + 425 ≈ 1.200.
-     OJO CON EL PORQUÉ: ese offset NO es inflación de Garmin. Un bottom-up sin doble
-     conteo (BMR 1.740 + TEF 220 + andar 199 + correr 198 + fuerza 130 + resto de
-     NEAT 150) da 2.637, a un 3% de las 2.720 de Garmin: Garmin acierta. El offset
-     es sobre todo INFRAREGISTRO de comida (~26%, o sea que kcal_in captura ~74% de
-     lo que se come). Consecuencia práctica: este 1.200 solo vale MIENTRAS SE
-     REGISTRE IGUAL. Si mejora la calidad del registro, kcal_in sube, el offset se
-     desploma y OUT_MARGIN hay que bajarlo (a ~500 con registro fiel).
+     El margen calibra el objetivo a UN DÍA NORMAL SUYO, no a un día ambicioso. Es
+     deliberado: la pregunta que responde la tarjeta es "¿me he movido menos de lo
+     habitual y me da tiempo a compensarlo?", no "¿he entrenado bastante?".
+     Medido sobre agosto-2026: gasto real medio 2.729 kcal/día, objetivo de comida
+     medio 1.753 → la diferencia es 967, de donde sale el 950 por defecto. Con él,
+     de sus siete días cumple 3 holgado, roza 3 y suspende 1 (el sábado, que es su
+     día flojo de verdad). Eso es señal.
+     NO poner aquí "comida + déficit deseado". Se probó con 1.200 (= offset empírico
+     de 776 + 425 de déficit) y salía un objetivo 233 kcal/día por encima de su gasto
+     normal: lo cumplía 1 día de 7 y pedía ~4.850 pasos extra diarios. Un objetivo
+     que se falla seis de cada siete días deja de ser señal y se ignora. Además
+     empujaba a moverse más, que es justo lo que el protocolo de auditoría
+     (1-sep→22-sep-2026) prohíbe: durante la calibración los pasos se mantienen
+     estables porque cambiar actividad y registro a la vez no deja aprender nada.
+     Ajustable con goal.outMargin; se puede apagar del todo con goal.outGoal=false.
      Solo en la vista de un día: al lado de una media de 7/30 días no significaría nada. */
-  var OUT_MARGIN=1200;
+  var OUT_MARGIN=(GG.outMargin!=null)?+GG.outMargin:950;
   function outGoalTag(){
-    if(rng!==1)return "";
+    if(rng!==1||GG.outGoal===false)return "";
     var g=macroGoal(day);
     if(!g)return "";
     var kcalG=Math.round(g.prot*4+g.carb*4+g.fat*9)+neatExtra(r);

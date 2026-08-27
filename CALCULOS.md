@@ -141,45 +141,40 @@ andando o subiendo escaleras.
 
 ```
 kcalObjetivo = round(prot*4 + carb*4 + fat*9) + neatExtra(r)   # el MISMO de macroCard
-objetivoOut  = kcalObjetivo + OUT_MARGIN                        # OUT_MARGIN = 1200
+objetivoOut  = kcalObjetivo + OUT_MARGIN                        # goal.outMargin ?? 950
 ```
 
-**Por qué 1.200 y no los ~425 de déficit que se buscan.** Hay un offset empírico: calibrado
-sobre los 18 días de registro completo de ago-2026, un déficit aparente de **776 kcal/día**
-(`kcal_out` de Garmin menos `kcal_in` de MFP) produjo una pérdida de peso de **CERO**. El "cero
-real" está por tanto en ~776, y el déficit que se quiere se suma encima: `776 + 425 ≈ 1.200`.
+**Por qué 950 y no "comida + déficit deseado".** El margen calibra el objetivo a **un día
+normal suyo**, no a un día ambicioso. La pregunta que responde la tarjeta es *"¿me he movido
+menos de lo habitual y me da tiempo a compensarlo?"*, no *"¿he entrenado bastante?"*.
 
-Rinde estos objetivos con la semana de Marcos: **2.755** (soft) · **3.000** (hard) · **3.080** (long).
+Medido sobre agosto-2026: gasto real medio **2.729** kcal/día, objetivo de comida medio
+**1.753** → diferencia **967**, de donde sale el 950 por defecto.
 
-- Solo se pinta en la **vista de un día** (`rng===1`): junto a una media de 7/30 días no
-  significaría nada.
-- Usa el mismo `gtag()` (◎) que peso y grasa, para no inventar un estilo nuevo.
+Rinde: **2.505** (soft) · **2.750** (hard) · **2.830** (long). Con la semana real de Marcos
+cumple 3 días holgado, roza 3 y suspende 1 — el sábado, que es su día flojo de verdad.
 
-**⚠️ De dónde sale ese offset — corregido el 27-ago-2026.** La primera versión de esta nota
-decía que las 776 kcal eran inflación de Garmin. **Es falso.** Un bottom-up hecho sin doble
-conteo (todos los términos NETOS, ya descontado el reposo):
+**⚠️ Intento fallido, no repetirlo.** La primera versión usó 1.200 (= offset empírico de 776
++ 425 de déficit deseado). Daba un objetivo **233 kcal/día por encima de su gasto normal**:
+lo cumplía **1 día de 7** y exigía ~4.850 pasos extra diarios. Dos fallos:
 
-| Componente | kcal/día |
-|---|---|
-| BMR (Mifflin, 87 kg / 178 cm / 50 a) | 1.740 |
-| TEF (proteína alta, 11-13 %) | 220 |
-| Andar (6,9 km/día · 9.520 pasos) | 199 |
-| Correr (2,46 km/día · 3.055 pasos) | 198 |
-| Fuerza (5 ses/sem, upper adaptado por lesión) | 130 |
-| NEAT no capturado por pasos | 150 |
-| **Total** | **2.637** |
+1. Un objetivo que se falla seis de cada siete días deja de ser señal y se ignora.
+2. Empujaba a moverse más, justo lo que el **protocolo de auditoría** (1-sep → 22-sep-2026)
+   prohíbe: durante la calibración los pasos se mantienen estables, porque cambiar actividad
+   y registro a la vez no deja aprender nada.
 
-Está a un **3 %** de las 2.720 que da Garmin: **Garmin acierta**. El error de la versión previa
-fue cobrar los 3.055 pasos de correr a precio de andar (30 kcal/1.000) y omitir el NEAT que los
-pasos no capturan. Rango de sensibilidad: 2.245 (conservador) – 2.637 (central) – 3.040 (alto).
+**Configuración:** `goal.outMargin` ajusta el margen; `goal.outGoal=false` apaga la etiqueta.
 
-Por tanto el offset es sobre todo **INFRAREGISTRO de comida**: `kcal_in` captura ~74 % de lo que
-realmente se come (~692 kcal/día sin registrar en el escenario central).
+**Sobre el offset de 776** (por si se quiere reintroducir algún día): NO es inflación de
+Garmin. Un bottom-up sin doble conteo — BMR 1.740 + TEF 220 + andar 199 + correr 198 +
+fuerza 130 + resto de NEAT 150 = **2.637** — queda a un 3 % de las 2.720 de Garmin: Garmin
+acierta. El offset es sobre todo **infraregistro de comida**: `kcal_in` captura ~74 % de lo
+que se come. Y por eso solo vale mientras se registre igual.
 
-**Consecuencia operativa: `OUT_MARGIN` = 1.200 solo vale MIENTRAS SE REGISTRE IGUAL.** Si mejora
-la calidad del registro, `kcal_in` sube, el offset se desploma y hay que bajarlo (~500 con
-registro fiel). Revisar en el checkpoint del 22-sep-2026. Detalle completo en el corpus:
-`deporte/referencia/2026-08-27_recalibracion-balance-energetico.md`.
+- Solo se pinta en la **vista de un día** (`rng===1`).
+- Usa el mismo `gtag()` (◎) que peso y grasa.
+
+Detalle completo en el corpus: `deporte/referencia/2026-08-27_recalibracion-balance-energetico.md`.
 
 ### 1.6 Déficit calórico semanal — `weekCardFor(lunes)`
 
