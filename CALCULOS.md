@@ -144,22 +144,42 @@ kcalObjetivo = round(prot*4 + carb*4 + fat*9) + neatExtra(r)   # el MISMO de mac
 objetivoOut  = kcalObjetivo + OUT_MARGIN                        # OUT_MARGIN = 1200
 ```
 
-**Por qué 1.200 y no los ~425 de déficit que se buscan.** La cifra se compara contra
-`kcal_out`, que viene de Garmin y **está inflado**. Calibrado sobre los 18 días de registro
-completo de ago-2026: un déficit *según Garmin* de **776 kcal/día produjo una pérdida de peso
-de CERO**. El "cero real" está por tanto en ~776, y el déficit que se quiere de verdad se suma
-encima: `776 + 425 ≈ 1.200`.
+**Por qué 1.200 y no los ~425 de déficit que se buscan.** Hay un offset empírico: calibrado
+sobre los 18 días de registro completo de ago-2026, un déficit aparente de **776 kcal/día**
+(`kcal_out` de Garmin menos `kcal_in` de MFP) produjo una pérdida de peso de **CERO**. El "cero
+real" está por tanto en ~776, y el déficit que se quiere se suma encima: `776 + 425 ≈ 1.200`.
 
-Rinde estos objetivos con la semana de Marcos: **2.647** (soft) · **2.901** (hard) · **2.981** (long).
+Rinde estos objetivos con la semana de Marcos: **2.755** (soft) · **3.000** (hard) · **3.080** (long).
 
 - Solo se pinta en la **vista de un día** (`rng===1`): junto a una media de 7/30 días no
   significaría nada.
 - Usa el mismo `gtag()` (◎) que peso y grasa, para no inventar un estilo nuevo.
-- ⚠️ **Caveat**: el offset de 776 mezcla DOS errores — la inflación de Garmin (~8-10 %) y el
-  infraregistro de comida (~20-25 %). Si el registro mejora (auditoría de entradas de cortes
-  grasos), el offset encoge y `OUT_MARGIN` habrá que bajarlo. Revisar en el checkpoint del
-  22-sep-2026. Detalle completo en el corpus:
-  `deporte/referencia/2026-08-27_recalibracion-balance-energetico.md`.
+
+**⚠️ De dónde sale ese offset — corregido el 27-ago-2026.** La primera versión de esta nota
+decía que las 776 kcal eran inflación de Garmin. **Es falso.** Un bottom-up hecho sin doble
+conteo (todos los términos NETOS, ya descontado el reposo):
+
+| Componente | kcal/día |
+|---|---|
+| BMR (Mifflin, 87 kg / 178 cm / 50 a) | 1.740 |
+| TEF (proteína alta, 11-13 %) | 220 |
+| Andar (6,9 km/día · 9.520 pasos) | 199 |
+| Correr (2,46 km/día · 3.055 pasos) | 198 |
+| Fuerza (5 ses/sem, upper adaptado por lesión) | 130 |
+| NEAT no capturado por pasos | 150 |
+| **Total** | **2.637** |
+
+Está a un **3 %** de las 2.720 que da Garmin: **Garmin acierta**. El error de la versión previa
+fue cobrar los 3.055 pasos de correr a precio de andar (30 kcal/1.000) y omitir el NEAT que los
+pasos no capturan. Rango de sensibilidad: 2.245 (conservador) – 2.637 (central) – 3.040 (alto).
+
+Por tanto el offset es sobre todo **INFRAREGISTRO de comida**: `kcal_in` captura ~74 % de lo que
+realmente se come (~692 kcal/día sin registrar en el escenario central).
+
+**Consecuencia operativa: `OUT_MARGIN` = 1.200 solo vale MIENTRAS SE REGISTRE IGUAL.** Si mejora
+la calidad del registro, `kcal_in` sube, el offset se desploma y hay que bajarlo (~500 con
+registro fiel). Revisar en el checkpoint del 22-sep-2026. Detalle completo en el corpus:
+`deporte/referencia/2026-08-27_recalibracion-balance-energetico.md`.
 
 ### 1.6 Déficit calórico semanal — `weekCardFor(lunes)`
 

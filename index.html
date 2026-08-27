@@ -4092,11 +4092,18 @@ function dayCard(){
      si falta movimiento y compensarlo andando o subiendo escaleras.
      Sale del MISMO objetivo de comida que la fila de macros (así la app no cuenta
      dos historias distintas) más un margen fijo de déficit.
-     El margen es 1.200 y no los ~425 que se querrían de verdad porque la cifra va
-     en UNIDADES DE GARMIN, que infla el gasto: medido sobre los 18 días de
-     registro completo de agosto-2026, un déficit según Garmin de 776 kcal/día dio
-     una pérdida de peso de CERO. O sea que el "cero real" está en ~776, y el
-     déficit que se quiere (~425) hay que sumarlo encima: 776+425 ≈ 1.200.
+     El margen es 1.200 y no los ~425 de déficit que se buscan porque hay un
+     offset empírico: medido sobre los 18 días de registro completo de agosto-2026,
+     un déficit aparente de 776 kcal/día (kcal_out de Garmin menos kcal_in de MFP)
+     produjo una pérdida de peso de CERO. El "cero real" está por tanto en ~776, y
+     el déficit que se quiere se suma encima: 776 + 425 ≈ 1.200.
+     OJO CON EL PORQUÉ: ese offset NO es inflación de Garmin. Un bottom-up sin doble
+     conteo (BMR 1.740 + TEF 220 + andar 199 + correr 198 + fuerza 130 + resto de
+     NEAT 150) da 2.637, a un 3% de las 2.720 de Garmin: Garmin acierta. El offset
+     es sobre todo INFRAREGISTRO de comida (~26%, o sea que kcal_in captura ~74% de
+     lo que se come). Consecuencia práctica: este 1.200 solo vale MIENTRAS SE
+     REGISTRE IGUAL. Si mejora la calidad del registro, kcal_in sube, el offset se
+     desploma y OUT_MARGIN hay que bajarlo (a ~500 con registro fiel).
      Solo en la vista de un día: al lado de una media de 7/30 días no significaría nada. */
   var OUT_MARGIN=1200;
   function outGoalTag(){
