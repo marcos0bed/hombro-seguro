@@ -4088,6 +4088,24 @@ function dayCard(){
     return ' <span style="font-size:11px;color:var(--mut);font-weight:400">· '+
            k.toFixed(1)+" km</span>";
   }
+  /* Objetivo de gasto del día, al lado de Kcal out. Sirve para ver a media tarde
+     si falta movimiento y compensarlo andando o subiendo escaleras.
+     Sale del MISMO objetivo de comida que la fila de macros (así la app no cuenta
+     dos historias distintas) más un margen fijo de déficit.
+     El margen es 1.200 y no los ~425 que se querrían de verdad porque la cifra va
+     en UNIDADES DE GARMIN, que infla el gasto: medido sobre los 18 días de
+     registro completo de agosto-2026, un déficit según Garmin de 776 kcal/día dio
+     una pérdida de peso de CERO. O sea que el "cero real" está en ~776, y el
+     déficit que se quiere (~425) hay que sumarlo encima: 776+425 ≈ 1.200.
+     Solo en la vista de un día: al lado de una media de 7/30 días no significaría nada. */
+  var OUT_MARGIN=1200;
+  function outGoalTag(){
+    if(rng!==1)return "";
+    var g=macroGoal(day);
+    if(!g)return "";
+    var kcalG=Math.round(g.prot*4+g.carb*4+g.fat*9)+neatExtra(r);
+    return gtag(Math.round(kcalG+OUT_MARGIN).toLocaleString());
+  }
   var tiles=[];
   if(!runOnly())tiles.push(
     ["⚖️ "+T(B("Peso","Weight")),wVal+gtag(GG.weight_kg),null,spark(wwin(),"#C88BD8")],
@@ -4098,7 +4116,7 @@ function dayCard(){
     ["💓 HRV",val("hrv_ms",function(x){return Math.round(x)+" ms"}),rng===1?r.hrv_q:null,spark(win("hrv_ms"),"#4DD0C0")],
     ["🫀 "+u("dRhr"),val("rhr",function(x){return Math.round(x)}),null,
       (rng===1&&Array.isArray(r.hr_curve)&&r.hr_curve.length>1)?spark(r.hr_curve,"#E5484D"):spark(win("rhr"),"#E5484D")],
-    ["🔥 Kcal out",val("kcal_out",function(x){return Math.round(x)}),null,spark(win("kcal_out"),"#E8963E")],
+    ["🔥 Kcal out",val("kcal_out",function(x){return Math.round(x)})+outGoalTag(),null,spark(win("kcal_out"),"#E8963E")],
     ["🫁 VO₂max",vVal,null,spark(vwin(),"#7BD8C0")]);
   if(!runOnly())tiles.splice(tiles.length-1,0,
     ["🍽️ Kcal in",val("kcal_in",function(x){return Math.round(x)}),null,spark(win("kcal_in"),"#7BA1D9")]);
