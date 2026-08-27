@@ -211,6 +211,25 @@ table.mini td:first-child{font-family:var(--disp);text-transform:uppercase;font-
 table.mini.labs td{padding:7px 4px}
 table.mini.labs td:first-child{white-space:normal;line-height:1.2}
 table.mini.labs td:nth-child(2){white-space:nowrap}
+/* Tablas dentro de texto markdown (richBody). A diferencia de table.mini "pura",
+   aquí la primera columna NO va en mayúsculas ni monoespaciada: son tablas de
+   contenido, no fichas de dos columnas. Y puede haber cabecera. */
+table.mini.rich{font-size:13px;margin:9px 0}
+table.mini.rich th{padding:6px;text-align:left;font-family:var(--disp);text-transform:uppercase;
+  letter-spacing:.05em;font-size:11px;color:var(--acc);border-bottom:1px solid var(--line);white-space:nowrap}
+table.mini.rich td{padding:6px;line-height:1.4}
+table.mini.rich td:first-child{font-family:inherit;text-transform:none;font-weight:400;
+  color:var(--text);white-space:normal}
+table.mini.rich tbody tr:first-child td{border-top:none}
+/* En móvil la tabla puede no caber: que haga scroll ella en vez de romper la tarjeta. */
+@media(max-width:420px){table.mini.rich{display:block;overflow-x:auto;white-space:nowrap}
+  table.mini.rich td,table.mini.rich th{white-space:nowrap}}
+p.rh1,p.rh2,p.rh3,p.rh4{font-family:var(--disp);font-weight:600;margin:16px 0 2px;line-height:1.25}
+p.rh1{font-size:16px;color:var(--text)}
+p.rh2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--acc)}
+p.rh3,p.rh4{font-size:13.5px;color:var(--text)}
+.card>p.rh1:first-child,.card>p.rh2:first-child{margin-top:0}
+hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 /* ---- pestaña Rutina: la sesión sola, en vivo ----
    Mismos datos que en Hoy (comparten kv), pero sin el parte del día delante:
@@ -361,7 +380,7 @@ table.mini.labs td:nth-child(2){white-space:nowrap}
 
 <script>
 "use strict";
-var APP_VERSION="v204";
+var APP_VERSION="v205";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3538,16 +3557,46 @@ function journalCard(){
 }
 
 /* Texto rico compartido (parte semanal y línea base): viñetas "- ", párrafos y **negritas** */
+/* Render del cuerpo de las tarjetas de texto (línea base, partes, plan de running).
+   Entiende un subconjunto de markdown: negrita, enlaces, listas, ENCABEZADOS y TABLAS.
+   Los dos últimos se añadieron el 27-ago-2026: hasta entonces un "## Título" salía con
+   las almohadillas literales y una tabla se pintaba como una sopa de barras verticales,
+   que es como estaba la tarjeta de línea base. */
 function richBody(txt){
-  var html="",list=[];
+  var html="",list=[],tbl=[];
   function fmt(x){
     return esc(x).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
       .replace(/\[([^\]]+)\]\((https?:[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener" style="color:var(--acc)">$1</a>');
   }
-  function flush(){if(list.length){html+='<ul class="blist">'+list.map(function(x){return "<li>"+x+"</li>"}).join("")+"</ul>";list=[]}}
+  function cells(ln){
+    /* Quita la barra inicial y final antes de partir, para que no salgan celdas
+       vacías en los extremos. */
+    return ln.replace(/^\s*\|/,"").replace(/\|\s*$/,"").split("|").map(function(c){return c.trim()});
+  }
+  function flush(){
+    if(list.length){html+='<ul class="blist">'+list.map(function(x){return "<li>"+x+"</li>"}).join("")+"</ul>";list=[]}
+    if(tbl.length){
+      /* La fila separadora (|---|---|) marca que la primera es cabecera. Si no
+         viene, no hay cabecera y todo son filas normales. */
+      var sep=tbl.length>1&&/^[\s:|-]+$/.test(tbl[1])&&tbl[1].indexOf("-")>=0;
+      var head=sep?cells(tbl[0]):null;
+      var rows=tbl.slice(sep?2:0).map(cells);
+      var h='<table class="mini rich">';
+      if(head&&head.some(function(c){return c!==""}))
+        h+="<thead><tr>"+head.map(function(c){return "<th>"+fmt(c)+"</th>"}).join("")+"</tr></thead>";
+      h+="<tbody>"+rows.map(function(r){
+        return "<tr>"+r.map(function(c){return "<td>"+fmt(c)+"</td>"}).join("")+"</tr>"}).join("")+"</tbody></table>";
+      html+=h;tbl=[];
+    }
+  }
   String(txt).split("\n").forEach(function(ln){
     ln=ln.trim();
     if(!ln){flush();return}
+    if(ln.charAt(0)==="|"){tbl.push(ln);return}
+    if(tbl.length)flush();
+    var m=ln.match(/^(#{1,4})\s+(.*)$/);
+    if(m){flush();html+='<p class="rh'+m[1].length+'">'+fmt(m[2])+"</p>";return}
+    if(/^(---+|\*\*\*+)$/.test(ln)){flush();html+='<hr class="rhr">';return}
     if(ln.indexOf("- ")===0)list.push(fmt(ln.slice(2)));
     else{flush();html+='<p class="bp">'+fmt(ln)+"</p>"}
   });
