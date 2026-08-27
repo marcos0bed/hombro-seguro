@@ -4134,8 +4134,48 @@ function dayCard(){
      sigue disponible poniendo goal.eatMode = "base+active". */
   var rsel='<span class="rng">'+[[1,T(B("Día","Day"))],[7,"7d"],[30,"30d"]].map(function(p){
     return '<button data-act="dayrange" data-r="'+p[0]+'"'+(rng===p[0]?' class="sel"':"")+'>'+p[1]+"</button>"}).join("")+"</span>";
+  /* Cintura. Es la ÚNICA medida de composición fiable que hay aquí: la báscula de
+     bioimpedancia deriva el % de grasa y la masa magra del propio peso (r=0,96 y
+     0,93 medidos sobre 34 pesadas), así que no aportan nada que el peso no diga ya.
+     La cintura sí distingue "no bajo de peso" de "no pierdo grasa".
+     Se teclea a mano, una vez por semana, mismo momento y misma técnica.
+     Vive aquí y no en Progreso porque es un dato del cuerpo y se apunta cuando te
+     pesas: si hay que ir a buscarlo a otra pestaña, no se apunta. */
+  function waistRow(){
+    if(rng!==1||runOnly())return "";
+    var H=[];
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k=localStorage.key(i);
+        if(k&&k.indexOf("hs:waist:")===0){
+          var kd=k.slice(9),kv=parseFloat(S("waist:"+kd,""));
+          if(kd&&!isNaN(kv)&&kv>0)H.push([kd,kv]);
+        }
+      }
+    }catch(e){}
+    H.sort(function(a,b){return a[0]<b[0]?-1:1});
+    var info="";
+    if(H.length){
+      var last=H[H.length-1];
+      info=" · "+T(B("última","last"))+" "+last[1].toFixed(1)+" cm "+last[0].slice(5).replace("-","/");
+      /* Contra la de hace ~3 semanas, que es la ventana del protocolo de
+         calibración: dos medidas seguidas se mueven dentro del ruido. */
+      var ref=null,lim=new Date(last[0]+"T12:00");lim.setDate(lim.getDate()-17);
+      var limS=iso(lim);
+      for(var j=H.length-1;j>=0;j--){if(H[j][0]<=limS){ref=H[j];break}}
+      if(ref){
+        var dd=last[1]-ref[1];
+        info+=" · "+(dd>0?"+":"")+dd.toFixed(1)+" cm "+T(B("en 3 sem","in 3 wk"));
+      }
+    }
+    return '<div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+      '<span class="tlab">📏 '+T(B("Cintura","Waist"))+"</span>"+
+      '<input class="w-in" style="width:66px" data-key="waist:'+day+'" inputmode="decimal" placeholder="cm" value="'+
+      esc(String(S("waist:"+day,"")))+'" aria-label="'+T(B("Cintura en cm","Waist in cm"))+'">'+
+      '<span style="font-size:11px;color:var(--mut);font-weight:400">'+esc(info)+"</span></div>";
+  }
   return '<div class="card"><div class="exhead" style="margin-bottom:9px"><div class="tlab">'+u("bodyT")+"</div>"+rsel+"</div><div class=\"dgrid\">"+tiles.map(function(t){
-    return '<div><div class="tlab">'+t[0]+'</div><div class="dval">'+t[1]+"</div>"+qualSub(t[2])+(t[3]||"")+"</div>"}).join("")+"</div>"+
+    return '<div><div class="tlab">'+t[0]+'</div><div class="dval">'+t[1]+"</div>"+qualSub(t[2])+(t[3]||"")+"</div>"}).join("")+"</div>"+waistRow()+
     (rng===1&&r.day!==day?'<p class="note" style="font-size:11px;color:var(--mut);margin-top:8px">'+r.day+"</p>":"")+srcLine()+"</div>";
 }
 
