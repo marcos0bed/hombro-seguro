@@ -380,7 +380,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v205";
+var APP_VERSION="v206";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1164,6 +1164,25 @@ function guessMuscle(n){
   var s=String(n||"");if(!s)return null;
   for(var k=0;k<MGUESS.length;k++)if(MGUESS[k][1].test(s))return MGUESS[k][0];
   return null;
+}
+/* Crédito SECUNDARIO para multiarticulares: la sentadilla, el peso muerto o
+   el farmer carry no reclutan solo su grupo `m` principal. Esto NO le quita
+   nada al principal (que sigue sumando su serie entera) — solo AÑADE una
+   fracción de esa serie al grupo sinergista, buscando el nombre. Por diseño
+   el total puede superar las series reales: un mismo ejercicio cuenta para
+   más de un sistema, que es justo lo que se quiere ver en el mapa. */
+var MSECONDARY=[
+  [/sentadilla|squat|prensa|leg ?press|zancada|lunge|b[uú]lgara|bulgarian|hack/i,"core",0.3],
+  [/peso muerto|deadlift|rumano|romanian|hip ?thrust/i,"back",0.4],
+  [/peso muerto|deadlift|rumano|romanian|hip ?thrust/i,"core",0.3],
+  [/farmer/i,"shoulders",0.4],
+  [/farmer/i,"cuff",0.3],
+  [/face ?pull/i,"shoulders",0.5]
+];
+function secondaryOf(n){
+  var s=String(n||""),out=[];
+  MSECONDARY.forEach(function(r){if(r[0].test(s))out.push([r[1],r[2]])});
+  return out;
 }
 /* MGROUPS mapea grupo muscular POR ÍNDICE, y eso se desalinea en cuanto alguien
    inserta o mueve un ejercicio. Ha pasado tres veces: manguito, upB y las dos
@@ -2942,8 +2961,16 @@ function muscleSets(rng){
   var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
   logs.forEach(function(l){
     if(l.day<cutS)return;
-    (l.entries||[]).forEach(function(e){if(e.m)out[e.m]=(out[e.m]||0)+(e.sets||0)});
+    (l.entries||[]).forEach(function(e){
+      if(!e.sets)return;
+      if(e.m)out[e.m]=(out[e.m]||0)+e.sets;
+      secondaryOf(e.n).forEach(function(p){
+        if(p[0]===e.m)return;
+        out[p[0]]=(out[p[0]]||0)+e.sets*p[1];
+      });
+    });
   });
+  Object.keys(out).forEach(function(k){out[k]=Math.round(out[k]*10)/10});
   return out;
 }
 
