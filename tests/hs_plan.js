@@ -25,4 +25,43 @@ W("race",{name:"x",date:"2026-11-15",km:10});
 var t=visibleTabs();
 ok("Carrera va justo detrás de Rutina",t[t.indexOf("rutina")+1]==="carrera",t.join(","));
 ok("y antes de Semana",t.indexOf("carrera")<t.indexOf("semana"),t.join(","));
+
+/* El badge de km del run1 ("Calidad") era un rango fijo de plantilla
+   (6-9 km, pensado para series de 45-55 min). El Fartlek del 1-sep-2026 dura
+   40 min con medio tiempo a ritmo suave y nunca llega a esos números: el
+   badge mentía. estimarKmPlan() lo calcula tramo a tramo desde el plan del
+   día, y solo si TODOS los tramos son calculables. */
+print("\n== estimarKmPlan: badge calculado tramo a tramo, no un rango fijo ==");
+var pasosFartlek=[["Calentamiento","10 min · 7:45-8:15 + 4 rectas"],
+  ["Fartlek","10 × (1 min · 5:50-6:10 / 1 min · 7:45-8:15)"],
+  ["Enfriamiento","10 min · 7:45-8:15"]];
+ok("Fartlek de 40 min sale 5,3-5,6 km (el reloj marcó 5,67)",
+   estimarKmPlan(pasosFartlek)==="5.3-5.6 km",String(estimarKmPlan(pasosFartlek)));
+var pasosCuestas=[["Calentamiento","10 min · 7:45-8:15 + 4 rectas"],
+  ["Cuestas","8 × 45 s subiendo fuerte"],["Recuperación","bajando al trote"],
+  ["Enfriamiento","10 min · 7:45-8:15"]];
+ok("cuestas por tiempo sin ritmo -> no se inventa un número",
+   estimarKmPlan(pasosCuestas)===null,String(estimarKmPlan(pasosCuestas)));
+var pasosObjetivo=[["Series","6 × 3 min · ritmo objetivo"]];
+ok("series a ritmo objetivo (antes del test del 4-oct) -> tampoco",
+   estimarKmPlan(pasosObjetivo)===null,String(estimarKmPlan(pasosObjetivo)));
+var pasosTest=[["🎯 TEST","5 km lo más rápido que puedas"]];
+ok("un tramo con km explícito se toma tal cual",
+   estimarKmPlan(pasosTest)==="5 km",String(estimarKmPlan(pasosTest)));
+var pasosRecortoNegligible=[["Recuperación","90 s andando o trote muy suave"]];
+ok("una recuperación corta sola no basta para dar un rango (nada calculable)",
+   estimarKmPlan(pasosRecortoNegligible)===null,String(estimarKmPlan(pasosRecortoNegligible)));
+
+print("\n== El badge de la sesión usa el cálculo, no el 6-9 km fijo de run1 ==");
+TODAY="2026-09-01";
+W("race",{name:"Ponle Freno",date:"2026-11-15",km:10,goal_min:55,
+  plan:{"2026-09-01":{t:{es:"Fartlek",en:"Fartlek"},p:pasosFartlek}}});
+var hv=sessionView("run1","2026-09-01");
+ok("el badge dice 5.3-5.6 km",/5\.3-5\.6 km/.test(hv),hv.slice(0,300));
+ok("y ya no el 6-9 km fijo de la plantilla",!/6-9 km/.test(hv),hv.slice(0,300));
+W("race",{name:"Ponle Freno",date:"2026-11-15",km:10,goal_min:55,
+  plan:{"2026-09-15":{t:{es:"Cuestas",en:"Hills"},p:pasosCuestas}}});
+var hv2=sessionView("run1","2026-09-15");
+ok("sin poder calcular, cae al 6-9 km fijo de la plantilla",/6-9 km/.test(hv2),hv2.slice(0,300));
+
 print("\n"+(fails?"==> "+fails+" FALLOS":"==> TODO OK"));

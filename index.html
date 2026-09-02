@@ -380,7 +380,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v206";
+var APP_VERSION="v207";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1348,7 +1348,8 @@ function sessionView(sid,dia){
   if(!s)return "";
   if(s.type==="run"){
     var done=S("done:"+TODAY+":"+sid,false);
-    h+='<div class="card runcard"><h3>'+esc(planTitulo(dia||selDay(),s)||T(s.title))+'</h3><p class="big">'+(s.km||"")+'</p><p class="note" style="margin-top:8px">'+esc(T(s.note)||"")+"</p>"+
+    var kmHoy=estimarKmPlan(planDelDia(dia||selDay()))||s.km||"";
+    h+='<div class="card runcard"><h3>'+esc(planTitulo(dia||selDay(),s)||T(s.title))+'</h3><p class="big">'+kmHoy+'</p><p class="note" style="margin-top:8px">'+esc(T(s.note)||"")+"</p>"+
        '<button class="donebtn'+(done?" on":"")+'" data-act="run-done" data-sid="'+sid+'">'+(done?u("done"):u("markDone"))+"</button></div>";
     /* Las sesiones de carrera solo enseñaban los km y el botón: sus bloques
        —objetivo, calentamiento, series, enfriamiento— nunca llegaban a pintarse
@@ -2014,6 +2015,70 @@ function planDelDia(dia){
   var R=raceCfg(),d=(R&&R.plan&&R.plan[dia])||null;
   if(d&&!Array.isArray(d)&&typeof d==="object")return d.p||null;
   return d;
+}
+/* El badge de km de una sesión de carrera venía de la plantilla fija del tipo
+   (p.ej. run1 = "6-9 km", pensado para series de 45-55 min). El plan del día
+   puede ser mucho más corto —un Fartlek de 40 min con medio tiempo a ritmo
+   suave— y entonces el badge fijo mentía. Aquí se calcula distancia = tiempo
+   ÷ ritmo tramo a tramo; si algún tramo no trae un ritmo o distancia numérica
+   (series a "ritmo objetivo" antes del test de 5K, cuestas por tiempo) mejor
+   no enseñar un rango que se sabe corto que enseñar uno calculado a medias. */
+function paceAMin(s){var m=/(\d+):(\d{2})/.exec(s);return m?(+m[1]+ +m[2]/60):null}
+function tramoKm(txt){
+  var rep=/^(\d+)\s*×\s*\((.+)\)/.exec(txt);
+  if(rep){
+    var n=+rep[1],partes=rep[2].split("/"),lo=0,hi=0;
+    for(var i=0;i<partes.length;i++){
+      var r=tramoKm(partes[i].trim());
+      if(!r)return null;
+      lo+=r[0];hi+=r[1];
+    }
+    return [lo*n,hi*n];
+  }
+  var rep2=/^(\d+)\s*×\s*(\d+(?:[.,]\d+)?)\s*min\s*·\s*(\d+:\d{2})\s*-\s*(\d+:\d{2})/.exec(txt);
+  if(rep2){
+    var n2=+rep2[1],dur2=parseFloat(rep2[2].replace(",",".")),p1=paceAMin(rep2[3]),p2=paceAMin(rep2[4]);
+    return [dur2/p2*n2,dur2/p1*n2];
+  }
+  var simple=/^(\d+(?:[.,]\d+)?)\s*min\s*·\s*(\d+:\d{2})\s*-\s*(\d+:\d{2})/.exec(txt);
+  if(simple){
+    var dur=parseFloat(simple[1].replace(",",".")),pa=paceAMin(simple[2]),pb=paceAMin(simple[3]);
+    return [dur/pb,dur/pa];
+  }
+  var directKm=/^(\d+(?:[.,]\d+)?)\s*km\b/.exec(txt);
+  if(directKm){var k=parseFloat(directKm[1].replace(",","."));return [k,k]}
+  return null;
+}
+/* Un tramo sin ritmo numérico invalida el total salvo que sea claramente
+   negligible: rectas (segundos, rápidas) o recuperación corta al trote/andando
+   (≤3 min). Cuestas por tiempo o series a "ritmo objetivo" sí llevan bastante
+   distancia y no se pueden adivinar: mejor abortar el cálculo entero. */
+function tramoInvalida(txt){
+  var t=txt.toLowerCase();
+  if(/rectas|strides|rápido y suelto|fast and relaxed/.test(t))return false;
+  var dm=/(\d+(?:[.,]\d+)?)\s*min/.exec(t);
+  if(/recuperaci|trote|andando|\bjog\b|\bwalk\b/.test(t)&&(!dm||parseFloat(dm[1].replace(",","."))<=3))return false;
+  return /\d+\s*(min|km|s\b)/.test(t);
+}
+function estimarKmPlan(pasos){
+  if(!Array.isArray(pasos))return null;
+  var lo=0,hi=0,huboAlgo=false;
+  for(var i=0;i<pasos.length;i++){
+    var paso=pasos[i];
+    if(!Array.isArray(paso))continue;
+    var txt=T(paso[1]);
+    if(!txt)continue;
+    txt=String(txt).trim();
+    var r=tramoKm(txt);
+    if(r===null){
+      if(tramoInvalida(txt))return null;
+      continue;
+    }
+    lo+=r[0];hi+=r[1];huboAlgo=true;
+  }
+  if(!huboAlgo)return null;
+  var f=function(x){return (Math.round(x*10)/10).toFixed(1).replace(/\.0$/,"")};
+  return lo===hi?f(lo)+" km":f(lo)+"-"+f(hi)+" km";
 }
 /* El título del plan solo vale si ese día se corre. Sin esta comprobación, al
    mover el rodaje de sitio con las flechas la sesión de pesas que ocupa su

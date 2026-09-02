@@ -218,6 +218,35 @@ Sin ningún esfuerzo "duro" en esa ventana → no hay proyección (aviso explíc
 hay un esfuerzo fuerte"). **Nunca se proyecta desde un rodaje suave** — dio a Marcos 1:19
 y a Sofi 1:27 la vez que se hizo mal (error ya cometido, documentado en `CLAUDE.md`).
 
+### 2.1b `estimarKmPlan(pasos)` — km del badge de la sesión de hoy *(1-sep-2026)*
+
+El badge grande de la sesión de carrera (p.ej. "FARTLEK") mostraba `s.km`, un rango **fijo
+por tipo de plantilla** (`run1.km="6-9 km"`, pensado para series de 45-55 min). El plan del
+día concreto puede ser mucho más corto — un Fartlek de 40 min con medio tiempo a ritmo
+suave nunca llega a esos números — así que el badge mentía. Ahora se calcula tramo a tramo
+a partir del texto del plan (`planDelDia(dia)`, campo `p`) y **solo si todos los tramos son
+calculables**; si no, cae al `s.km` fijo de antes:
+
+```
+por tramo:
+  "N × (A min · P1-P2 / B min · P3-P4)"   → N * Σ tramo(sub)
+  "N × M min · P1-P2"                     → [N*M/P2, N*M/P1]   (P1 rápido, P2 lento)
+  "M min · P1-P2"                         → [M/P2, M/P1]
+  "K km ..."                              → [K, K]             (distancia dada directamente)
+  cualquier otro (cuestas por tiempo, series a "ritmo objetivo") → no calculable
+
+si algún tramo no calculable es sustancial (tiene min/km/s y no es rectas o
+recuperación corta ≤3 min al trote/andando) → estimarKmPlan devuelve null entero,
+no un rango calculado a medias
+si no → suma de los lo/hi de cada tramo, redondeado a un decimal
+```
+
+Comprobado contra el plan real de Marcos: 1-sep (Fartlek 10×1'/1') → 5,3-5,6 km (el reloj
+marcó 5,67 km, dentro de rango); 11-ago (Series 6×1') → 3,4-3,6 km. Días de cuestas por
+tiempo, series a "ritmo objetivo" (antes del test del 4-oct) o calentamiento sin ritmo
+numérico caen a `null` **a propósito**: mejor el badge fijo antiguo que un número calculado
+a medias y con más confianza de la que merece.
+
 ### 2.2 `fcMax()`
 
 ```
