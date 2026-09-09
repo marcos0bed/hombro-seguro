@@ -1,0 +1,13 @@
+# CLAUDE.md lleva el contexto personal de la familia (nombres, edades, historial
+# clínico, pesos, marcas). Estuvo versionado en un repo PÚBLICO hasta el
+# 9-sep-2026; se purgó del historial con git-filter-repo. NO volver a añadirlo.
+CLAUDE.md
+
+# Fixtures de tests: llevan métricas reales, viven en /tmp a propósito.
+tests/fixtures/
+/tmp/
+
+# Enlace local al proyecto de Supabase
+supabase/.temp/
+
+.DS_Store
