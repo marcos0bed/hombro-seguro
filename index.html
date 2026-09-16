@@ -180,6 +180,8 @@ h2.sect{font-family:var(--disp);text-transform:uppercase;font-weight:700;font-si
 
 #ptr{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translateX(-50%);z-index:60;background:var(--surface2);border:1px solid var(--acc-dim);color:var(--acc);font-family:var(--disp);font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:6px 14px;border-radius:99px;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 #sheet{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));display:none;justify-content:center;z-index:40;pointer-events:none;transform:translateZ(0);will-change:transform}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);z-index:70;max-width:min(92vw,420px);padding:11px 15px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);color:var(--text);font-size:14px;line-height:1.35;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+#toast.on{opacity:1;transform:translate(-50%,0)}
 #sheet.show{display:flex}
 .sheet-in{pointer-events:auto;display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--acc-dim);border-radius:16px;padding:12px 18px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .tnum{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums;min-width:74px;text-align:center}
@@ -380,7 +382,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v208";
+var APP_VERSION="v209";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -680,10 +682,21 @@ function buildLog(sid){
     if(w>0&&tot>0)vol+=tot*w;
     entries.push({n:T(it.n),m:muscleOf(sid,i,it),sets:c,reps:rp||null,target:nSets(sid,i,it)+"×"+T(it.reps),weight:w>0?w:null});
   });
-  if(!entries.length)return null;
   var nt=String(S("note:"+TODAY+":"+sid,"")).trim();
+  /* Sin series marcadas pero con nota escrita se guarda igual: es el caso de
+     haber improvisado ejercicios que no están en la rutina, que antes se perdían
+     porque el botón de guardar no hacía nada. La fila va con 0 series y 0
+     volumen, así que no ensucia el mapa de carga; la nota queda en el historial. */
+  if(!entries.length&&!nt)return null;
   return {user_id:sbUser?sbUser.id:null,day:TODAY,session_id:sid,title:T(s.title),
           entries:entries,total_sets:total,est_volume:Math.round(vol),note:nt||null};
+}
+/* Aviso efímero. Lo mínimo para que ninguna acción falle en silencio. */
+function toast(msg){
+  var t=document.getElementById("toast");
+  if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t)}
+  t.textContent=msg;t.className="on";
+  clearTimeout(toast._t);toast._t=setTimeout(function(){t.className=""},3400);
 }
 function saveLog(row,sid){
   sb.from("workout_logs").insert(row).then(
@@ -762,6 +775,7 @@ es:{hoy:"Hoy",rutina:"Rutina",semana:"Semana",viaje:"Viaje",manguito:"Manguito",
   familyNote:"Familia: cada persona crea su cuenta con su email. El aislamiento es por usuario a nivel de base de datos (RLS).",
   progreso:"Progreso",subProgreso:"Evolución por grupo muscular y cargas",
   saveSession:"Guardar sesión",savedSession:"✓ Sesión guardada hoy",
+  nothingToSave:"Nada que guardar: marca alguna serie o escribe una nota.",
   needLoginStats:"Inicia sesión para guardar sesiones y ver tu progreso.",
   loading:"Cargando…",
   statsSessions:"Sesiones por semana",statsVolume:"Volumen estimado por semana",
@@ -818,6 +832,7 @@ en:{hoy:"Today",rutina:"Workout",semana:"Week",viaje:"Travel",manguito:"Cuff",re
   familyNote:"Family: each person creates their own account with their email. Isolation is per-user at the database level (RLS).",
   progreso:"Progress",subProgreso:"Evolution by muscle group and loads",
   saveSession:"Save workout",savedSession:"✓ Workout saved today",
+  nothingToSave:"Nothing to save: tick a set or write a note.",
   needLoginStats:"Sign in to save workouts and see your progress.",
   loading:"Loading…",
   statsSessions:"Sessions per week",statsVolume:"Estimated weekly volume",
@@ -4697,7 +4712,8 @@ document.addEventListener("click",function(e){
     if(S("savedlog:"+TODAY+":"+sidL,false))return;
     if(!cloudOn()){state.tab="cuenta";render();return}
     var row=buildLog(sidL);
-    if(row)saveLog(row,sidL);
+    if(!row){toast(u("nothingToSave"));return}
+    saveLog(row,sidL);
     return;
   }
   if(act==="rxday"){state.rxSid=b.dataset.sid;render();return}

@@ -449,6 +449,14 @@ volumen_ejercicio = tot * peso_kg      (solo si hay peso; si no, no aporta volum
 volumen_sesión = Σ volumen_ejercicio
 ```
 
+**Sesión sin series marcadas (v209).** Si no se marcó ni una serie, `buildLog` ya no
+devuelve siempre `null`: si hay **nota escrita** monta la fila igual, con `entries:[]`,
+`total_sets:0` y `est_volume:0`. Sirve para dejar constancia de una sesión improvisada
+cuyos ejercicios no están en la rutina. Al no llevar `m`, no suma nada al mapa de carga,
+pero `isCardioLog()` la cuenta como sesión **de fuerza** hecha esa semana. Solo devuelve
+`null` cuando no hay ni series ni nota, y entonces el botón avisa (`nothingToSave`) en vez
+de no hacer nada, que es lo que pasaba hasta v208.
+
 ### 4.2 `muscleOf` / `guessMuscle` — a qué grupo pertenece un ejercicio
 
 Cadena de prioridad: (1) campo explícito `it.m` en la ficha → (2) mapa por índice

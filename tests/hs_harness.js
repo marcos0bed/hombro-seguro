@@ -48,6 +48,7 @@ var _timers = 0;
 function setInterval() { return ++_timers; }
 function clearInterval() {}
 function setTimeout(f) { return ++_timers; }
+function clearTimeout() {}
 function requestAnimationFrame(f) { return 0; }
 var Notification = undefined;
 
