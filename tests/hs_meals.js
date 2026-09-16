@@ -156,4 +156,102 @@ document._h.click({target:{closest:function(sel){
 ok("al tocarlo, la hora queda vacía",S("meal:"+R.day+":d",null)==="","");
 ok("y el botón desaparece",!new RegExp('data-act="clearmeal" data-key="meal:'+R.day+':d"').test(mealsCard()),"");
 
+
+print("\n== Reparto recomendado del día (16-sep-2026) ==");
+/* La suite NO puede depender del día en que se grabó el fixture: mealRec()
+   mira el weekday real. Se fija la semana entera al sid que toque probar. */
+var _gw=getWeek;
+function pinSid(sid){getWeek=function(){var a=[];for(var i=0;i<7;i++)a.push({d:B("X","X"),sid:sid});return a}}
+function unpin(){getWeek=_gw}
+
+/* El guardarraíl que importa: si alguien toca una hora o un gramo, el reparto
+   tiene que seguir sumando el objetivo de carbos de ese tipo de día. Sin esto
+   MEALREC y MACROS se desalinean en silencio y el plan deja de ser el plan. */
+["descanso","run1","lowB","runEasy","carga","runLong"].forEach(function(sid){
+  pinSid(sid);
+  var rec=mealRec(TODAY),kind=loadOf(sid),tot=0;
+  Object.keys(rec.c).forEach(function(k){tot+=rec.c[k]});
+  ok(sid+" ("+kind+") suma "+MACROS[kind].carb+" g de HC",tot===MACROS[kind].carb,sid+" suma "+tot);
+  unpin();
+});
+var totP=0;Object.keys(MEALPROT).forEach(function(k){totP+=MEALPROT[k]});
+ok("la proteína suma los 160 g del plan",totP===MACROS.prot,String(totP));
+
+print("\n== La tarjeta enseña la recomendación ==");
+reset(); pinSid("lowB"); W("meal:"+R.day+":l","");
+var cR=mealsCard();
+ok("sugiere hora para la comida",/→ 14:15/.test(cR),cR.slice(cR.indexOf("Comida"),cR.indexOf("Comida")+260));
+ok("y los gramos de HC y proteína",/14:15 · 45 g HC · 60 g prot/.test(cR),"");
+ok("el batido lleva su ancla de las 18:00",/→ 18:00/.test(cR),"");
+ok("un día sin pre no saca la nota del plátano",cR.indexOf("Pre-sesión")<0,"");
+
+print("\n== Solo avisa cuando la desviación importa ==");
+/* Se limpian las demás horas: las secciones de arriba dejaron el desayuno en
+   las 7:00 y la comprobación miraba la tarjeta entera, así que el ámbar de esa
+   fila daba por buena una marca que no era la que se estaba probando. */
+["b","d","w","s"].forEach(function(k){W("meal:"+R.day+":"+k,"")});
+W("meal:"+R.day+":l","14:40");
+ok("26 min de diferencia no se marcan",!/mealsug off/.test(mealsCard()),"");
+W("meal:"+R.day+":l","16:30");
+var cOff=mealsCard();
+ok("2h15 sí se marcan en ámbar",/mealsug off/.test(cOff),"");
+ok("y dice cuánto se ha desviado",/\(2\.3 h\)/.test(cOff),cOff.slice(cOff.indexOf("mealsug off"),cOff.indexOf("mealsug off")+90));
+W("meal:"+R.day+":l","");
+ok("basura en el campo no marca desviación",mealOff("12:75","14:15")===null,"");
+ok("ni una hora imposible",mealOff("25:00","14:15")===null,"");
+unpin();
+
+print("\n== Los días de calidad llevan pre de carrera ==");
+pinSid("run1");
+var cQ=mealsCard();
+ok("martes: nota de pre-sesión a las 07:45",/Pre-sesión 07:45/.test(cQ),cQ.slice(cQ.indexOf("mealnote"),cQ.indexOf("mealnote")+160));
+ok("con los 30 g de HC rápidos",/30 g HC rápidos/.test(cQ),"");
+ok("y el desayuno se adelanta a justo después de entrenar",/→ 09:30/.test(cQ),"");
+unpin();
+pinSid("runLong");
+var cL=mealsCard();
+ok("tirada larga: pre a las 09:15",/Pre-sesión 09:15/.test(cL),"");
+ok("y desayuno a las 11:45",/→ 11:45/.test(cL),"");
+unpin();
+pinSid("runEasy");
+ok("el rodaje suave NO lleva pre: ahí se conserva el ayuno",mealsCard().indexOf("Pre-sesión")<0,"");
+unpin();
+
+print("\n== El backend manda sobre el plan integrado ==");
+pinSid("lowB");
+W("goal",{meals:{hard:{h:{b:"08:00",l:"13:00",w:"19:30"},c:{b:40,l:50,w:20}}}});
+var cB=mealsCard();
+ok("goal.meals pisa a MEALREC",/→ 13:00/.test(cB)&&!/→ 14:15/.test(cB),"");
+W("goal",{});
+unpin();
+
+print("\n== Nadie hereda el plan de otro ==");
+/* macroGoal() ya tenía este candado; mealRec() no, y le habría enseñado a
+   Lorena la ventana de ayuno de Marcos como si fuera su recomendación. */
+pinSid("lowB");
+var _rt=getRT();
+W("routine",{mode:"full",days:[]});
+ok("con rutina propia y sin goal.meals, no hay recomendación",mealRec(TODAY)===null,"");
+ok("y la tarjeta diaria no la inventa",mealsCard().indexOf("→ ")<0,"");
+ok("ni la de Perfil",mealPlanCard()==="","");
+W("goal",{meals:{hard:{h:{l:"13:00"},c:{l:50}}}});
+ok("pero sí las suyas si el backend se las manda",/→ 13:00/.test(mealsCard()),"");
+W("goal",{}); W("routine",_rt);
+ok("y Marcos, sin rutina propia en localStorage, sigue viendo la suya",/→ 14:15/.test(mealsCard()),"");
+unpin();
+
+print("\n== El plan entero, en Perfil ==");
+var mp=mealPlanCard();
+ok("hay tarjeta",mp.length>300,String(mp.length));
+ok("una fila por día de la semana",(mp.match(/class="mprow/g)||[]).length===7,String((mp.match(/class="mprow/g)||[]).length));
+ok("marca el día de hoy",/mprow today/.test(mp),"");
+ok("dice la proteína fija",/160 g/.test(mp),"");
+ok("avisa del batido de la tirada de noche",/21:30/.test(mp),"");
+ok("sale de la misma fuente que la tarjeta diaria",/18:00/.test(mp),"");
+W("goal",{meals:{hard:{h:{b:"08:00"},c:{b:40}}}});
+ok("y también obedece a goal.meals",/08:00/.test(mealPlanCard()),"");
+W("goal",{});
+ok("perfil solo-running no la pinta",(function(){
+  var r=getRT();W("routine",{mode:"run"});var v=mealPlanCard();W("routine",r);return v===""})(),"");
+
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");

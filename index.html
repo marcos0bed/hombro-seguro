@@ -297,8 +297,18 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 .mealgrid{display:flex;flex-direction:column;gap:6px;padding:2px 2px 0}
 .mealit{display:flex;align-items:center;gap:9px;min-width:0}
 .mealic{font-size:16px;flex:none;width:19px;text-align:center}
-.mealnm{font-size:12.5px;color:var(--text);min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mealnm{font-size:12.5px;color:var(--text);min-width:0;flex:1;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.mealnm>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mealnm b{font:400 11px var(--mono);color:var(--mut);margin-left:6px}
+.mealsug{font:400 10.5px var(--mono);color:var(--mut);opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mealsug.off{color:#E8963E;opacity:1}
+.mealnote{font:400 10.5px var(--mono);color:var(--mut);padding:5px 2px 0;line-height:1.45}
+.mplan{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.mprow{display:flex;gap:8px;align-items:baseline;font-size:12px}
+.mprow.today{background:var(--surface2);border-radius:7px;padding:3px 5px;margin:-3px -5px}
+.mpd{font:600 11px var(--mono);color:var(--mut);flex:none;width:30px}
+.mph{font:400 11px var(--mono);color:var(--text);min-width:0;flex:1}
+.mpsep{color:var(--mut);opacity:.5;margin:0 3px}
 .t-in{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:5px 6px;font:13px var(--mono);flex:none;min-width:0;width:88px}
 .tclear{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:var(--mut);font-size:11px;line-height:1;padding:0}
 .tclear.ph{visibility:hidden}
@@ -382,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v209";
+var APP_VERSION="v210";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1710,6 +1720,7 @@ function render(keepScroll){
          '<button class="abtn ghost" data-act="savename">'+u("save")+"</button>"+
          '<p class="okmsg" id="okmsg"></p><p class="err" id="errmsg"></p></div>';
       h+=baselineCard();
+      h+=mealPlanCard();
       h+='<div class="card"><p class="note">'+u("syncOn")+'</p><p class="note" style="margin-top:8px;color:var(--mut)">'+u("familyNote")+"</p>"+
          '<button class="abtn ghost" data-act="logout" style="margin-top:12px">'+u("signout")+"</button></div>";
       h+='<p class="note" style="margin:10px 4px;font-family:var(--mono);font-size:10.5px;color:var(--mut);word-break:break-all">'+esc(diagLine())+"</p>";
@@ -3487,6 +3498,48 @@ function sColor(v){
   for(var i=0;i<SBANDAS.length;i++)if(v<SBANDAS[i][1])return SBANDAS[i][2];
   return "#E5484D";
 }
+/* Reparto recomendado del día (acordado 16-sep-2026). Marcos come en ventana
+   corta por decisión propia (ayuno intermitente, no cena). El problema que
+   corrige esto no es CUÁNTO come sino que el batido se le solapaba con la
+   comida 10 días de 14: así no era una tercera toma, era relleno de la
+   segunda. Anclarlo a las 18:00 le cuesta 3 h de ayuno (se queda en 17,5 h,
+   por encima del 16:8 de los ensayos) y le compra el tercer pulso entero.
+   Los carbos PRE solo van en las dos sesiones de calidad de carrera (martes y
+   tirada larga): a ritmo de rodaje el glucógeno no es el limitante y ahí sale
+   más a cuenta conservar el ayuno. Esos dos días la ventana ya está abierta,
+   así que el desayuno se adelanta a justo después de entrenar sin coste.
+   Se indexa por sid y se cae al tipo de día, igual que loadOf(): si cambia la
+   rutina esto la sigue sin tocar nada. El backend manda con goal.meals. */
+var MEALREC={
+  soft:    {h:{b:"11:30",l:"14:15",w:"18:00"},           c:{b:20,l:30,w:10}},
+  hard:    {h:{b:"11:30",l:"14:15",w:"18:00"},           c:{b:45,l:45,w:20}},
+  long:    {h:{b:"11:30",l:"14:30",w:"18:00"},           c:{b:50,l:55,w:25}},
+  run1:    {h:{s:"07:45",b:"09:30",l:"14:15",w:"18:00"}, c:{s:30,b:40,l:30,w:10},pre:"s"},
+  runLong: {h:{s:"09:15",b:"11:45",l:"14:30",w:"18:00"}, c:{s:35,b:50,l:35,w:10},pre:"s"}
+};
+/* La proteína no varía con el día: 160 g repartidos en tres pulsos. El pre no
+   lleva (es un plátano antes de correr, no una toma). */
+var MEALPROT={b:45,l:60,w:55};
+function mealRec(day){
+  /* Mismo candado que macroGoal(): quien tenga rutina propia cargada (otra
+     cuenta de la familia) NO hereda esto. El plan de Marcos —sin cena, ventana
+     corta, batido a las 18:00— no es el de Lorena ni el de Sofi, y enseñárselo
+     como recomendación sería peor que no enseñar nada. Sus horas, si las
+     quieren, llegan por goal.meals. */
+  var G=S("goal",{})||{},cfg=(G&&G.meals)||(getRT()?null:MEALREC);
+  if(!cfg)return null;
+  var d=new Date(day+"T12:00:00"),idx=(d.getDay()+6)%7;
+  var w=getWeek()[idx],sid=w&&w.sid;
+  return cfg[sid]||cfg[loadOf(sid)]||null;
+}
+/* Minutos entre la hora apuntada y la recomendada, para avisar solo cuando la
+   desviación importa. null si el campo está vacío o es basura. */
+function mealOff(t,sug){
+  var a=/^(\d{1,2}):(\d{2})$/.exec(t||""),b=/^(\d{1,2}):(\d{2})$/.exec(sug||"");
+  if(!a||!b)return null;
+  if(+a[1]>23||+a[2]>59)return null;
+  return Math.abs((+a[1]*60+ +a[2])-(+b[1]*60+ +b[2]));
+}
 /* Horas de comida. MFP guarda el CUÁNTO por cajón (desayuno/comida/cena/snacks)
    pero nunca la hora del reloj, así que la hora la pone él y nosotros le pegamos
    las calorías y la proteína que ya sabemos. Solo se ofrecen los cajones en los
@@ -3504,14 +3557,17 @@ function mealsOf(day){
   var r=rowFor(day), m=(r&&r.meals_kcal)||null;
   var hoy=(day===TODAY);
   if(!m&&!hoy)return [];
-  var out=[];
+  var rec=mealRec(day),out=[];
   MEALKEYS.forEach(function(mk){
     var v=(m||{})[mk[0]];
     var hay=v&&v.k;
     if(!hay&&!(hoy&&MEALHOY.indexOf(mk[0])>-1))return;
     out.push({k:mk[0],ic:mk[1],nm:B(mk[2][0],mk[2][1]),
               kcal:hay?v.k:null,prot:hay?v.p:null,
-              t:String(S("meal:"+day+":"+mk[0],""))});
+              t:String(S("meal:"+day+":"+mk[0],"")),
+              sug:(rec&&rec.h&&rec.h[mk[0]])||null,
+              carb:(rec&&rec.c&&rec.c[mk[0]])!=null?rec.c[mk[0]]:null,
+              pro:MEALPROT[mk[0]]!=null?MEALPROT[mk[0]]:null});
   });
   return out;
 }
@@ -3526,8 +3582,20 @@ function mealsCard(){
         '<div class="mealgrid">';
   ms.forEach(function(m){
     var mk="meal:"+day+":"+m.k;
+    /* La recomendación va en su propia línea, no pegada al nombre: en el móvil
+       la fila ya iba justa y el texto largo se comía con puntos suspensivos
+       justo la parte que interesa. Se pone en ámbar cuando lo apuntado se
+       desvía más de 45 min — por debajo de eso el reparto da igual. */
+    var dif=mealOff(m.t,m.sug),sug="";
+    if(m.sug){
+      var bits=[m.sug];
+      if(m.carb!=null)bits.push(m.carb+" g "+T(B("HC","carb")));
+      if(m.pro!=null)bits.push(m.pro+" g "+T(B("prot","prot")));
+      sug='<span class="mealsug'+(dif!=null&&dif>45?" off":"")+'">→ '+esc(bits.join(" · "))+
+          (dif!=null&&dif>45?" ("+(dif>=60?Math.round(dif/60*10)/10+" h":dif+" min")+")":"")+"</span>";
+    }
     h+='<div class="mealit"><span class="mealic">'+m.ic+"</span>"+
-       '<span class="mealnm">'+esc(T(m.nm))+'<b>'+(m.kcal!=null?m.kcal+" kcal · "+m.prot+" g":T(B("sin registrar aún","not logged yet")))+"</b></span>"+
+       '<span class="mealnm"><span>'+esc(T(m.nm))+'<b>'+(m.kcal!=null?m.kcal+" kcal · "+m.prot+" g":T(B("sin registrar aún","not logged yet")))+"</b></span>"+sug+"</span>"+
        '<input class="t-in" type="time" data-key="'+mk+'" value="'+esc(m.t)+
        '" aria-label="'+esc(T(m.nm))+'">'+
        /* El "Reset" del selector nativo de hora en iOS no vacía el campo: solo
@@ -3542,7 +3610,56 @@ function mealsCard(){
            :'<span class="tclear ph" aria-hidden="true"></span>')+
        "</div>";
   });
-  return h+"</div></div>";
+  h+="</div>";
+  /* El pre de las sesiones de calidad no tiene cajón propio en MFP hasta que
+     él apunta algo, así que si ese día no hay picoteo registrado la fila no
+     existe y la recomendación se perdería. Va como nota al pie. */
+  var rec=mealRec(day);
+  if(rec&&rec.pre&&!ms.some(function(m){return m.k===rec.pre})){
+    var ph=rec.h[rec.pre],pc=rec.c&&rec.c[rec.pre];
+    h+='<p class="mealnote">🍌 '+T(B("Pre-sesión ","Pre-session "))+esc(ph)+
+       (pc!=null?" · "+pc+" g "+T(B("HC rápidos","fast carbs")):"")+
+       " — "+T(B("plátano, tostada con miel o 4 dátiles. Sin fibra ni grasa antes de correr.",
+                 "banana, toast with honey or 4 dates. No fibre or fat before running."))+"</p>";
+  }
+  return h+"</div>";
+}
+/* El plan de comidas, entero, en Perfil. La tarjeta de Hoy solo enseña el día
+   que toca; para seguirlo hace falta poder ver la semana de un vistazo y sin
+   depender de que el sync haya traído ya los cajones de MFP. Se genera de la
+   MISMA fuente que la recomendación diaria (MEALREC / goal.meals), así que no
+   pueden desalinearse: si se cambia una hora, cambian las dos a la vez. */
+function mealPlanCard(){
+  if(runOnly())return "";
+  var G=S("goal",{})||{},cfg=(G&&G.meals)||(getRT()?null:MEALREC);
+  if(!cfg)return "";
+  var WK=getWeek(),ORD=["s","b","l","d","w"],filas="";
+  for(var i=0;i<7;i++){
+    var w=WK[i],sid=w&&w.sid,rec=cfg[sid]||cfg[loadOf(sid)];
+    if(!rec||!rec.h)continue;
+    var ses=getSession(sid),tt=ses?(T(ses.title)||""):"";
+    var tramos=ORD.filter(function(k){return rec.h[k]}).map(function(k){
+      var c=rec.c&&rec.c[k]!=null?rec.c[k]:null;
+      return esc(rec.h[k])+(c!=null?"·"+c:"");
+    }).join('<span class="mpsep">→</span>');
+    filas+='<div class="mprow'+(i===todayIdx?" today":"")+'">'+
+           '<span class="mpd">'+esc(T(w.d))+'</span>'+
+           '<span class="mph">'+tramos+"</span></div>";
+  }
+  if(!filas)return "";
+  var pr=Object.keys(MEALPROT).map(function(k){return MEALPROT[k]}).reduce(function(a,b){return a+b},0);
+  return '<div class="card"><h3>'+T(B("Plan de comidas","Meal plan"))+"</h3>"+
+    '<p class="note" style="margin-top:6px">'+
+    T(B("Hora y gramos de hidratos de cada toma. Mismos macros de siempre, solo repartidos.",
+        "Time and carb grams per meal. Same macros as always, only redistributed."))+"</p>"+
+    '<div class="mplan">'+filas+"</div>"+
+    '<p class="mealnote" style="padding-top:10px">'+
+    T(B("Proteína fija: ","Protein, fixed: "))+pr+" g — "+MEALPROT.b+T(B(" desayuno · "," breakfast · "))+
+    MEALPROT.l+T(B(" comida · "," lunch · "))+MEALPROT.w+T(B(" batido.<br>","  shake.<br>"))+
+    T(B("Ventana 11:30→18:00 = 17,5 h de ayuno. Martes y domingo se abre antes por el pre de carrera.",
+        "Window 11:30→18:00 = 17.5 h fasted. Tuesday and Sunday open earlier for the pre-run carbs."))+"<br>"+
+    T(B("Si la tirada larga se corre de noche, el batido va detrás (~21:30), no a las 18:00.",
+        "If the long run is at night, the shake goes after it (~21:30), not at 18:00."))+"</p></div>";
 }
 function stressDayCard(){
   if(!cloudOn())return "";
