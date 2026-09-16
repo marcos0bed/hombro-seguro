@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v210";
+var APP_VERSION="v211";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3347,13 +3347,19 @@ function garminFor(l){
   }
   var day=acts.filter(function(x){return (x.start_time||"").slice(0,10)===l.day&&(x.type||"")==="strength_training"});
   if(!day.length)return null;
-  if(day.length===1||!l.created_at)return day[0];
+  if(!l.created_at)return day.length===1?day[0]:null;
   var ct=+new Date(l.created_at);
   day.sort(function(x,y){
     var ex=+new Date(x.start_time)+(+x.duration_min||0)*60000;
     var ey=+new Date(y.start_time)+(+y.duration_min||0)*60000;
     return Math.abs(ex-ct)-Math.abs(ey-ct)});
-  return day[0];
+  var best=day[0],bestEnd=+new Date(best.start_time)+(+best.duration_min||0)*60000;
+  /* Si la actividad más cercana está a más de 3h del guardado del log, no es
+     un match fiable (típicamente: GACT.data desactualizado con solo una
+     actividad del día cuando en realidad hubo dos sesiones) — mejor sin dato
+     de Garmin que con el de otra sesión pegado por error. */
+  if(Math.abs(bestEnd-ct)>3*3600000)return null;
+  return best;
 }
 
 /* Historial de sesiones guardadas (los workout_logs ya cargados en LOGS) */
