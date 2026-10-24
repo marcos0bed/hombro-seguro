@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v211";
+var APP_VERSION="v212";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1667,6 +1667,7 @@ function render(keepScroll){
     h+=weekPaceCard();
     h+=lastWeekCard();
     h+=daybriefCard();
+    h+=daybriefHistCard();
     h+=stressDayCard();
     h+=mealsCard();
     h+=achCard();
@@ -3833,12 +3834,45 @@ function richBody(txt){
   flush();
   return html;
 }
+/* Los partes diarios se guardan uno por fecha ("daybrief:<día>") y las fechas
+   disponibles vienen en "daybriefIdx", que mantiene fitmet_brief.py al publicar.
+   Se recorre el índice en vez de enumerar localStorage porque así funciona
+   también sin red y en el arnés de tests, que no expone las claves.
+   Hasta v211 había UNA sola clave "daybrief" y cada parte pisaba al anterior: no
+   se podía consultar ni el día de antes. Se sigue leyendo esa clave plana como
+   respaldo, que un móvil con la app cacheada la necesita. */
+function daybriefDias(){
+  var ids=S("daybriefIdx",null);
+  if(!ids||!ids.length)return [];
+  return ids.filter(function(d){var b=S("daybrief:"+d,null);return !!(b&&b.body)})
+            .sort().reverse();
+}
 function daybriefCard(){
-  var b=S("daybrief",null);if(!b||!b.body)return "";
+  var ds=daybriefDias();
+  var b=ds.length?S("daybrief:"+ds[0],null):S("daybrief",null);
+  if(!b||!b.body)return "";
   var ayer=new Date();ayer.setDate(ayer.getDate()-1);
   if((b.week||"")<iso(ayer))return "";
   var txt=T(b.body)||"";if(!txt)return "";
   return foldCard("daybrief","☀️ "+T(B("Parte del día","Daily brief")),b.week,txt,true);
+}
+/* Los días anteriores, en una sola tarjeta plegada y CERRADA por defecto: son
+   largos y el del día ya va arriba. Se esconde si el parte más nuevo tiene más
+   de una semana, para que al volver de un viaje no aparezca un bloque de partes
+   viejos; el archivo permanente son los .md del corpus. */
+var DAYBRIEF_HIST=7;
+function daybriefHistCard(){
+  var ds=daybriefDias();
+  if(ds.length<2)return "";
+  var corte=new Date();corte.setDate(corte.getDate()-7);
+  if(ds[0]<iso(corte))return "";
+  ds=ds.slice(1,1+DAYBRIEF_HIST);
+  var txt=ds.map(function(d){
+    var b=S("daybrief:"+d,null);
+    return "### "+d+"\n\n"+(T(b.body)||"");
+  }).join("\n\n---\n\n");
+  return foldCard("daybriefHist","🗓️ "+T(B("Partes anteriores","Previous briefs")),
+    ds.length+" "+T(B("días","days")),txt,false);
 }
 
 /* Tarjeta plegable para los partes: son largos y estorban al llegar a la sesión.
