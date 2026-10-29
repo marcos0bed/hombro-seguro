@@ -428,6 +428,16 @@ Madrid calculado con `zoneinfo`.
   fórmula: correlaciona mejor con las horas dormidas (r=+0,46) que el `sleep_score` del
   reloj (r=+0,20) en una comparación de 15 días — es la razón de que exista junto al dato
   del reloj, no un cálculo en sí.
+- `isq:<día>` = `{s,p}`, **el protocolo del isquion** (v213, 29-oct-2026). Dos
+  pruebas diarias a la misma hora, cada una en tres bandas **0 nada / 1 molestia /
+  2 dolor**: `s` = sentado 3 min en silla dura, `p` = puente a una pierna 30 s.
+  El grado del día (`isqGrado`) **no es la suma ni el máximo**: `s≥1` manda sobre
+  `p`, porque la molestia al sentarse es lo que distingue un tendón reactivo de una
+  tendinopatía establecida, y cualquier `2` (dolor) manda sobre todo. Tres bandas y
+  no un 0-10 porque el semáforo del hombro se rellena con tres y un 0-10 no se
+  rellena. Se ve solo si la rutina trae `isqCheck:true` (es de una persona y una
+  lesión). Existe porque la cita de fisio cayó el 17-nov, **dos días después del 10K
+  del 15-nov**: hasta la carrera esta serie es la única medida que hay.
 - `baselineCard` (línea base de 90 días) es **texto ya redactado por el backend**, no hay
   fórmula visible en el front — si hace falta auditar esa "línea base", hay que mirar el
   proceso que la genera, no `index.html`.

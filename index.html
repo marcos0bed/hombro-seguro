@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v212";
+var APP_VERSION="v213";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1274,6 +1274,10 @@ function orderedIdx(sid,items){
 /* El semáforo del hombro y el marco de fase son del plan integrado (Marcos).
    Usuarios con rutina propia no ven nada del hombro salvo que su rutina lo pida. */
 function shoulderUser(){var rt=getRT();return !rt||rt.shoulderCheck===true}
+/* Igual que la del hombro pero al contrario: aquí hay que pedirlo
+   explícitamente (rt.isqCheck), porque es de UNA persona y una lesión
+   concreta. Lorena y Sofía comparten este fichero y no deben verlo. */
+function isqUser(){var rt=getRT();return !!(rt&&rt.isqCheck===true)}
 
 var state={tab:"hoy",sid:null,viaje:S("viajeMode","gomas"),pview:"train",dayOff:0,dayRange:1,rxSid:null,rxExp:{}};
 /* El día se calculaba UNA vez, al cargar. Si la PWA se queda abierta y pasa la
@@ -4330,7 +4334,7 @@ function habCard(){
   return '<div class="card"><h3>'+u("habT")+'</h3><div class="hab">'+HABITS.map(function(hb){
     var on=!!st[hb.k]||!!auto[hb.k];
     return '<button class="habb'+(on?" on":"")+'" data-act="habit" data-h="'+hb.k+'" aria-label="'+esc(T(hb.n))+'" aria-pressed="'+on+'">'+hb.i+"</button>"}).join("")+"</div>"+
-    despertarBloque(day)+"</div>";
+    despertarBloque(day)+isqBlock(day)+"</div>";
 }
 /* Cómo se levanta, del 1 al 5. En quince días de comparar banda contra reloj,
    este número resultó ser el mejor instrumento de los tres: correlaciona con
@@ -4347,6 +4351,70 @@ function despertarBloque(day){
       return '<button class="wkb'+(v===n?" on":"")+'" data-act="wake" data-v="'+n+
         '" aria-label="'+n+'/5 · '+esc(T(lab[n-1]))+'" aria-pressed="'+(v===n)+'">'+n+"</button>";
     }).join("")+"</div></div>";
+}
+
+/* ---------- protocolo del isquion (29-oct-2026) ----------
+   Molestia nueva en la tuberosidad isquiática izquierda —la inserción de los
+   isquiotibiales—, que apareció en las repeticiones rápidas del 28-oct. La cita
+   de fisio más temprana que se consiguió es el 17-nov: DOS DÍAS DESPUÉS del 10K
+   del 15-nov. O sea que hasta la carrera no hay valoración profesional y lo
+   único que habrá para decidir es esta serie. Dos pruebas de treinta segundos,
+   a la misma hora del día:
+     · sentado 3 min en silla dura → es el DISCRIMINADOR. Mientras no moleste
+       sentado, el cuadro sigue siendo reactivo y dependiente de carga; el dolor
+       al sentarse es el sello de la versión establecida.
+     · puente a una pierna 30 s → es la prueba de CARGA.
+   Tres bandas y no un 0-10 a propósito: el semáforo del hombro lleva meses
+   rellenándose con tres bandas, y un 0-10 se rellena dos días. Y las etiquetas
+   son "nada / molestia / dolor" porque él distingue las dos últimas —lo corrigió
+   el 29-oct— y el umbral tiene que estar escrito con su palabra, no con la mía. */
+var ISQMSGS=[
+  B("Limpio en las dos. Tres días seguidos así y esto se puede dar por cerrado.",
+    "Clean on both. Three days in a row like this and it can be called closed."),
+  B("Línea base: molestia solo con carga, nada sentado. Es donde estabas el 29-oct — el plan sigue igual.",
+    "Baseline: discomfort under load only, nothing sitting. Same as 29-Oct — the plan stands."),
+  B("⚠️ La notas SENTADO, y eso es nuevo. Dilo hoy: toca revisar el plan, no esperar al 17-nov.",
+    "⚠️ You feel it SITTING, and that's new. Say so today: the plan needs a review, don't wait for 17-Nov."),
+  B("⛔ Dolor, no molestia. Fuera el trabajo rápido y adelanta la consulta: lista de cancelaciones o fisio privado.",
+    "⛔ Pain, not discomfort. Drop the fast work and move the appointment up: cancellation list or a private physio.")
+];
+/* 0 limpio · 1 línea base · 2 ha cambiado · 3 parar. El orden importa: que
+   duela sentado manda sobre que no duela en el puente. */
+function isqGrado(r){
+  if(!r||(r.s==null&&r.p==null))return -1;
+  if(r.s>=2||r.p>=2)return 3;
+  if(r.s>=1)return 2;
+  if(r.p>=1)return 1;
+  return 0;
+}
+function isqBlock(day){
+  if(!isqUser())return "";
+  var v=S("isq:"+day,{})||{},g=isqGrado(v);
+  var lab=[B("nada","none"),B("molestia","discomfort"),B("dolor","pain")];
+  function fila(k,tit){
+    var cur=v[k];
+    return '<div class="tlab" style="margin-top:9px;letter-spacing:.04em">'+esc(T(tit))+"</div>"+
+      '<div class="painbtns" style="margin-top:5px">'+[0,1,2].map(function(n){
+        return '<button class="p'+n+(cur===n?" sel":"")+'" data-act="isq" data-r="'+k+'" data-v="'+n+
+          '" aria-pressed="'+(cur===n)+'">'+esc(T(lab[n]))+"</button>";
+      }).join("")+"</div>";
+  }
+  var tira=[],d0=new Date(day+"T12:00");
+  for(var i=9;i>=0;i--){
+    var dd=new Date(d0);dd.setDate(dd.getDate()-i);
+    var gg=isqGrado(S("isq:"+iso(dd),null));
+    var col=gg<0?"var(--line)":gg===0?"var(--ok)":gg===1?"var(--acc)":gg===2?"var(--warn)":"var(--bad)";
+    tira.push('<span style="flex:1;text-align:center;font-family:var(--mono);font-size:9.5px;color:var(--mut)">'+
+      dd.getDate()+'<br><span style="font-size:15px;color:'+col+'">'+(gg<0?"·":"●")+"</span></span>");
+  }
+  return '<div class="wakeb"><div class="tlab">'+
+    esc(T(B("Isquion izquierdo · prueba diaria","Left ischium · daily test")))+"</div>"+
+    fila("s",B("Sentado 3 min en silla dura","Sitting 3 min on a hard chair"))+
+    fila("p",B("Puente a una pierna, 30 s","Single-leg bridge, 30 s"))+
+    '<p class="note" style="margin:9px 2px 0">'+esc(g<0?
+      T(B("Las dos pruebas, a la misma hora del día. Treinta segundos.",
+          "Both tests, same time of day. Thirty seconds.")):T(ISQMSGS[g]))+"</p>"+
+    '<div style="display:flex;gap:2px;margin-top:9px">'+tira.join("")+"</div></div>";
 }
 
 /* Resumen en Hoy: pasos, sueño, HRV, FC reposo, kcal in/out.
@@ -4837,6 +4905,13 @@ document.addEventListener("click",function(e){
     var kw="wake:"+selDay(),nv=+b.dataset.v;
     W(kw,S(kw,0)===nv?0:nv);   /* volver a tocar el mismo lo borra */
     haptic(1);render(true);return;
+  }
+  if(act==="isq"){
+    var ki="isq:"+selDay(),cv=S(ki,{})||{},rr=b.dataset.r,nvi=+b.dataset.v,nx={};
+    if(cv.s!=null)nx.s=cv.s;
+    if(cv.p!=null)nx.p=cv.p;
+    if(nx[rr]===nvi)delete nx[rr]; else nx[rr]=nvi;   /* volver a tocar lo borra */
+    W(ki,nx);haptic(1);render(true);return;
   }
   if(act==="bedtap"){
     /* Sin toggle-a-borrar: si se toca por error, tocar otra vez a la hora
