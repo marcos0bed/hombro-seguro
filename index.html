@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v213";
+var APP_VERSION="v214";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4369,34 +4369,52 @@ function despertarBloque(day){
    son "nada / molestia / dolor" porque él distingue las dos últimas —lo corrigió
    el 29-oct— y el umbral tiene que estar escrito con su palabra, no con la mía. */
 var ISQMSGS=[
-  B("Limpio en las dos. Tres días seguidos así y esto se puede dar por cerrado.",
-    "Clean on both. Three days in a row like this and it can be called closed."),
-  B("Línea base: molestia solo con carga, nada sentado. Es donde estabas el 29-oct — el plan sigue igual.",
-    "Baseline: discomfort under load only, nothing sitting. Same as 29-Oct — the plan stands."),
-  B("⚠️ La notas SENTADO, y eso es nuevo. Dilo hoy: toca revisar el plan, no esperar al 17-nov.",
-    "⚠️ You feel it SITTING, and that's new. Say so today: the plan needs a review, don't wait for 17-Nov."),
+  B("Limpio en las cuatro. Tres días seguidos así y esto se puede dar por cerrado.",
+    "Clean on all four. Three days in a row like this and it can be called closed."),
+  B("Línea base: se provoca con carga y se calla en reposo. Es donde estabas el 30-oct — el plan sigue igual.",
+    "Baseline: provoked by load, quiet at rest. Same as 30-Oct — the plan stands."),
+  B("⚠️ Esto ha cambiado de fase: la notas SENTADO o te DESPIERTA. Dilo hoy y se revisa el plan, no se espera al 17-nov.",
+    "⚠️ This has changed phase: you feel it SITTING or it WAKES you. Say so today and the plan gets reviewed, don't wait for 17-Nov."),
   B("⛔ Dolor, no molestia. Fuera el trabajo rápido y adelanta la consulta: lista de cancelaciones o fisio privado.",
     "⛔ Pain, not discomfort. Drop the fast work and move the appointment up: cancellation list or a private physio.")
 ];
-/* 0 limpio · 1 línea base · 2 ha cambiado · 3 parar. El orden importa: que
-   duela sentado manda sobre que no duela en el puente. */
+/* El grado del día. Jerarquía, no suma — y rehecha el 30-oct-2026 con lo que se
+   aprendió en 48 h:
+     · cualquier "dolor" (2) manda sobre todo;
+     · molestia SENTADO o que DESPIERTA = ha cambiado de fase (reactivo →
+       establecido), y eso pesa más que cualquier cosa provocada por carga;
+     · provocado por carga (cuesta andando, puente, o incomodidad nocturna sin
+       despertar) = la línea base del 30-oct, no es empeorar.
+   Las filas `c` (cuesta andando) y `n` (noche) se añadieron porque las dos
+   primeras no detectaban nada: el 30-oct marcó nada/nada en silla y puente la
+   misma mañana en que un paseo de 2 km con 50 m de desnivel se lo provocó
+   subiendo Y bajando. Una prueba que no puede salir positiva no es una prueba. */
 function isqGrado(r){
-  if(!r||(r.s==null&&r.p==null))return -1;
-  if(r.s>=2||r.p>=2)return 3;
-  if(r.s>=1)return 2;
-  if(r.p>=1)return 1;
+  if(!r)return -1;
+  var hay=["s","p","n","c"].some(function(k){return r[k]!=null});
+  if(!hay)return -1;
+  /* OJO: la fila de la noche NO se mide en molestia/dolor sino en
+     incomodó/despertó, así que su 2 no es "dolor" y no dispara el grado 3.
+     Despertarse es cambio de fase (2), no una orden de parar. */
+  if(r.s>=2||r.p>=2||r.c>=2)return 3;
+  if(r.s>=1||r.n>=2)return 2;
+  if(r.p>=1||r.c>=1||r.n>=1)return 1;
   return 0;
 }
 function isqBlock(day){
   if(!isqUser())return "";
   var v=S("isq:"+day,{})||{},g=isqGrado(v);
   var lab=[B("nada","none"),B("molestia","discomfort"),B("dolor","pain")];
-  function fila(k,tit){
-    var cur=v[k];
+  /* La noche se mide en otra escala: ahí no hay "dolor", hay "me ha obligado a
+     cambiar de postura" y "me ha despertado". Mezclar las dos escalas en las
+     mismas tres palabras fue el primer error de este bloque. */
+  var labN=[B("nada","none"),B("incomodó","bothered"),B("me despertó","woke me")];
+  function fila(k,tit,ls){
+    var cur=v[k],L=ls||lab;
     return '<div class="tlab" style="margin-top:9px;letter-spacing:.04em">'+esc(T(tit))+"</div>"+
       '<div class="painbtns" style="margin-top:5px">'+[0,1,2].map(function(n){
         return '<button class="p'+n+(cur===n?" sel":"")+'" data-act="isq" data-r="'+k+'" data-v="'+n+
-          '" aria-pressed="'+(cur===n)+'">'+esc(T(lab[n]))+"</button>";
+          '" aria-pressed="'+(cur===n)+'">'+esc(T(L[n]))+"</button>";
       }).join("")+"</div>";
   }
   var tira=[],d0=new Date(day+"T12:00");
@@ -4409,8 +4427,10 @@ function isqBlock(day){
   }
   return '<div class="wakeb"><div class="tlab">'+
     esc(T(B("Isquion izquierdo · prueba diaria","Left ischium · daily test")))+"</div>"+
-    fila("s",B("Sentado 3 min en silla dura","Sitting 3 min on a hard chair"))+
-    fila("p",B("Puente a una pierna, 30 s","Single-leg bridge, 30 s"))+
+    fila("s",B("Sentado · silla dura, coche","Sitting · hard chair, car"))+
+    fila("n",B("Anoche","Last night"),labN)+
+    fila("c",B("Cuesta andando · el paseo","Walking a slope · the dog walk"))+
+    fila("p",B("Puente de prueba · talón LEJOS, 30 s","Test bridge · heel FAR, 30 s"))+
     '<p class="note" style="margin:9px 2px 0">'+esc(g<0?
       T(B("Las dos pruebas, a la misma hora del día. Treinta segundos.",
           "Both tests, same time of day. Thirty seconds.")):T(ISQMSGS[g]))+"</p>"+

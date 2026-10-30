@@ -15,25 +15,32 @@ ok("con isqCheck sí sale",/Isquion izquierdo|Left ischium/.test(isqBlock(hoy)),
 print("\n== Las dos pruebas, tres bandas cada una ==");
 var c=isqBlock(hoy);
 ok("la de la silla",/silla dura|hard chair/.test(c),"");
-ok("la del puente",/Puente a una pierna|Single-leg bridge/.test(c),"");
-ok("seis botones en total",(c.match(/data-act="isq"/g)||[]).length===6,String((c.match(/data-act="isq"/g)||[]).length));
+ok("la del puente, con el talón lejos",/tal\u00f3n LEJOS|heel FAR/.test(c),"");
+ok("doce botones: cuatro filas de tres",(c.match(/data-act="isq"/g)||[]).length===12,String((c.match(/data-act="isq"/g)||[]).length));
+ok("la de la noche",/Anoche|Last night/.test(c),"");
+ok("y con SU escala, no la de dolor",/incomod\u00f3|bothered/.test(c)&&/me despert\u00f3|woke me/.test(c),"");
+ok("la de la cuesta",/Cuesta andando|Walking a slope/.test(c),"");
 ok("ninguno marcado al empezar",c.indexOf("sel")<0,"");
 ok("y pide rellenarlo",/Treinta segundos|Thirty seconds/.test(c),"");
 
 print("\n== El veredicto por grados ==");
 ok("sin datos, grado -1",isqGrado(null)===-1&&isqGrado({})===-1,String(isqGrado({})));
-ok("nada y nada → limpio",isqGrado({s:0,p:0})===0,"");
+ok("todo a nada → limpio",isqGrado({s:0,p:0,n:0,c:0})===0,"");
 ok("solo en el puente → línea base",isqGrado({s:0,p:1})===1,"");
+ok("solo en la cuesta → línea base",isqGrado({c:1})===1,String(isqGrado({c:1})));
+ok("incomodó de noche sin despertar → línea base",isqGrado({n:1})===1,"");
 ok("sentado manda sobre el puente",isqGrado({s:1,p:0})===2,"");
-ok("dolor en cualquiera → parar",isqGrado({s:0,p:2})===3&&isqGrado({s:2,p:0})===3,"");
+ok("que te DESPIERTE es cambio de fase (2), no orden de parar",isqGrado({n:2})===2,String(isqGrado({n:2})));
+ok("dolor en cualquiera → parar",isqGrado({s:0,p:2})===3&&isqGrado({c:2})===3,"");
+ok("el caso real del 30-oct: silla y puente a nada pero cuesta y noche a molestia",isqGrado({s:0,p:0,n:1,c:1})===1,"");
 
 print("\n== Los mensajes dicen lo que toca ==");
-W("isq:"+hoy,{s:0,p:0});
+W("isq:"+hoy,{s:0,p:0,n:0,c:0});
 ok("limpio habla de cerrarlo",/dar por cerrado|called closed/.test(isqBlock(hoy)),"");
 W("isq:"+hoy,{s:0,p:1});
 ok("línea base dice que el plan sigue",/plan sigue igual|plan stands/.test(isqBlock(hoy)),"");
 W("isq:"+hoy,{s:1,p:1});
-ok("sentado avisa de que es nuevo",/SENTADO|SITTING/.test(isqBlock(hoy)),"");
+ok("sentado avisa de que ha cambiado de fase",/SENTADO|SITTING/.test(isqBlock(hoy)),"");
 ok("y de no esperar al 17-nov",/17-nov|17-Nov/.test(isqBlock(hoy)),"");
 W("isq:"+hoy,{s:0,p:2});
 ok("dolor manda parar lo rápido",/trabajo rápido|fast work/.test(isqBlock(hoy)),"");
