@@ -28,17 +28,21 @@ ok("sin datos, grado -1",isqGrado(null)===-1&&isqGrado({})===-1,String(isqGrado(
 ok("todo a nada → limpio",isqGrado({s:0,p:0,n:0,c:0})===0,"");
 ok("solo en el puente → línea base",isqGrado({s:0,p:1})===1,"");
 ok("solo en la cuesta → línea base",isqGrado({c:1})===1,String(isqGrado({c:1})));
-ok("incomodó de noche sin despertar → línea base",isqGrado({n:1})===1,"");
-ok("sentado manda sobre el puente",isqGrado({s:1,p:0})===2,"");
-ok("que te DESPIERTE es cambio de fase (2), no orden de parar",isqGrado({n:2})===2,String(isqGrado({n:2})));
-ok("dolor en cualquiera → parar",isqGrado({s:0,p:2})===3&&isqGrado({c:2})===3,"");
-ok("el caso real del 30-oct: silla y puente a nada pero cuesta y noche a molestia",isqGrado({s:0,p:0,n:1,c:1})===1,"");
+ok("REPOSO manda sobre carga: una noche incómoda sube de 1 a 2",isqGrado({n:1})===2,String(isqGrado({n:1})));
+ok("y con cuesta y puente a la vez sigue siendo 2, no se suma",isqGrado({n:1,c:1,p:1})===2,String(isqGrado({n:1,c:1,p:1})));
+ok("sentado es cambio de fase (3)",isqGrado({s:1,p:0})===3,String(isqGrado({s:1,p:0})));
+ok("que te DESPIERTE también (3), no es orden de parar",isqGrado({n:2})===3,String(isqGrado({n:2})));
+ok("dolor en silla/puente/cuesta → parar (4)",isqGrado({s:0,p:2})===4&&isqGrado({c:2})===4,"");
+ok("el caso real del 30-oct (noche incomodó + cuesta molestia) = 2",isqGrado({s:0,p:0,n:1,c:1})===2,String(isqGrado({s:0,p:0,n:1,c:1})));
 
 print("\n== Los mensajes dicen lo que toca ==");
 W("isq:"+hoy,{s:0,p:0,n:0,c:0});
 ok("limpio habla de cerrarlo",/dar por cerrado|called closed/.test(isqBlock(hoy)),"");
 W("isq:"+hoy,{s:0,p:1});
 ok("línea base dice que el plan sigue",/plan sigue igual|plan stands/.test(isqBlock(hoy)),"");
+W("isq:"+hoy,{s:0,p:0,n:1,c:1});
+ok("reposo avisa de no añadir provocación",/No a\u00f1adas provocaci\u00f3n|Don't add provocation/.test(isqBlock(hoy)),"");
+ok("y deja la calidad EN DUDA",/EN DUDA|IN DOUBT/.test(isqBlock(hoy)),"");
 W("isq:"+hoy,{s:1,p:1});
 ok("sentado avisa de que ha cambiado de fase",/SENTADO|SITTING/.test(isqBlock(hoy)),"");
 ok("y de no esperar al 17-nov",/17-nov|17-Nov/.test(isqBlock(hoy)),"");

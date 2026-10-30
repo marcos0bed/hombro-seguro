@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v214";
+var APP_VERSION="v215";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4371,34 +4371,36 @@ function despertarBloque(day){
 var ISQMSGS=[
   B("Limpio en las cuatro. Tres días seguidos así y esto se puede dar por cerrado.",
     "Clean on all four. Three days in a row like this and it can be called closed."),
-  B("Línea base: se provoca con carga y se calla en reposo. Es donde estabas el 30-oct — el plan sigue igual.",
-    "Baseline: provoked by load, quiet at rest. Same as 30-Oct — the plan stands."),
-  B("⚠️ Esto ha cambiado de fase: la notas SENTADO o te DESPIERTA. Dilo hoy y se revisa el plan, no se espera al 17-nov.",
-    "⚠️ This has changed phase: you feel it SITTING or it WAKES you. Say so today and the plan gets reviewed, don't wait for 17-Nov."),
+  B("Línea base: se provoca con carga y se calla en reposo. El plan sigue igual.",
+    "Baseline: provoked by load, quiet at rest. The plan stands."),
+  B("Síntoma EN REPOSO: te incomodó de noche. Más irritable que la línea base, aunque sea suave. No añadas provocación —cuestas, velocidad extra— y la próxima sesión de calidad queda EN DUDA, no confirmada.",
+    "Symptom AT REST: it bothered you at night. More irritable than baseline even if mild. Don't add provocation —hills, extra speed— and the next quality session is IN DOUBT, not confirmed."),
+  B("⚠️ Cambio de fase: la notas SENTADO o te DESPIERTA. Dilo hoy y se revisa el plan, no se espera al 17-nov.",
+    "⚠️ Phase change: you feel it SITTING or it WAKES you. Say so today and the plan gets reviewed, don't wait for 17-Nov."),
   B("⛔ Dolor, no molestia. Fuera el trabajo rápido y adelanta la consulta: lista de cancelaciones o fisio privado.",
     "⛔ Pain, not discomfort. Drop the fast work and move the appointment up: cancellation list or a private physio.")
 ];
-/* El grado del día. Jerarquía, no suma — y rehecha el 30-oct-2026 con lo que se
-   aprendió en 48 h:
-     · cualquier "dolor" (2) manda sobre todo;
-     · molestia SENTADO o que DESPIERTA = ha cambiado de fase (reactivo →
-       establecido), y eso pesa más que cualquier cosa provocada por carga;
-     · provocado por carga (cuesta andando, puente, o incomodidad nocturna sin
-       despertar) = la línea base del 30-oct, no es empeorar.
-   Las filas `c` (cuesta andando) y `n` (noche) se añadieron porque las dos
-   primeras no detectaban nada: el 30-oct marcó nada/nada en silla y puente la
-   misma mañana en que un paseo de 2 km con 50 m de desnivel se lo provocó
-   subiendo Y bajando. Una prueba que no puede salir positiva no es una prueba. */
+/* El grado del día. Jerarquía, no suma, y en CINCO niveles desde el 30-oct-2026,
+   cuando él señaló —con razón— que meter "me incomodó de noche y me obligó a
+   cambiar de postura" en el mismo cajón que "me molestó subiendo una cuesta" era
+   un error: una molestia EN REPOSO y una PROVOCADA POR CARGA son señales de
+   orden distinto, aunque la de reposo sea más suave. Un tendón que solo se queja
+   cuando lo cargas no molesta estando quieto en la cama.
+     0 limpio
+     1 línea base — provocado por carga (cuesta andando, puente), nada en reposo
+     2 síntoma en reposo — incomodó de noche: más irritable; no añadir
+       provocación, y la siguiente sesión de calidad pasa a estar EN DUDA
+     3 cambio de fase — molesta sentado, o despierta: revisar el plan hoy
+     4 dolor — parar lo rápido y adelantar la consulta
+   La fila de la noche se mide en nada/incomodó/me despertó, así que su 2 NO es
+   "dolor" y no dispara el 4: dispara el 3. */
 function isqGrado(r){
   if(!r)return -1;
-  var hay=["s","p","n","c"].some(function(k){return r[k]!=null});
-  if(!hay)return -1;
-  /* OJO: la fila de la noche NO se mide en molestia/dolor sino en
-     incomodó/despertó, así que su 2 no es "dolor" y no dispara el grado 3.
-     Despertarse es cambio de fase (2), no una orden de parar. */
-  if(r.s>=2||r.p>=2||r.c>=2)return 3;
-  if(r.s>=1||r.n>=2)return 2;
-  if(r.p>=1||r.c>=1||r.n>=1)return 1;
+  if(!["s","p","n","c"].some(function(k){return r[k]!=null}))return -1;
+  if(r.s>=2||r.p>=2||r.c>=2)return 4;
+  if(r.s>=1||r.n>=2)return 3;
+  if(r.n>=1)return 2;
+  if(r.p>=1||r.c>=1)return 1;
   return 0;
 }
 function isqBlock(day){
@@ -4421,9 +4423,10 @@ function isqBlock(day){
   for(var i=9;i>=0;i--){
     var dd=new Date(d0);dd.setDate(dd.getDate()-i);
     var gg=isqGrado(S("isq:"+iso(dd),null));
-    var col=gg<0?"var(--line)":gg===0?"var(--ok)":gg===1?"var(--acc)":gg===2?"var(--warn)":"var(--bad)";
+    var COL=["var(--ok)","var(--acc)","var(--warn)","var(--bad)","var(--bad)"];
+    var col=gg<0?"var(--line)":COL[gg];
     tira.push('<span style="flex:1;text-align:center;font-family:var(--mono);font-size:9.5px;color:var(--mut)">'+
-      dd.getDate()+'<br><span style="font-size:15px;color:'+col+'">'+(gg<0?"·":"●")+"</span></span>");
+      dd.getDate()+'<br><span style="font-size:15px;color:'+col+'">'+(gg<0?"·":gg===4?"◆":"●")+"</span></span>");
   }
   return '<div class="wakeb"><div class="tlab">'+
     esc(T(B("Isquion izquierdo · prueba diaria","Left ischium · daily test")))+"</div>"+
