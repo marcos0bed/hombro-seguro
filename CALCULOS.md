@@ -437,8 +437,18 @@ Madrid calculado con `zoneinfo`.
   provocaba — y **ya no se puntúan**: un día anterior al cambio sale como "sin datos" en vez
   de como un 0 falso.
 
-  Cinco filas. Cuatro en tres bandas cada una (**0 nada / 1 molestia / 2 dolor**, su vocabulario):
-  `c` = cuesta andando (el paseo de los perros, la dosis diaria invisible), `m` = apoyo
+  Seis filas. Cinco en tres bandas cada una (**0 nada / 1 molestia / 2 dolor**, su vocabulario):
+  `b` = **AHORA MISMO, parado y sin hacer nada** — la **línea de base** (v219), y la fila que
+  da sentido a las demás: el 31-oct amaneció con molestia de fondo todo el día y avisó de que
+  así la tarjeta no discrimina nada (si ya molesta parado, marcar "molestia" tras subir
+  escaleras no dice si la escalera ha hecho algo). **Las filas de carga puntúan por ENCIMA de
+  la base**; el `4` (dolor) sí mira el valor absoluto, porque dolor es dolor.
+  `c` = cuesta andando (el paseo de los perros, la dosis diaria invisible), que lleva debajo
+  los **pisos de escalera en casa** (`pisosCasa`, v219): los pisos que cuenta Garmin menos el
+  desnivel de las actividades registradas ÷3. Vive en una casa de cuatro plantas, mediana ~11
+  pisos de casa al día de 29 totales — el total engaña porque los paseos en cuesta también
+  suman. Idea suya.
+ `m` = apoyo
   monopodal 30 s sobre la izquierda (la prueba de **carga**: el glúteo medio es el
   estabilizador de la pelvis en apoyo a una pierna), `a` = tumbado del lado izquierdo 30 s
   (la prueba de **compresión**, y el **discriminador**: la aducción aplasta el tendón contra

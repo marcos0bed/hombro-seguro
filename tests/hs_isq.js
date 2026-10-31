@@ -25,7 +25,8 @@ ok("la de tumbado del lado izquierdo (compresión)",/lado izquierdo|left side/.t
 ok("la de la noche",/Anoche|Last night/.test(c),"");
 ok("la quinta fila: ¿dormiste sobre el izquierdo?",/dormido sobre el lado izquierdo|sleep on your left side/.test(c),"");
 ok("y la casilla del isométrico",/Isom\u00e9trico de abducci\u00f3n|Isometric abduction/.test(c),"");
-ok("dieciséis botones: cuatro de tres, dos de dos",(c.match(/data-act="isq"/g)||[]).length===16,String((c.match(/data-act="isq"/g)||[]).length));
+ok("la fila de línea de base va primero",/AHORA MISMO|RIGHT NOW/.test(c)&&c.indexOf('data-r="b"')<c.indexOf('data-r="c"'),"");
+ok("diecinueve botones: cinco de tres, dos de dos",(c.match(/data-act="isq"/g)||[]).length===19,String((c.match(/data-act="isq"/g)||[]).length));
 ok("la fila del lado es binaria (no/sí)",/data-r="l" data-v="1"/.test(c)&&!/data-r="l" data-v="2"/.test(c),"");
 ok("la noche con SU escala, no la de dolor",/incomodó|bothered/.test(c)&&/me despertó|woke me/.test(c),"");
 ok("ninguno marcado al empezar",c.indexOf("sel")<0,"");
@@ -62,6 +63,30 @@ ok("un cero se conserva, no se pierde por falsy",isqMerge({c:0},"n",1).c===0,JSO
 ok("volver a tocar el mismo valor lo borra",isqMerge({c:1,n:1},"n",1).n===undefined,JSON.stringify(isqMerge({c:1,n:1},"n",1)));
 ok("y tocar otro valor lo cambia",isqMerge({n:1},"n",2).n===2,JSON.stringify(isqMerge({n:1},"n",2)));
 ok("sobre un día vacío funciona igual",JSON.stringify(isqMerge(null,"c",2))===JSON.stringify({c:2}),JSON.stringify(isqMerge(null,"c",2)));
+
+print("\n== La línea de base: las de carga cuentan POR ENCIMA ==");
+ok("molestia solo en reposo → síntoma en reposo (2)",isqGrado({b:1})===2,String(isqGrado({b:1})));
+ok("la cuesta igualando la base no añade nada: sigue 2",isqGrado({b:1,c:1})===2,String(isqGrado({b:1,c:1})));
+ok("pero por encima de la base ya es dolor (4)",isqGrado({b:1,c:2})===4,String(isqGrado({b:1,c:2})));
+ok("compresión IGUAL que la base no es cambio de fase",isqGrado({b:1,a:1})===2,String(isqGrado({b:1,a:1})));
+ok("compresión POR ENCIMA de la base sí lo es (3)",isqGrado({b:0,a:1})===3,String(isqGrado({b:0,a:1})));
+ok("sin base, la cuesta sola sigue dando línea base (1)",isqGrado({b:0,c:1})===1,String(isqGrado({b:0,c:1})));
+ok("dolor en reposo manda del todo (4)",isqGrado({b:2})===4,String(isqGrado({b:2})));
+ok("el caso real del 31-oct (fondo todo el día, paseo sin cambio) = 2",isqGrado({b:1,c:1,m:1,a:0,n:0})===2,String(isqGrado({b:1,c:1,m:1,a:0,n:0})));
+ok("marcar solo la base ya da el día por relleno",isqGrado({b:0})===0,String(isqGrado({b:0})));
+
+print("\n== Pisos en casa: total menos el desnivel de las actividades ==");
+METRICS.data=[{day:hoy,steps:9000,floors:28}];
+GACT.data=[{start_time:hoy+"T19:00:00",elevation_m:45}];
+ok("28 pisos menos 45 m de paseo (15) = 13 en casa",pisosCasa(hoy)===13,String(pisosCasa(hoy)));
+GACT.data=[];
+ok("sin actividades, todos son de casa",pisosCasa(hoy)===28,String(pisosCasa(hoy)));
+GACT.data=[{start_time:hoy+"T19:00:00",elevation_m:300}];
+ok("nunca negativo",pisosCasa(hoy)===0,String(pisosCasa(hoy)));
+METRICS.data=[{day:hoy,steps:9000,floors:null}];
+ok("sin dato de pisos no inventa nada",pisosCasa(hoy)===null&&pisosLinea(hoy)==="",String(pisosCasa(hoy)));
+METRICS.data=[{day:hoy,steps:9000,floors:28}];GACT.data=[];
+ok("y la línea sale en la tarjeta",/Escaleras en casa|Stairs at home/.test(isqBlock(hoy)),pisosLinea(hoy));
 
 print("\n== El isométrico es adherencia, no síntoma ==");
 ok("marcarlo solo a él no da el día por relleno",isqGrado({iso:1})===-1,String(isqGrado({iso:1})));

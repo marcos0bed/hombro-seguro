@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v218";
+var APP_VERSION="v219";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4365,8 +4365,13 @@ function despertarBloque(day){
    el ~14-nov, la VÍSPERA del 10K, y él ha dicho que no va. Hasta la carrera lo
    único que hay para decidir es esta serie.
    Cuatro filas, y dos son observaciones que no piden hacer nada:
-     · c  cuesta andando (el paseo de los perros) → la dosis diaria invisible, y
-          la fila que más información ha dado de todas.
+     · b  AHORA MISMO, parado y sin hacer nada → la LÍNEA DE BASE. Sin ella las
+          demás no discriminan: el 31-oct amaneció con molestia de fondo todo el
+          día y con eso cualquier fila marca "molestia" haga lo que haga. Las de
+          carga puntúan por ENCIMA de ésta.
+     · c  cuesta andando (el paseo de los perros) → la dosis diaria invisible.
+          Lleva debajo los pisos de escalera EN CASA que ha contado Garmin, que
+          es el mismo estímulo y no se recuerda.
      · m  apoyo monopodal 30 s sobre la izquierda → la prueba de CARGA del glúteo
           medio: es el estabilizador de la pelvis en apoyo a una pierna.
      · a  tumbado del lado izquierdo 30 s → la prueba de COMPRESIÓN, y el nuevo
@@ -4418,16 +4423,27 @@ var ISQMSGS=[
    que un día anterior al cambio sale como "sin datos" en vez de como un 0 falso. */
 function isqGrado(r){
   if(!r)return -1;
-  if(!["a","m","n","c"].some(function(k){return r[k]!=null}))return -1;
+  if(!["b","a","m","n","c"].some(function(k){return r[k]!=null}))return -1;
+  /* LÍNEA DE BASE (v219). El 31-oct amaneció con molestia de fondo todo el día y
+     avisó de que así la tarjeta no discrimina: si ya le molesta parado, marcar
+     "molestia" tras subir escaleras no dice si la escalera ha hecho algo. Tenía
+     razón — medía el cambio sin medir el punto de partida. Las filas de carga se
+     puntúan por ENCIMA de la base; la base misma es un síntoma en reposo. */
+  var b=r.b||0;
   /* Si durmió sobre el lado izquierdo, el síntoma de la noche NO es "en reposo":
      estuvo con su propio peso encima del trocánter durante horas, y eso es
      compresión, o sea CARGA. Baja un escalón, no se anula: que te despierte
      sigue contando algo aunque estuvieras tumbado encima. */
   var nn=r.n||0;
   if(r.l===1&&nn>0)nn--;
-  if(r.a>=2||r.m>=2||r.c>=2)return 4;
-  if(r.a>=1||nn>=2)return 3;
-  if(nn>=1)return 2;
+  var aa=Math.max((r.a||0)-b,0);   /* compresión por encima de la base */
+  /* Dolor es dolor: el 4 mira el valor absoluto, no la diferencia. */
+  if(b>=2||r.a>=2||r.m>=2||r.c>=2)return 4;
+  if(aa>=1||nn>=2)return 3;
+  if(b>=1||nn>=1)return 2;
+  /* La noche en absoluto: si durmió encima, el síntoma se explica por COMPRESIÓN,
+     que es carga — baja a 1, no desaparece. Perder esta cláusula al meter la base
+     hacía que "me incomodó durmiendo del lado malo" saliera como día limpio. */
   if(r.m>=1||r.c>=1||r.n>=1)return 1;
   return 0;
 }
@@ -4443,6 +4459,29 @@ function isqMerge(cv,fila,val){
   Object.keys(cv).forEach(function(k){if(cv[k]!=null)nx[k]=cv[k]});
   if(nx[fila]===val)delete nx[fila]; else nx[fila]=val;   /* volver a tocar lo borra */
   return nx;
+}
+/* Pisos de escalera EN CASA: los que cuenta Garmin menos el desnivel de las
+   actividades registradas (÷3 m, que es lo que Garmin llama un piso). Idea suya,
+   31-oct: "tú puedes ver cuánto subo y bajo escaleras". Vive en una casa de cuatro
+   plantas y se mueve constantemente entre la 2.ª y la 3.ª. Mediana ~11/día.
+   El total sin descontar engaña: los paseos en cuesta también suman pisos. */
+function pisosCasa(day){
+  var r=rowFor(day);
+  if(!r||r.floors==null)return null;
+  var fuera=0,G=GACT.data||[];
+  for(var i=0;i<G.length;i++)
+    if(G[i].start_time&&G[i].start_time.slice(0,10)===day&&G[i].elevation_m)fuera+=G[i].elevation_m;
+  return Math.max(Math.round(r.floors-fuera/3),0);
+}
+function pisosLinea(day){
+  var hoy=pisosCasa(day);
+  if(hoy===null)return "";
+  var v=[],M=METRICS.data||[];
+  for(var i=0;i<M.length;i++){var c=pisosCasa(M[i].day);if(c!==null)v.push(c)}
+  v.sort(function(a,b){return a-b});
+  var med=v.length?v[Math.floor(v.length/2)]:null;
+  return T(B("Escaleras en casa: ~"+hoy+" pisos","Stairs at home: ~"+hoy+" floors"))+
+    (med===null?"":T(B(" · tu mediana "+med," · your median "+med)));
 }
 /* Adherencia del isométrico en los últimos 7 días. Es la pregunta que hay que
    poder contestar antes de concluir que el tendón no responde. */
@@ -4491,7 +4530,12 @@ function isqBlock(day){
   }
   return '<div class="wakeb"><div class="tlab">'+
     esc(T(B("Glúteo medio izquierdo · prueba diaria","Left gluteus medius · daily test")))+"</div>"+
+    fila("b",B("AHORA MISMO · parado, sin hacer nada","RIGHT NOW · still, doing nothing"))+
+    '<p class="note" style="margin:5px 2px 0;color:var(--mut)">'+
+      esc(T(B("Esta es la referencia: las de abajo cuentan por encima de ésta.",
+              "This is the reference: the rows below count above this one.")))+"</p>"+
     fila("c",B("Cuesta andando · el paseo","Walking a slope · the dog walk"))+
+    '<p class="note" style="margin:5px 2px 0;color:var(--mut)">'+esc(pisosLinea(day))+"</p>"+
     fila("m",B("Apoyo monopodal 30 s · pierna izquierda","Single-leg stand 30 s · left leg"))+
     fila("a",B("Tumbado del lado izquierdo · 30 s","Lying on your left side · 30 s"))+
     fila("n",B("Anoche","Last night"),labN)+
