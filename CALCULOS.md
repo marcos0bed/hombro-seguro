@@ -437,7 +437,7 @@ Madrid calculado con `zoneinfo`.
   provocaba — y **ya no se puntúan**: un día anterior al cambio sale como "sin datos" en vez
   de como un 0 falso.
 
-  Cuatro filas, en tres bandas cada una (**0 nada / 1 molestia / 2 dolor**, su vocabulario):
+  Cinco filas. Cuatro en tres bandas cada una (**0 nada / 1 molestia / 2 dolor**, su vocabulario):
   `c` = cuesta andando (el paseo de los perros, la dosis diaria invisible), `m` = apoyo
   monopodal 30 s sobre la izquierda (la prueba de **carga**: el glúteo medio es el
   estabilizador de la pelvis en apoyo a una pierna), `a` = tumbado del lado izquierdo 30 s
@@ -445,11 +445,24 @@ Madrid calculado con `zoneinfo`.
   el trocánter). La cuarta, `n` = anoche, lleva **escala propia** (nada / incomodó / me
   despertó), así que su `2` **no** es dolor.
 
+  La quinta, `l` = ¿dormiste sobre el lado izquierdo? (sí/no, **v217**), **no es un síntoma**:
+  es el contexto que desambigua la anterior. Duerme de los dos lados, y **tumbarse sobre el
+  trocánter no es reposo, es compresión, o sea carga**. Por eso, cuando `l=1`, la fila de la
+  noche **baja un escalón** antes de puntuar — no se anula, porque que te despierte sigue
+  contando algo aunque estuvieras encima. Sin rellenar se asume que no durmió del lado malo.
+
   `isqGrado` **no es suma ni máximo, es jerarquía**, en cinco niveles:
   `0` limpio · `1` línea base (carga sí, reposo no) · `2` **síntoma en reposo** (la noche
   incomodó: la calidad queda EN DUDA) · `3` cambio de fase (`a≥1`, ha entrado la compresión,
-  o la noche le despertó) · `4` dolor en cualquier prueba de carga o compresión. El `3` **no
-  sube a 4** porque además haya carga.
+  o la noche le despertó **sin haber dormido encima**) · `4` dolor en cualquier prueba de
+  carga o compresión. El `3` **no sube a 4** porque además haya carga.
+
+  **`isqMerge` (v217)** guarda un toque sobre lo que ya hubiera ese día. Vivía dentro del
+  handler del click y copiaba a mano **solo `s` y `p`**; al añadir `n` y `c` en v214 nadie lo
+  actualizó, así que **cada toque borraba las demás filas** y la tarjeta no podía guardar más
+  de una a la vez. El 30-oct se grabó como `{s:0,p:0}`: justo la noche y la cuesta, las dos
+  filas sobre las que se razonó ese día, **nunca llegaron a Supabase**. Sacado a función
+  propia para poder probarlo, que era el problema de fondo.
 
   Se ve solo si la rutina trae `isqCheck:true` (es de una persona y una lesión). Existe
   porque **no hay valoración profesional antes de la carrera**: la cita de fisio más temprana
