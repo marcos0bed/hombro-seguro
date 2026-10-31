@@ -24,7 +24,8 @@ ok("la del apoyo monopodal",/monopodal|Single-leg stand/.test(c),"");
 ok("la de tumbado del lado izquierdo (compresión)",/lado izquierdo|left side/.test(c),"");
 ok("la de la noche",/Anoche|Last night/.test(c),"");
 ok("la quinta fila: ¿dormiste sobre el izquierdo?",/dormido sobre el lado izquierdo|sleep on your left side/.test(c),"");
-ok("catorce botones: cuatro filas de tres y una de dos",(c.match(/data-act="isq"/g)||[]).length===14,String((c.match(/data-act="isq"/g)||[]).length));
+ok("y la casilla del isométrico",/Isom\u00e9trico de abducci\u00f3n|Isometric abduction/.test(c),"");
+ok("dieciséis botones: cuatro de tres, dos de dos",(c.match(/data-act="isq"/g)||[]).length===16,String((c.match(/data-act="isq"/g)||[]).length));
 ok("la fila del lado es binaria (no/sí)",/data-r="l" data-v="1"/.test(c)&&!/data-r="l" data-v="2"/.test(c),"");
 ok("la noche con SU escala, no la de dolor",/incomodó|bothered/.test(c)&&/me despertó|woke me/.test(c),"");
 ok("ninguno marcado al empezar",c.indexOf("sel")<0,"");
@@ -61,6 +62,18 @@ ok("un cero se conserva, no se pierde por falsy",isqMerge({c:0},"n",1).c===0,JSO
 ok("volver a tocar el mismo valor lo borra",isqMerge({c:1,n:1},"n",1).n===undefined,JSON.stringify(isqMerge({c:1,n:1},"n",1)));
 ok("y tocar otro valor lo cambia",isqMerge({n:1},"n",2).n===2,JSON.stringify(isqMerge({n:1},"n",2)));
 ok("sobre un día vacío funciona igual",JSON.stringify(isqMerge(null,"c",2))===JSON.stringify({c:2}),JSON.stringify(isqMerge(null,"c",2)));
+
+print("\n== El isométrico es adherencia, no síntoma ==");
+ok("marcarlo solo a él no da el día por relleno",isqGrado({iso:1})===-1,String(isqGrado({iso:1})));
+ok("ni cambia el grado",isqGrado({c:1,iso:1})===1&&isqGrado({c:1,iso:0})===1,"");
+ok("se conserva al tocar otra fila",isqMerge({iso:1},"c",1).iso===1,JSON.stringify(isqMerge({iso:1},"c",1)));
+LS={};LS["routine"]={week:[],sessions:{},isqCheck:true};
+ok("sin hacerlo, cero de siete",/0 de los \u00faltimos 7|0 of the last 7/.test(isqBlock(hoy)),isoRacha(hoy));
+W("isq:"+hoy,{iso:1});
+ok("hecho hoy, uno de siete",/1 de los \u00faltimos 7|1 of the last 7/.test(isqBlock(hoy)),isoRacha(hoy));
+(function(){var d=new Date(hoy+"T12:00");for(var i=0;i<7;i++){var x=new Date(d);x.setDate(x.getDate()-i);W("isq:"+iso(x),{iso:1})}})();
+ok("siete seguidos tienen mensaje propio",/Siete de siete|Seven out of seven/.test(isqBlock(hoy)),isoRacha(hoy));
+LS={};LS["routine"]={week:[],sessions:{},isqCheck:true};
 
 print("\n== Los mensajes dicen lo que toca ==");
 W("isq:"+hoy,{a:0,m:0,n:0,c:0});

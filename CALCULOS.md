@@ -457,6 +457,14 @@ Madrid calculado con `zoneinfo`.
   o la noche le despertó **sin haber dormido encima**) · `4` dolor en cualquier prueba de
   carga o compresión. El `3` **no sube a 4** porque además haya carga.
 
+  Y una casilla aparte, bajo una línea separadora: **`iso` = ¿hecho el isométrico? (v218)**.
+  Tampoco es un síntoma — es **adherencia**, y no entra en `isqGrado` ni cuenta para dar el
+  día por relleno. Existe porque el isométrico de abducción es lo único que trata el tendón y
+  **la rutina solo lo prescribe lunes y sábado** (sesión `rodillas`), mientras que la pauta es
+  diaria; los días de correr va dentro del plan como paso previo, pero el resto se caían.
+  `isoRacha()` muestra debajo cuántos de los últimos 7 días está hecho: es la pregunta que hay
+  que poder contestar **antes** de concluir que el tendón no responde.
+
   **`isqMerge` (v217)** guarda un toque sobre lo que ya hubiera ese día. Vivía dentro del
   handler del click y copiaba a mano **solo `s` y `p`**; al añadir `n` y `c` en v214 nadie lo
   actualizó, así que **cada toque borraba las demás filas** y la tarjeta no podía guardar más

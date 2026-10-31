@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v217";
+var APP_VERSION="v218";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4374,6 +4374,10 @@ function despertarBloque(day){
           eso empiece a molestar es el sello de que el cuadro ha cambiado de fase.
           Ocupa el sitio que tenía "sentado", que para este tendón no mide nada.
      · n  anoche → escala propia, ver abajo.
+     · iso ¿hecho el isométrico? (sí/no) → tampoco es un síntoma: es ADHERENCIA.
+          Va separado por una línea porque es lo único de la tarjeta que pide
+          hacer algo, y porque la rutina solo lo prescribe lunes y sábado
+          mientras que la pauta es diaria.
      · l  ¿dormiste sobre el lado izquierdo? (sí/no) → NO es un síntoma, es el
           contexto que desambigua la fila de arriba. Duerme de los dos lados
           (31-oct), así que un "me incomodó" puede ser el tendón yendo a peor o
@@ -4440,6 +4444,17 @@ function isqMerge(cv,fila,val){
   if(nx[fila]===val)delete nx[fila]; else nx[fila]=val;   /* volver a tocar lo borra */
   return nx;
 }
+/* Adherencia del isométrico en los últimos 7 días. Es la pregunta que hay que
+   poder contestar antes de concluir que el tendón no responde. */
+function isoRacha(day){
+  var n=0,d0=new Date(day+"T12:00");
+  for(var i=0;i<7;i++){
+    var dd=new Date(d0);dd.setDate(dd.getDate()-i);
+    if((S("isq:"+iso(dd),{})||{}).iso===1)n++;
+  }
+  return n===7?T(B("Siete de siete. Así es como esto se arregla.","Seven out of seven. This is how it gets fixed.")):
+    T(B("Hecho "+n+" de los últimos 7 días.","Done "+n+" of the last 7 days."));
+}
 function isqBlock(day){
   if(!isqUser())return "";
   var v=S("isq:"+day,{})||{},g=isqGrado(v);
@@ -4451,6 +4466,12 @@ function isqBlock(day){
   /* Binaria y no es un síntoma: es el contexto que da sentido a la fila de arriba.
      Tumbarte sobre el trocánter no es reposo, es COMPRESIÓN, o sea carga. */
   var labL=[B("no","no"),B("sí","yes")];
+  /* El isométrico es lo ÚNICO que trata el tendón, y la rutina solo lo pide los
+     lunes y los sábados (sesión `rodillas`), mientras que la pauta es diaria. Sin
+     esta casilla no hay forma de saber si se está haciendo — y si dentro de una
+     semana esto no mejora, la primera pregunta es justo esa. No es un síntoma:
+     no entra en isqGrado ni cuenta para dar el día por relleno. */
+  var labI=[B("aún no","not yet"),B("hecho","done")];
   function fila(k,tit,ls){
     var cur=v[k],L=ls||lab;
     return '<div class="tlab" style="margin-top:9px;letter-spacing:.04em">'+esc(T(tit))+"</div>"+
@@ -4475,6 +4496,9 @@ function isqBlock(day){
     fila("a",B("Tumbado del lado izquierdo · 30 s","Lying on your left side · 30 s"))+
     fila("n",B("Anoche","Last night"),labN)+
     fila("l",B("¿Has dormido sobre el lado izquierdo?","Did you sleep on your left side?"),labL)+
+    '<div style="border-top:1px solid var(--line);margin:11px 0 0"></div>'+
+    fila("iso",B("Isométrico de abducción · 5 × 30-45 s","Isometric abduction · 5 × 30-45 s"),labI)+
+    '<p class="note" style="margin:6px 2px 0;color:var(--mut)">'+esc(isoRacha(day))+"</p>"+
     '<p class="note" style="margin:9px 2px 0">'+esc(g<0?
       T(B("Las dos pruebas, a la misma hora del día. Treinta segundos cada una.",
           "Both tests, same time of day. Thirty seconds each.")):T(ISQMSGS[g]))+"</p>"+
