@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v216";
+var APP_VERSION="v217";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4374,6 +4374,11 @@ function despertarBloque(day){
           eso empiece a molestar es el sello de que el cuadro ha cambiado de fase.
           Ocupa el sitio que tenía "sentado", que para este tendón no mide nada.
      · n  anoche → escala propia, ver abajo.
+     · l  ¿dormiste sobre el lado izquierdo? (sí/no) → NO es un síntoma, es el
+          contexto que desambigua la fila de arriba. Duerme de los dos lados
+          (31-oct), así que un "me incomodó" puede ser el tendón yendo a peor o
+          puede ser que esa noche le tocó dormir encima. Tumbarte sobre el
+          trocánter no es reposo: es compresión, y la compresión es carga.
    Tres bandas y no un 0-10 a propósito: el semáforo del hombro lleva meses
    rellenándose con tres bandas, y un 0-10 se rellena dos días. Y las etiquetas
    son "nada / molestia / dolor" porque él distingue las dos últimas —lo corrigió
@@ -4401,6 +4406,7 @@ var ISQMSGS=[
      2 síntoma en reposo — incomodó de noche: más irritable; no añadir
        provocación, y la siguiente sesión de calidad pasa a estar EN DUDA
      3 cambio de fase — molesta tumbado del lado izquierdo, o despierta
+       (la noche baja un escalón si durmió sobre el lado malo: l=1)
      4 dolor — parar lo rápido
    La fila de la noche se mide en nada/incomodó/me despertó, así que su 2 NO es
    "dolor" y no dispara el 4: dispara el 3.
@@ -4409,11 +4415,30 @@ var ISQMSGS=[
 function isqGrado(r){
   if(!r)return -1;
   if(!["a","m","n","c"].some(function(k){return r[k]!=null}))return -1;
+  /* Si durmió sobre el lado izquierdo, el síntoma de la noche NO es "en reposo":
+     estuvo con su propio peso encima del trocánter durante horas, y eso es
+     compresión, o sea CARGA. Baja un escalón, no se anula: que te despierte
+     sigue contando algo aunque estuvieras tumbado encima. */
+  var nn=r.n||0;
+  if(r.l===1&&nn>0)nn--;
   if(r.a>=2||r.m>=2||r.c>=2)return 4;
-  if(r.a>=1||r.n>=2)return 3;
-  if(r.n>=1)return 2;
-  if(r.m>=1||r.c>=1)return 1;
+  if(r.a>=1||nn>=2)return 3;
+  if(nn>=1)return 2;
+  if(r.m>=1||r.c>=1||r.n>=1)return 1;
   return 0;
+}
+/* Guarda un toque de la tarjeta sobre lo que ya hubiera ese día.
+   ⚠️ Hasta v216 esto vivía dentro del handler del click y copiaba a mano SOLO
+   las claves s y p. Al añadir las filas n y c en v214 nadie lo actualizó, así
+   que cada toque borraba las demás filas: la tarjeta no podía guardar más de
+   una a la vez, y el 30-oct —el día de la noche incómoda y el paseo en cuesta—
+   se grabó como {s:0,p:0}, con las dos filas que importaban perdidas.
+   Sacado aquí fuera para que se pueda probar, que era el verdadero problema. */
+function isqMerge(cv,fila,val){
+  var nx={};cv=cv||{};
+  Object.keys(cv).forEach(function(k){if(cv[k]!=null)nx[k]=cv[k]});
+  if(nx[fila]===val)delete nx[fila]; else nx[fila]=val;   /* volver a tocar lo borra */
+  return nx;
 }
 function isqBlock(day){
   if(!isqUser())return "";
@@ -4423,10 +4448,13 @@ function isqBlock(day){
      cambiar de postura" y "me ha despertado". Mezclar las dos escalas en las
      mismas tres palabras fue el primer error de este bloque. */
   var labN=[B("nada","none"),B("incomodó","bothered"),B("me despertó","woke me")];
+  /* Binaria y no es un síntoma: es el contexto que da sentido a la fila de arriba.
+     Tumbarte sobre el trocánter no es reposo, es COMPRESIÓN, o sea carga. */
+  var labL=[B("no","no"),B("sí","yes")];
   function fila(k,tit,ls){
     var cur=v[k],L=ls||lab;
     return '<div class="tlab" style="margin-top:9px;letter-spacing:.04em">'+esc(T(tit))+"</div>"+
-      '<div class="painbtns" style="margin-top:5px">'+[0,1,2].map(function(n){
+      '<div class="painbtns" style="margin-top:5px">'+L.map(function(_,n){
         return '<button class="p'+n+(cur===n?" sel":"")+'" data-act="isq" data-r="'+k+'" data-v="'+n+
           '" aria-pressed="'+(cur===n)+'">'+esc(T(L[n]))+"</button>";
       }).join("")+"</div>";
@@ -4446,6 +4474,7 @@ function isqBlock(day){
     fila("m",B("Apoyo monopodal 30 s · pierna izquierda","Single-leg stand 30 s · left leg"))+
     fila("a",B("Tumbado del lado izquierdo · 30 s","Lying on your left side · 30 s"))+
     fila("n",B("Anoche","Last night"),labN)+
+    fila("l",B("¿Has dormido sobre el lado izquierdo?","Did you sleep on your left side?"),labL)+
     '<p class="note" style="margin:9px 2px 0">'+esc(g<0?
       T(B("Las dos pruebas, a la misma hora del día. Treinta segundos cada una.",
           "Both tests, same time of day. Thirty seconds each.")):T(ISQMSGS[g]))+"</p>"+
@@ -4942,11 +4971,8 @@ document.addEventListener("click",function(e){
     haptic(1);render(true);return;
   }
   if(act==="isq"){
-    var ki="isq:"+selDay(),cv=S(ki,{})||{},rr=b.dataset.r,nvi=+b.dataset.v,nx={};
-    if(cv.s!=null)nx.s=cv.s;
-    if(cv.p!=null)nx.p=cv.p;
-    if(nx[rr]===nvi)delete nx[rr]; else nx[rr]=nvi;   /* volver a tocar lo borra */
-    W(ki,nx);haptic(1);render(true);return;
+    var ki="isq:"+selDay();
+    W(ki,isqMerge(S(ki,{}),b.dataset.r,+b.dataset.v));haptic(1);render(true);return;
   }
   if(act==="bedtap"){
     /* Sin toggle-a-borrar: si se toca por error, tocar otra vez a la hora

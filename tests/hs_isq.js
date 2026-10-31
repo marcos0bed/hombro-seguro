@@ -23,7 +23,9 @@ ok("la de la cuesta se queda",/Cuesta andando|Walking a slope/.test(c),"");
 ok("la del apoyo monopodal",/monopodal|Single-leg stand/.test(c),"");
 ok("la de tumbado del lado izquierdo (compresión)",/lado izquierdo|left side/.test(c),"");
 ok("la de la noche",/Anoche|Last night/.test(c),"");
-ok("doce botones: cuatro filas de tres",(c.match(/data-act="isq"/g)||[]).length===12,String((c.match(/data-act="isq"/g)||[]).length));
+ok("la quinta fila: ¿dormiste sobre el izquierdo?",/dormido sobre el lado izquierdo|sleep on your left side/.test(c),"");
+ok("catorce botones: cuatro filas de tres y una de dos",(c.match(/data-act="isq"/g)||[]).length===14,String((c.match(/data-act="isq"/g)||[]).length));
+ok("la fila del lado es binaria (no/sí)",/data-r="l" data-v="1"/.test(c)&&!/data-r="l" data-v="2"/.test(c),"");
 ok("la noche con SU escala, no la de dolor",/incomodó|bothered/.test(c)&&/me despertó|woke me/.test(c),"");
 ok("ninguno marcado al empezar",c.indexOf("sel")<0,"");
 ok("y pide rellenarlo",/Treinta segundos|Thirty seconds/.test(c),"");
@@ -41,12 +43,31 @@ ok("que te DESPIERTE también (3), no es orden de parar",isqGrado({n:2})===3,Str
 ok("y el 3 no sube a 4 porque además haya carga",isqGrado({a:1,m:1,c:1})===3,String(isqGrado({a:1,m:1,c:1})));
 ok("dolor en compresión/monopodal/cuesta → parar (4)",isqGrado({a:0,m:2})===4&&isqGrado({c:2})===4&&isqGrado({a:2})===4,"");
 
+print("\n== Dormir sobre el lado malo no es reposo, es compresión ==");
+ok("la fila del lado sola no da grado",isqGrado({l:1})===-1,String(isqGrado({l:1})));
+ok("noche incomodó SIN dormir encima → síntoma en reposo (2)",isqGrado({n:1,l:0})===2,String(isqGrado({n:1,l:0})));
+ok("la misma noche HABIENDO dormido encima baja a línea base (1)",isqGrado({n:1,l:1})===1,String(isqGrado({n:1,l:1})));
+ok("que te DESPIERTE sin dormir encima sigue siendo cambio de fase (3)",isqGrado({n:2,l:0})===3,String(isqGrado({n:2,l:0})));
+ok("y habiendo dormido encima baja un escalón, no se anula (2)",isqGrado({n:2,l:1})===2,String(isqGrado({n:2,l:1})));
+ok("sin la fila rellena se asume que no durmió encima",isqGrado({n:1})===2,String(isqGrado({n:1})));
+ok("la compresión de día (a) no la rebaja dormir del lado",isqGrado({a:1,l:1})===3,String(isqGrado({a:1,l:1})));
+ok("y el dolor manda igual",isqGrado({m:2,l:1})===4,String(isqGrado({m:2,l:1})));
+
+print("\n== El bug de guardado de v214-v216 (isqMerge) ==");
+ok("tocar la noche NO borra la cuesta",JSON.stringify(isqMerge({c:1},"n",1))===JSON.stringify({c:1,n:1}),JSON.stringify(isqMerge({c:1},"n",1)));
+ok("ni la cuesta borra el monopodal",isqMerge({m:2,n:1},"c",1).m===2,JSON.stringify(isqMerge({m:2,n:1},"c",1)));
+ok("las cinco filas conviven",Object.keys(isqMerge({c:1,m:0,a:0,n:1},"l",1)).length===5,JSON.stringify(isqMerge({c:1,m:0,a:0,n:1},"l",1)));
+ok("un cero se conserva, no se pierde por falsy",isqMerge({c:0},"n",1).c===0,JSON.stringify(isqMerge({c:0},"n",1)));
+ok("volver a tocar el mismo valor lo borra",isqMerge({c:1,n:1},"n",1).n===undefined,JSON.stringify(isqMerge({c:1,n:1},"n",1)));
+ok("y tocar otro valor lo cambia",isqMerge({n:1},"n",2).n===2,JSON.stringify(isqMerge({n:1},"n",2)));
+ok("sobre un día vacío funciona igual",JSON.stringify(isqMerge(null,"c",2))===JSON.stringify({c:2}),JSON.stringify(isqMerge(null,"c",2)));
+
 print("\n== Los mensajes dicen lo que toca ==");
 W("isq:"+hoy,{a:0,m:0,n:0,c:0});
 ok("limpio habla de cerrarlo",/dar por cerrado|called closed/.test(isqBlock(hoy)),"");
 W("isq:"+hoy,{a:0,m:1});
 ok("línea base dice que el plan sigue",/plan sigue igual|plan stands/.test(isqBlock(hoy)),"");
-W("isq:"+hoy,{a:0,m:0,n:1,c:1});
+W("isq:"+hoy,{a:0,m:0,n:1,c:1,l:0});
 ok("reposo avisa de no añadir provocación",/No añadas provocación|Don't add provocation/.test(isqBlock(hoy)),"");
 ok("y deja la calidad EN DUDA",/EN DUDA|IN DOUBT/.test(isqBlock(hoy)),"");
 W("isq:"+hoy,{a:1,m:1});
