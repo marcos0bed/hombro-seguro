@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v215";
+var APP_VERSION="v216";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4353,17 +4353,27 @@ function despertarBloque(day){
     }).join("")+"</div></div>";
 }
 
-/* ---------- protocolo del isquion (29-oct-2026) ----------
-   Molestia nueva en la tuberosidad isquiática izquierda —la inserción de los
-   isquiotibiales—, que apareció en las repeticiones rápidas del 28-oct. La cita
-   de fisio más temprana que se consiguió es el 17-nov: DOS DÍAS DESPUÉS del 10K
-   del 15-nov. O sea que hasta la carrera no hay valoración profesional y lo
-   único que habrá para decidir es esta serie. Dos pruebas de treinta segundos,
-   a la misma hora del día:
-     · sentado 3 min en silla dura → es el DISCRIMINADOR. Mientras no moleste
-       sentado, el cuadro sigue siendo reactivo y dependiente de carga; el dolor
-       al sentarse es el sello de la versión establecida.
-     · puente a una pierna 30 s → es la prueba de CARGA.
+/* ---------- protocolo del glúteo medio (31-oct-2026) ----------
+   ⚠️ REESCRITO ENTERO. Del 28 al 30-oct esto medía la TUBEROSIDAD ISQUIÁTICA
+   (inserción proximal del isquiotibial), porque él dijo "el hueso del glúteo" y
+   se dio por hecho que era el hueso de sentarse. El 31-oct Urgencias de HM
+   Torrelodones diagnosticó TENDINITIS DEL GLÚTEO MEDIO izquierdo, que se inserta
+   en el TROCÁNTER MAYOR: otro tendón, otros agravantes y otras pruebas.
+   Las dos filas viejas medían el tendón equivocado y por eso daban 0 el mismo día
+   que un paseo en cuesta se lo provocaba.
+   Y no hay valoración profesional por delante: la cita de fisio más temprana es
+   el ~14-nov, la VÍSPERA del 10K, y él ha dicho que no va. Hasta la carrera lo
+   único que hay para decidir es esta serie.
+   Cuatro filas, y dos son observaciones que no piden hacer nada:
+     · c  cuesta andando (el paseo de los perros) → la dosis diaria invisible, y
+          la fila que más información ha dado de todas.
+     · m  apoyo monopodal 30 s sobre la izquierda → la prueba de CARGA del glúteo
+          medio: es el estabilizador de la pelvis en apoyo a una pierna.
+     · a  tumbado del lado izquierdo 30 s → la prueba de COMPRESIÓN, y el nuevo
+          DISCRIMINADOR. La aducción aplasta el tendón contra el trocánter; que
+          eso empiece a molestar es el sello de que el cuadro ha cambiado de fase.
+          Ocupa el sitio que tenía "sentado", que para este tendón no mide nada.
+     · n  anoche → escala propia, ver abajo.
    Tres bandas y no un 0-10 a propósito: el semáforo del hombro lleva meses
    rellenándose con tres bandas, y un 0-10 se rellena dos días. Y las etiquetas
    son "nada / molestia / dolor" porque él distingue las dos últimas —lo corrigió
@@ -4375,10 +4385,10 @@ var ISQMSGS=[
     "Baseline: provoked by load, quiet at rest. The plan stands."),
   B("Síntoma EN REPOSO: te incomodó de noche. Más irritable que la línea base, aunque sea suave. No añadas provocación —cuestas, velocidad extra— y la próxima sesión de calidad queda EN DUDA, no confirmada.",
     "Symptom AT REST: it bothered you at night. More irritable than baseline even if mild. Don't add provocation —hills, extra speed— and the next quality session is IN DOUBT, not confirmed."),
-  B("⚠️ Cambio de fase: la notas SENTADO o te DESPIERTA. Dilo hoy y se revisa el plan, no se espera al 17-nov.",
-    "⚠️ Phase change: you feel it SITTING or it WAKES you. Say so today and the plan gets reviewed, don't wait for 17-Nov."),
-  B("⛔ Dolor, no molestia. Fuera el trabajo rápido y adelanta la consulta: lista de cancelaciones o fisio privado.",
-    "⛔ Pain, not discomfort. Drop the fast work and move the appointment up: cancellation list or a private physio.")
+  B("⚠️ Cambio de fase: te molesta TUMBADO DEL LADO IZQUIERDO o te DESPIERTA. Ha entrado la compresión, que es el mecanismo de este tendón. Hoy: isométricos sí, correr no, y el plan se revisa.",
+    "⚠️ Phase change: it bothers you LYING ON YOUR LEFT SIDE or it WAKES you. Compression has set in, and that is this tendon's mechanism. Today: isometrics yes, running no, and the plan gets reviewed."),
+  B("⛔ Dolor, no molestia. Fuera el trabajo rápido. Aquí sí tiene sentido el enantyum 3-4 días con comida y omeprazol esa mañana. Y si en cinco días no baja, fisio privado aunque sea fuera del seguro: la cita del seguro llega tarde.",
+    "⛔ Pain, not discomfort. Drop the fast work. Here the enantyum does make sense, 3-4 days with food and omeprazole that morning. And if it hasn't eased in five days, pay for a private physio: the insurance appointment comes too late.")
 ];
 /* El grado del día. Jerarquía, no suma, y en CINCO niveles desde el 30-oct-2026,
    cuando él señaló —con razón— que meter "me incomodó de noche y me obligó a
@@ -4387,20 +4397,22 @@ var ISQMSGS=[
    orden distinto, aunque la de reposo sea más suave. Un tendón que solo se queja
    cuando lo cargas no molesta estando quieto en la cama.
      0 limpio
-     1 línea base — provocado por carga (cuesta andando, puente), nada en reposo
+     1 línea base — provocado por carga (cuesta andando, monopodal), nada en reposo
      2 síntoma en reposo — incomodó de noche: más irritable; no añadir
        provocación, y la siguiente sesión de calidad pasa a estar EN DUDA
-     3 cambio de fase — molesta sentado, o despierta: revisar el plan hoy
-     4 dolor — parar lo rápido y adelantar la consulta
+     3 cambio de fase — molesta tumbado del lado izquierdo, o despierta
+     4 dolor — parar lo rápido
    La fila de la noche se mide en nada/incomodó/me despertó, así que su 2 NO es
-   "dolor" y no dispara el 4: dispara el 3. */
+   "dolor" y no dispara el 4: dispara el 3.
+   Las claves viejas s/p (31-oct-2026) ya no se leen: medían el otro tendón, así
+   que un día anterior al cambio sale como "sin datos" en vez de como un 0 falso. */
 function isqGrado(r){
   if(!r)return -1;
-  if(!["s","p","n","c"].some(function(k){return r[k]!=null}))return -1;
-  if(r.s>=2||r.p>=2||r.c>=2)return 4;
-  if(r.s>=1||r.n>=2)return 3;
+  if(!["a","m","n","c"].some(function(k){return r[k]!=null}))return -1;
+  if(r.a>=2||r.m>=2||r.c>=2)return 4;
+  if(r.a>=1||r.n>=2)return 3;
   if(r.n>=1)return 2;
-  if(r.p>=1||r.c>=1)return 1;
+  if(r.m>=1||r.c>=1)return 1;
   return 0;
 }
 function isqBlock(day){
@@ -4429,14 +4441,14 @@ function isqBlock(day){
       dd.getDate()+'<br><span style="font-size:15px;color:'+col+'">'+(gg<0?"·":gg===4?"◆":"●")+"</span></span>");
   }
   return '<div class="wakeb"><div class="tlab">'+
-    esc(T(B("Isquion izquierdo · prueba diaria","Left ischium · daily test")))+"</div>"+
-    fila("s",B("Sentado · silla dura, coche","Sitting · hard chair, car"))+
-    fila("n",B("Anoche","Last night"),labN)+
+    esc(T(B("Glúteo medio izquierdo · prueba diaria","Left gluteus medius · daily test")))+"</div>"+
     fila("c",B("Cuesta andando · el paseo","Walking a slope · the dog walk"))+
-    fila("p",B("Puente de prueba · talón LEJOS, 30 s","Test bridge · heel FAR, 30 s"))+
+    fila("m",B("Apoyo monopodal 30 s · pierna izquierda","Single-leg stand 30 s · left leg"))+
+    fila("a",B("Tumbado del lado izquierdo · 30 s","Lying on your left side · 30 s"))+
+    fila("n",B("Anoche","Last night"),labN)+
     '<p class="note" style="margin:9px 2px 0">'+esc(g<0?
-      T(B("Las dos pruebas, a la misma hora del día. Treinta segundos.",
-          "Both tests, same time of day. Thirty seconds.")):T(ISQMSGS[g]))+"</p>"+
+      T(B("Las dos pruebas, a la misma hora del día. Treinta segundos cada una.",
+          "Both tests, same time of day. Thirty seconds each.")):T(ISQMSGS[g]))+"</p>"+
     '<div style="display:flex;gap:2px;margin-top:9px">'+tira.join("")+"</div></div>";
 }
 

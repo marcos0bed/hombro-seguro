@@ -428,16 +428,34 @@ Madrid calculado con `zoneinfo`.
   fórmula: correlaciona mejor con las horas dormidas (r=+0,46) que el `sleep_score` del
   reloj (r=+0,20) en una comparación de 15 días — es la razón de que exista junto al dato
   del reloj, no un cálculo en sí.
-- `isq:<día>` = `{s,p}`, **el protocolo del isquion** (v213, 29-oct-2026). Dos
-  pruebas diarias a la misma hora, cada una en tres bandas **0 nada / 1 molestia /
-  2 dolor**: `s` = sentado 3 min en silla dura, `p` = puente a una pierna 30 s.
-  El grado del día (`isqGrado`) **no es la suma ni el máximo**: `s≥1` manda sobre
-  `p`, porque la molestia al sentarse es lo que distingue un tendón reactivo de una
-  tendinopatía establecida, y cualquier `2` (dolor) manda sobre todo. Tres bandas y
-  no un 0-10 porque el semáforo del hombro se rellena con tres y un 0-10 no se
-  rellena. Se ve solo si la rutina trae `isqCheck:true` (es de una persona y una
-  lesión). Existe porque la cita de fisio cayó el 17-nov, **dos días después del 10K
-  del 15-nov**: hasta la carrera esta serie es la única medida que hay.
+- `isq:<día>` = `{c,m,a,n}`, **el protocolo del glúteo medio** (v216, 31-oct-2026).
+  ⚠️ **Hasta v215 esto medía el ISQUION** (`{s,p}`, inserción proximal del isquiotibial),
+  porque se interpretó "el hueso del glúteo" como la tuberosidad isquiática. El **31-oct
+  Urgencias de HM Torrelodones diagnosticó tendinitis del glúteo medio izquierdo**, que se
+  inserta en el trocánter mayor: otro tendón, otros agravantes, otras pruebas. Las dos filas
+  viejas medían el tendón equivocado — daban 0 el mismo día que un paseo en cuesta se lo
+  provocaba — y **ya no se puntúan**: un día anterior al cambio sale como "sin datos" en vez
+  de como un 0 falso.
+
+  Cuatro filas, en tres bandas cada una (**0 nada / 1 molestia / 2 dolor**, su vocabulario):
+  `c` = cuesta andando (el paseo de los perros, la dosis diaria invisible), `m` = apoyo
+  monopodal 30 s sobre la izquierda (la prueba de **carga**: el glúteo medio es el
+  estabilizador de la pelvis en apoyo a una pierna), `a` = tumbado del lado izquierdo 30 s
+  (la prueba de **compresión**, y el **discriminador**: la aducción aplasta el tendón contra
+  el trocánter). La cuarta, `n` = anoche, lleva **escala propia** (nada / incomodó / me
+  despertó), así que su `2` **no** es dolor.
+
+  `isqGrado` **no es suma ni máximo, es jerarquía**, en cinco niveles:
+  `0` limpio · `1` línea base (carga sí, reposo no) · `2` **síntoma en reposo** (la noche
+  incomodó: la calidad queda EN DUDA) · `3` cambio de fase (`a≥1`, ha entrado la compresión,
+  o la noche le despertó) · `4` dolor en cualquier prueba de carga o compresión. El `3` **no
+  sube a 4** porque además haya carga.
+
+  Se ve solo si la rutina trae `isqCheck:true` (es de una persona y una lesión). Existe
+  porque **no hay valoración profesional antes de la carrera**: la cita de fisio más temprana
+  es el ~14-nov, la víspera del 10K del 15-nov, y él ha dicho que no va. Hasta la carrera
+  esta serie es la única medida que hay — y por eso los analgésicos quedaron aparcados
+  (31-oct, no tiene dolor en reposo): un AINE la invalidaría.
 - `baselineCard` (línea base de 90 días) es **texto ya redactado por el backend**, no hay
   fórmula visible en el front — si hace falta auditar esa "línea base", hay que mirar el
   proceso que la genera, no `index.html`.
