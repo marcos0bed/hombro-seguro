@@ -475,7 +475,7 @@ Madrid calculado con `zoneinfo`.
 
   Y una casilla aparte, bajo una línea separadora: **`iso` = ¿hecho el isométrico? (v218)**.
   Tampoco es un síntoma — es **adherencia**, y no entra en `isqGrado` ni cuenta para dar el
-  día por relleno. Existe porque el isométrico de abducción es lo único que trata el tendón y
+  día por relleno. Existe porque el isométrico de abducción (5×15-20 s desde el 1-nov; 30-45 s era demasiado de entrada) es lo único que trata el tendón y
   **la rutina solo lo prescribe lunes y sábado** (sesión `rodillas`), mientras que la pauta es
   diaria; los días de correr va dentro del plan como paso previo, pero el resto se caían.
   `isoRacha()` muestra debajo cuántos de los últimos 7 días está hecho: es la pregunta que hay
