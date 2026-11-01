@@ -21,7 +21,8 @@ ok("fuera el puente con el talón lejos",!/talón LEJOS|heel FAR/.test(c),"");
 print("\n== Las cuatro filas nuevas ==");
 ok("la de la cuesta se queda",/Cuesta andando|Walking a slope/.test(c),"");
 ok("la del apoyo monopodal",/monopodal|Single-leg stand/.test(c),"");
-ok("la de tumbado del lado izquierdo (compresión)",/lado izquierdo|left side/.test(c),"");
+ok("la de apretar el punto con el pulgar",/apretar el punto|Pressing the spot/.test(c),"");
+ok("ya no mide la compresión en el trocánter",!/Tumbado del lado izquierdo|Lying on your left side/.test(c),"");
 ok("la de la noche",/Anoche|Last night/.test(c),"");
 ok("la quinta fila: ¿dormiste sobre el izquierdo?",/dormido sobre el lado izquierdo|sleep on your left side/.test(c),"");
 ok("y la casilla del isométrico",/Isom\u00e9trico de abducci\u00f3n|Isometric abduction/.test(c),"");
@@ -40,10 +41,10 @@ ok("solo en el monopodal → línea base",isqGrado({a:0,m:1})===1,"");
 ok("solo en la cuesta → línea base",isqGrado({c:1})===1,String(isqGrado({c:1})));
 ok("REPOSO manda sobre carga: una noche incómoda sube de 1 a 2",isqGrado({n:1})===2,String(isqGrado({n:1})));
 ok("y con cuesta y monopodal a la vez sigue siendo 2, no se suma",isqGrado({n:1,c:1,m:1})===2,String(isqGrado({n:1,c:1,m:1})));
-ok("la COMPRESIÓN es cambio de fase (3)",isqGrado({a:1,m:0})===3,String(isqGrado({a:1,m:0})));
+ok("apretar el punto ya NO es cambio de fase (1)",isqGrado({a:1,m:0})===1,String(isqGrado({a:1,m:0})));
 ok("que te DESPIERTE también (3), no es orden de parar",isqGrado({n:2})===3,String(isqGrado({n:2})));
-ok("y el 3 no sube a 4 porque además haya carga",isqGrado({a:1,m:1,c:1})===3,String(isqGrado({a:1,m:1,c:1})));
-ok("dolor en compresión/monopodal/cuesta → parar (4)",isqGrado({a:0,m:2})===4&&isqGrado({c:2})===4&&isqGrado({a:2})===4,"");
+ok("el 3 (noche que despierta) no sube a 4 porque además haya carga",isqGrado({n:2,a:1,m:1,c:1})===3,String(isqGrado({n:2,a:1,m:1,c:1})));
+ok("dolor al apretar/monopodal/cuesta → parar (4)",isqGrado({a:0,m:2})===4&&isqGrado({c:2})===4&&isqGrado({a:2})===4,"");
 
 print("\n== Dormir sobre el lado malo no es reposo, es compresión ==");
 ok("la fila del lado sola no da grado",isqGrado({l:1})===-1,String(isqGrado({l:1})));
@@ -52,7 +53,7 @@ ok("la misma noche HABIENDO dormido encima baja a línea base (1)",isqGrado({n:1
 ok("que te DESPIERTE sin dormir encima sigue siendo cambio de fase (3)",isqGrado({n:2,l:0})===3,String(isqGrado({n:2,l:0})));
 ok("y habiendo dormido encima baja un escalón, no se anula (2)",isqGrado({n:2,l:1})===2,String(isqGrado({n:2,l:1})));
 ok("sin la fila rellena se asume que no durmió encima",isqGrado({n:1})===2,String(isqGrado({n:1})));
-ok("la compresión de día (a) no la rebaja dormir del lado",isqGrado({a:1,l:1})===3,String(isqGrado({a:1,l:1})));
+ok("dormir del lado no rebaja la presión en el punto",isqGrado({a:1,l:1})===1,String(isqGrado({a:1,l:1})));
 ok("y el dolor manda igual",isqGrado({m:2,l:1})===4,String(isqGrado({m:2,l:1})));
 
 print("\n== El bug de guardado de v214-v216 (isqMerge) ==");
@@ -68,11 +69,11 @@ print("\n== La línea de base: las de carga cuentan POR ENCIMA ==");
 ok("molestia solo en reposo → síntoma en reposo (2)",isqGrado({b:1})===2,String(isqGrado({b:1})));
 ok("la cuesta igualando la base no añade nada: sigue 2",isqGrado({b:1,c:1})===2,String(isqGrado({b:1,c:1})));
 ok("pero por encima de la base ya es dolor (4)",isqGrado({b:1,c:2})===4,String(isqGrado({b:1,c:2})));
-ok("compresión IGUAL que la base no es cambio de fase",isqGrado({b:1,a:1})===2,String(isqGrado({b:1,a:1})));
-ok("compresión POR ENCIMA de la base sí lo es (3)",isqGrado({b:0,a:1})===3,String(isqGrado({b:0,a:1})));
+ok("presión en el punto cuenta como carga (1), ya no como cambio de fase",isqGrado({b:0,a:1})===1,String(isqGrado({b:0,a:1})));
+ok("y con base de 1 no sube nada",isqGrado({b:1,a:1})===2,String(isqGrado({b:1,a:1})));
 ok("sin base, la cuesta sola sigue dando línea base (1)",isqGrado({b:0,c:1})===1,String(isqGrado({b:0,c:1})));
 ok("dolor en reposo manda del todo (4)",isqGrado({b:2})===4,String(isqGrado({b:2})));
-ok("el caso real del 31-oct (fondo todo el día, paseo sin cambio) = 2",isqGrado({b:1,c:1,m:1,a:0,n:0})===2,String(isqGrado({b:1,c:1,m:1,a:0,n:0})));
+ok("el caso real del 31-oct (fondo todo el día, paseo sin cambio) = 2",isqGrado({b:1,c:1,m:1,a:1,n:0})===2,String(isqGrado({b:1,c:1,m:1,a:0,n:0})));
 ok("marcar solo la base ya da el día por relleno",isqGrado({b:0})===0,String(isqGrado({b:0})));
 
 print("\n== Pisos en casa: total menos el desnivel de las actividades ==");
@@ -108,8 +109,8 @@ ok("línea base dice que el plan sigue",/plan sigue igual|plan stands/.test(isqB
 W("isq:"+hoy,{a:0,m:0,n:1,c:1,l:0});
 ok("reposo avisa de no añadir provocación",/No añadas provocación|Don't add provocation/.test(isqBlock(hoy)),"");
 ok("y deja la calidad EN DUDA",/EN DUDA|IN DOUBT/.test(isqBlock(hoy)),"");
-W("isq:"+hoy,{a:1,m:1});
-ok("la compresión avisa de que ha cambiado de fase",/LADO IZQUIERDO|LEFT SIDE/.test(isqBlock(hoy)),"");
+W("isq:"+hoy,{n:2});
+ok("que te despierte avisa de cambio de fase",/DESPIERTA|WAKES/.test(isqBlock(hoy)),"");
 ok("y ya no manda esperar al 17-nov (esa cita no existe)",!/17-nov|17-Nov/.test(isqBlock(hoy)),"");
 W("isq:"+hoy,{a:0,m:2});
 ok("dolor manda parar lo rápido",/trabajo rápido|fast work/.test(isqBlock(hoy)),"");

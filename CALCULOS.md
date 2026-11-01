@@ -450,9 +450,15 @@ Madrid calculado con `zoneinfo`.
   suman. Idea suya.
  `m` = apoyo
   monopodal 30 s sobre la izquierda (la prueba de **carga**: el glúteo medio es el
-  estabilizador de la pelvis en apoyo a una pierna), `a` = tumbado del lado izquierdo 30 s
-  (la prueba de **compresión**, y el **discriminador**: la aducción aplasta el tendón contra
-  el trocánter). La cuarta, `n` = anoche, lleva **escala propia** (nada / incomodó / me
+  estabilizador de la pelvis en apoyo a una pierna), `a` = **apretar el punto con el pulgar 5 s**
+  (v220): la prueba **directa** sobre su punto real, sin suponer qué estructura es.
+  ⚠️ Sustituye a «tumbado del lado izquierdo», que medía la compresión del tendón contra el
+  trocánter. El 1-nov localizó su punto —**el mismo desde el principio**— *«donde estaría la
+  bolsa trasera del pantalón»*: por detrás y en masa muscular, **no en el trocánter**. Sin
+  trocánter no hay mecanismo de compresión, así que la fila deja de ser discriminador y puntúa
+  como las demás de carga; el grado 3 lo dispara ya solo la noche que despierta.
+  👉 **Van tres filas montadas sobre una estructura supuesta** (sentado, puente, compresión) y
+  las tres medían otra cosa. Ésta no supone nada: aprieta donde le duele a él. La cuarta, `n` = anoche, lleva **escala propia** (nada / incomodó / me
   despertó), así que su `2` **no** es dolor.
 
   La quinta, `l` = ¿dormiste sobre el lado izquierdo? (sí/no, **v217**), **no es un síntoma**:
@@ -463,8 +469,8 @@ Madrid calculado con `zoneinfo`.
 
   `isqGrado` **no es suma ni máximo, es jerarquía**, en cinco niveles:
   `0` limpio · `1` línea base (carga sí, reposo no) · `2` **síntoma en reposo** (la noche
-  incomodó: la calidad queda EN DUDA) · `3` cambio de fase (`a≥1`, ha entrado la compresión,
-  o la noche le despertó **sin haber dormido encima**) · `4` dolor en cualquier prueba de
+  incomodó: la calidad queda EN DUDA) · `3` cambio de fase (la noche le despertó
+  **sin haber dormido encima**) · `4` dolor en cualquier prueba de
   carga o compresión. El `3` **no sube a 4** porque además haya carga.
 
   Y una casilla aparte, bajo una línea separadora: **`iso` = ¿hecho el isométrico? (v218)**.

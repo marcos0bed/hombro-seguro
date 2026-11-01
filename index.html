@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v219";
+var APP_VERSION="v220";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -4374,10 +4374,13 @@ function despertarBloque(day){
           es el mismo estímulo y no se recuerda.
      · m  apoyo monopodal 30 s sobre la izquierda → la prueba de CARGA del glúteo
           medio: es el estabilizador de la pelvis en apoyo a una pierna.
-     · a  tumbado del lado izquierdo 30 s → la prueba de COMPRESIÓN, y el nuevo
-          DISCRIMINADOR. La aducción aplasta el tendón contra el trocánter; que
-          eso empiece a molestar es el sello de que el cuadro ha cambiado de fase.
-          Ocupa el sitio que tenía "sentado", que para este tendón no mide nada.
+     · a  al apretar el punto con el pulgar, 5 s → la prueba DIRECTA sobre su
+          punto real, sea cual sea la estructura. Sustituye (v220) a "tumbado del
+          lado izquierdo", que medía la compresión del tendón contra el trocánter:
+          el 1-nov localizó su punto "donde estaría la bolsa trasera del pantalón",
+          por detrás y en músculo, no en el trocánter. Van tres filas puestas sobre
+          una estructura supuesta —sentado, puente, compresión— y las tres medían
+          otra cosa. Ésta no supone nada: aprieta DONDE LE DUELE A ÉL.
      · n  anoche → escala propia, ver abajo.
      · iso ¿hecho el isométrico? (sí/no) → tampoco es un síntoma: es ADHERENCIA.
           Va separado por una línea porque es lo único de la tarjeta que pide
@@ -4399,8 +4402,8 @@ var ISQMSGS=[
     "Baseline: provoked by load, quiet at rest. The plan stands."),
   B("Síntoma EN REPOSO: te incomodó de noche. Más irritable que la línea base, aunque sea suave. No añadas provocación —cuestas, velocidad extra— y la próxima sesión de calidad queda EN DUDA, no confirmada.",
     "Symptom AT REST: it bothered you at night. More irritable than baseline even if mild. Don't add provocation —hills, extra speed— and the next quality session is IN DOUBT, not confirmed."),
-  B("⚠️ Cambio de fase: te molesta TUMBADO DEL LADO IZQUIERDO o te DESPIERTA. Ha entrado la compresión, que es el mecanismo de este tendón. Hoy: isométricos sí, correr no, y el plan se revisa.",
-    "⚠️ Phase change: it bothers you LYING ON YOUR LEFT SIDE or it WAKES you. Compression has set in, and that is this tendon's mechanism. Today: isometrics yes, running no, and the plan gets reviewed."),
+  B("⚠️ Cambio de fase: te DESPIERTA por la noche. Eso es de otro orden que una molestia al cargar. Hoy: isométricos sí, correr no, y el plan se revisa.",
+    "⚠️ Phase change: it WAKES you at night. That's a different order of thing from an ache under load. Today: isometrics yes, running no, and the plan gets reviewed."),
   B("⛔ Dolor, no molestia. Fuera el trabajo rápido. Aquí sí tiene sentido el enantyum 3-4 días con comida y omeprazol esa mañana. Y si en cinco días no baja, fisio privado aunque sea fuera del seguro: la cita del seguro llega tarde.",
     "⛔ Pain, not discomfort. Drop the fast work. Here the enantyum does make sense, 3-4 days with food and omeprazole that morning. And if it hasn't eased in five days, pay for a private physio: the insurance appointment comes too late.")
 ];
@@ -4436,15 +4439,20 @@ function isqGrado(r){
      sigue contando algo aunque estuvieras tumbado encima. */
   var nn=r.n||0;
   if(r.l===1&&nn>0)nn--;
-  var aa=Math.max((r.a||0)-b,0);   /* compresión por encima de la base */
   /* Dolor es dolor: el 4 mira el valor absoluto, no la diferencia. */
   if(b>=2||r.a>=2||r.m>=2||r.c>=2)return 4;
-  if(aa>=1||nn>=2)return 3;
+  /* v220: el 3 ya NO lo dispara `a`. La fila medía la COMPRESIÓN del tendón
+     contra el trocánter, y el 1-nov él localizó su punto —el mismo desde el
+     principio— "donde estaría la bolsa trasera del pantalón": por detrás, en la
+     masa muscular, NO en el trocánter. Sin trocánter no hay mecanismo de
+     compresión que discrimine nada, así que la fila pasa a ser una prueba de
+     PRESIÓN sobre su punto real y puntúa como las demás de carga. */
+  if(nn>=2)return 3;
   if(b>=1||nn>=1)return 2;
   /* La noche en absoluto: si durmió encima, el síntoma se explica por COMPRESIÓN,
      que es carga — baja a 1, no desaparece. Perder esta cláusula al meter la base
      hacía que "me incomodó durmiendo del lado malo" saliera como día limpio. */
-  if(r.m>=1||r.c>=1||r.n>=1)return 1;
+  if(r.a>=1||r.m>=1||r.c>=1||r.n>=1)return 1;
   return 0;
 }
 /* Guarda un toque de la tarjeta sobre lo que ya hubiera ese día.
@@ -4537,7 +4545,7 @@ function isqBlock(day){
     fila("c",B("Cuesta andando · el paseo","Walking a slope · the dog walk"))+
     '<p class="note" style="margin:5px 2px 0;color:var(--mut)">'+esc(pisosLinea(day))+"</p>"+
     fila("m",B("Apoyo monopodal 30 s · pierna izquierda","Single-leg stand 30 s · left leg"))+
-    fila("a",B("Tumbado del lado izquierdo · 30 s","Lying on your left side · 30 s"))+
+    fila("a",B("Al apretar el punto · pulgar, 5 s","Pressing the spot · thumb, 5 s"))+
     fila("n",B("Anoche","Last night"),labN)+
     fila("l",B("¿Has dormido sobre el lado izquierdo?","Did you sleep on your left side?"),labL)+
     '<div style="border-top:1px solid var(--line);margin:11px 0 0"></div>'+
