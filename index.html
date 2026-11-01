@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v221";
+var APP_VERSION="v226";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -632,7 +632,7 @@ function loadGact(){
   if(!cloudOn()||GACT.loading)return;
   GACT.loading=true;
   sb.from("garmin_activities")
-    .select("activity_id,start_time,type,distance_km,duration_min,pace,hr_avg,hr_max,calories,cadence,elevation_m,temp_c,apparent_c,raw")
+    .select("activity_id,name,start_time,type,distance_km,duration_min,pace,hr_avg,hr_max,calories,cadence,elevation_m,temp_c,apparent_c,raw")
     .order("start_time",{ascending:false}).limit(1200)
     .then(function(r){GACT.loading=false;GACT.data=r.data||[];ULTGACT=Date.now();render();},
           function(){GACT.loading=false;GACT.data=[];ULTGACT=Date.now();render();});
@@ -3367,6 +3367,127 @@ function garminFor(l){
   return best;
 }
 
+/* ---------- detalle serie a serie del reloj (raw.sets) ----------
+   Garmin registra cada serie de una sesión de pesas (repes, peso, duración y
+   descanso), pero NO sabe qué ejercicio es: deja la categoría en UNKNOWN. El
+   nombre solo existe si la sesión se edita a mano en Garmin Connect, y eso
+   pasa un rato después de que la cadena del Mac ya se haya traído la sesión.
+   De ahí el botón: escribe kv_state.exreq y com.fitmet.exreq (cada minuto)
+   vuelve a bajar el detalle. Ver corpus-tools/garmintool.py `sets`. */
+var EXREQ={aid:null,firma:null,tries:0,falló:false};
+
+function exSetsDe(aid){
+  var acts=GACT.data||[];
+  for(var i=0;i<acts.length;i++)
+    if(String(acts[i].activity_id)===String(aid))return (acts[i].raw&&acts[i].raw.sets)||null;
+  return null;
+}
+/* "ROW:SINGLE_ARM_NEUTRAL_GRIP_DUMBBELL_ROW" -> "Single arm neutral grip dumbbell row".
+   Sin subcategoría se queda la categoría, que es la adivinanza del reloj; si
+   ni eso, UNKNOWN, y entonces no se enseña nada: es ruido, no un dato. */
+function exName(ej){
+  if(!ej)return "";
+  var parts=String(ej).split(":"),w=parts.length>1?parts[1]:parts[0];
+  if(!w||w==="UNKNOWN")return "";
+  w=w.replace(/_/g," ").toLowerCase();
+  return w.charAt(0).toUpperCase()+w.slice(1);
+}
+function mmss(s){
+  if(s==null)return "—";
+  var m=Math.floor(s/60);return m+":"+("0"+Math.round(s%60)).slice(-2);
+}
+/* Agrupa series consecutivas del mismo ejercicio, que es como se lee una
+   sesión. Sin esto son 21 filas sueltas. */
+function exGrupos(sets){
+  var gs=[];
+  sets.forEach(function(x){
+    var n=exName(x.ej);
+    var last=gs[gs.length-1];
+    if(last&&last.n===n)last.sets.push(x);
+    else gs.push({n:n,sets:[x]});
+  });
+  return gs;
+}
+function relojSetsCard(sets){
+  if(!sets||!sets.length)return "";
+  var filas=exGrupos(sets).map(function(gr){
+    var cab=gr.n?'<tr><td colspan="4" style="text-transform:none;font-family:inherit;font-weight:600;color:var(--acc)">'+esc(gr.n)+"</td></tr>":"";
+    var kgs=gr.sets.map(function(x){return x.kg}).filter(function(v){return v!=null});
+    var mezcla=kgs.length>1&&Math.min.apply(null,kgs)!==Math.max.apply(null,kgs);
+    return cab+gr.sets.map(function(x){
+      /* El peso NO es una medida: es lo que él teclea en el reloj, y se
+         arrastra del ejercicio anterior si no lo cambia. Cuando dentro de un
+         mismo ejercicio hay pesos distintos se marca, porque suele ser eso. */
+      var kg=x.kg!=null?(x.kg+(mezcla?" ⚠":"")):"—";
+      return '<tr><td style="white-space:normal;text-transform:none;font-family:inherit;font-weight:400;color:#c6cdd6">'+
+        esc(x.hora||"—")+"</td><td>"+(x.reps!=null?x.reps:"—")+"</td><td>"+esc(kg)+"</td><td>"+esc(mmss(x.descanso))+"</td></tr>";
+    }).join("");
+  }).join("");
+  return '<div style="overflow-x:auto;margin-top:10px"><table class="mini"><tr><td>'+
+    T(B("Hora","Time"))+"</td><td>Reps</td><td>kg</td><td>"+T(B("Descanso","Rest"))+
+    "</td></tr>"+filas+"</table></div>";
+}
+/* El Mac mira la petición cada minuto, así que se sondea hasta ~2 min y se
+   deja de insistir en vez de girar para siempre. */
+function exreqPide(aid){
+  if(!cloudOn())return;
+  EXREQ={aid:String(aid),firma:JSON.stringify(exSetsDe(aid)),tries:0,falló:false};
+  cloudPush("exreq",{activity_id:+aid,at:new Date().toISOString()});
+  render(true);
+  exreqSonda();
+}
+function exreqSonda(){
+  if(!EXREQ.aid)return;
+  EXREQ.tries++;
+  if(EXREQ.tries>12){EXREQ.aid=null;EXREQ.falló=true;render(true);return}
+  setTimeout(function(){
+    var aid=EXREQ.aid,firma=EXREQ.firma;
+    if(!aid)return;
+    exSetsRefresca(aid,function(sets){
+      if(EXREQ.aid!==aid)return;
+      if(JSON.stringify(sets)!==firma){
+        EXREQ.aid=null;EXREQ.recien=String(aid);
+        /* El Mac, al servir la petición, también pisa el registro con lo que
+           diga Garmin (nombres, series y repes reales). Sin recargar LOGS la
+           tabla de arriba seguiría enseñando lo viejo al lado de lo nuevo. */
+        LOGS.data=null;loadLogs();
+        render(true);return;
+      }
+      exreqSonda();
+    });
+  },10000);
+}
+function exSetsRefresca(aid,cb){
+  if(!cloudOn()){cb(null);return}
+  sb.from("garmin_activities").select("activity_id,raw").eq("activity_id",aid).limit(1)
+    .then(function(r){
+      var row=(r&&r.data&&r.data[0])||null;
+      if(row&&GACT.data){
+        for(var i=0;i<GACT.data.length;i++)
+          if(String(GACT.data[i].activity_id)===String(aid))GACT.data[i].raw=row.raw;
+      }
+      cb(row?((row.raw&&row.raw.sets)||null):null);
+    },function(){cb(null)});
+}
+
+function exreqBloque(aid,sets){
+  var pidiendo=EXREQ.aid===String(aid);
+  var tabla=(sets&&sets.length)
+    ?'<p class="note" style="margin-top:10px;font-weight:600;color:var(--mut)">⌚ '+
+       T(B("Lo que vio el reloj","What the watch recorded"))+"</p>"+relojSetsCard(sets)
+    :"";
+  return tabla+
+    '<button class="abtn ghost" data-act="exreq" data-aid="'+esc(String(aid))+'"'+
+    (pidiendo?' disabled style="opacity:.6"':"")+">"+
+    (pidiendo?T(B("Trayendo de Garmin…","Fetching from Garmin…"))
+             :T(B("⟳ Traer de Garmin","⟳ Fetch from Garmin")))+"</button>"+
+    '<p class="note" style="margin-top:6px;font-size:10.5px;color:var(--mut)">'+
+    T(B("Púlsalo cuando ya les hayas puesto nombre a los ejercicios en Garmin Connect. Trae el detalle y corrige tu registro: series y repeticiones reales siempre, y el nombre solo si resulta ser otro ejercicio. El peso lo pones tú. Tarda hasta un minuto.",
+        "Press it once you have named the exercises in Garmin Connect. It fetches the detail and fixes your log: real sets and reps always, and the name only if it turns out to be a different exercise. The weight stays yours. Takes up to a minute."))+
+    (EXREQ.falló?" <b>"+T(B("No llegó nada nuevo; el Mac tiene que estar encendido.",
+                             "Nothing new arrived; the Mac needs to be awake."))+"</b>":"")+"</p>";
+}
+
 /* Historial de sesiones guardadas (los workout_logs ya cargados en LOGS) */
 function histView(){
   var L=(LOGS.data||[]).slice().reverse().slice(0,20);
@@ -3391,7 +3512,10 @@ function histView(){
         return '<tr><td style="white-space:normal;text-transform:none;font-family:inherit;font-weight:400;color:#c6cdd6">'+esc(e.n||"")+"</td><td>"+(e.sets||"—")+"</td><td>"+esc(e.reps||e.target||"—")+"</td><td>"+(e.weight!=null?e.weight:"—")+"</td></tr>";
       }).join("");
       var noteHtml=l.note?'<p class="note" style="margin-top:10px;padding:8px 10px;background:var(--bg);border-radius:8px;border-left:3px solid var(--acc-dim)">📝 '+esc(l.note)+"</p>":"";
-      det='<div class="card" style="margin:0 0 10px"><div style="overflow-x:auto"><table class="mini"><tr><td>'+u("thEj")+"</td><td>"+u("thSets")+"</td><td>Reps</td><td>kg</td></tr>"+trs+"</table></div>"+noteHtml+"</div>";
+      /* Lo que vio el reloj, debajo de lo que él anotó: el valor está en
+         comparar las dos columnas, no en cada una por separado. */
+      var extra=(g&&!isCardioLog(l))?exreqBloque(g.activity_id,exSetsDe(g.activity_id)):"";
+      det='<div class="card" style="margin:0 0 10px"><div style="overflow-x:auto"><table class="mini"><tr><td>'+u("thEj")+"</td><td>"+u("thSets")+"</td><td>Reps</td><td>kg</td></tr>"+trs+"</table></div>"+noteHtml+extra+"</div>";
     }
     return head+det;
   }).join("");
@@ -3415,7 +3539,19 @@ function gactView(){
     else if(a.duration_min)det.push(Math.round(+a.duration_min)+" min");
     if(a.hr_avg)det.push(hrL+a.hr_avg);
     if(!(+a.distance_km>0)&&a.calories)det.push(Math.round(+a.calories)+" kcal");
-    return "<tr><td>"+d+"</td><td>"+esc(t)+"</td><td>"+esc(det.join(" · "))+"</td></tr>";
+    /* Las sesiones de fuerza con detalle se despliegan aquí mismo. Es la única
+       vía para quien no registra en la app (Lorena): su historial de pesas no
+       está en workout_logs, está en estas filas. */
+    var sets=(a.type||"")==="strength_training"?exSetsDe(a.activity_id):null;
+    if(!(sets&&sets.length))
+      return "<tr><td>"+d+"</td><td>"+esc(t)+"</td><td>"+esc(det.join(" · "))+"</td></tr>";
+    var key="gact|"+a.activity_id;
+    var abierto=state.doneOpen===key||EXREQ.recien===String(a.activity_id);
+    var nom=a.name?esc(a.name):esc(t);
+    return '<tr data-act="doneopen" data-k="'+esc(key)+'" style="cursor:pointer"><td>'+d+
+      "</td><td>"+nom+' <span style="color:var(--mut)">'+(abierto?"▾":"▸")+"</span></td><td>"+
+      esc(det.join(" · "))+"</td></tr>"+
+      (abierto?'<tr><td colspan="3">'+exreqBloque(a.activity_id,sets)+"</td></tr>":"");
   }).join("");
   return '<div class="card"><h3>'+u("garmT")+'</h3><div style="overflow-x:auto"><table class="mini">'+trs+"</table></div></div>";
 }
@@ -3463,15 +3599,58 @@ function doneTodayBox(){
   if(!cloudOn())return "";
   if(LOGS.data===null){loadLogs();return ""}
   var hoyL=(LOGS.data||[]).filter(function(l){return l.day===selDay()});
-  if(!hoyL.length)return "";
-  if(GACT.data===null)loadGact();
-  var rows=hoyL.map(function(l){
+  if(GACT.data===null){loadGact();if(!hoyL.length)return ""}
+  var rows=hoyL.map(function(l,k){
     var g=garminFor(l),gt="";
     if(g)gt='<small>⌚ '+String(g.start_time||"").slice(11,16)+
       (g.duration_min?" · "+Math.round(+g.duration_min)+" min":"")+
       (g.calories?" · "+Math.round(+g.calories)+" kcal":"")+"</small>";
-    return '<div class="doneline"><span class="di">'+(isCardioLog(l)?"🏃":"💪")+"</span><b>"+esc(l.title||"?")+"</b>"+gt+"</div>";
+    var linea='<div class="doneline"><span class="di">'+(isCardioLog(l)?"🏃":"💪")+"</span><b>"+esc(l.title||"?")+"</b>"+gt+"</div>";
+    /* Una sesión de pesas de hoy con su actividad casada puede pedirle a
+       Garmin el detalle serie a serie. Aquí y no solo en el historial: es
+       nada más acabar de entrenar cuando él edita los nombres en Garmin
+       Connect y quiere verlo. Las carreras no tienen series. */
+    if(isCardioLog(l)||!g)return linea;
+    var key="hoy|"+(l.session_id||"")+"|"+k;
+    /* Abierto por defecto: él abre la app justo después de entrenar y lo que
+       quiere ver es esto, no tener que buscarlo. Se puede plegar, y una vez
+       plegado manda su elección. También se abre solo al acabar una petición. */
+    var abierto=state.doneOpen===key||
+      (state.doneOpen===undefined&&!!(exSetsDe(g.activity_id)||[]).length)||
+      EXREQ.recien===String(g.activity_id);
+    var cab='<button class="doneline" style="width:100%;background:none;text-align:left" data-act="doneopen" data-k="'+esc(key)+'">'+
+      '<span class="di">💪</span><b>'+esc(l.title||"?")+"</b>"+gt+
+      '<span style="color:var(--mut);margin-left:6px">'+(abierto?"▾":"▸")+"</span></button>";
+    if(!abierto)return cab;
+    return cab+exreqBloque(g.activity_id,exSetsDe(g.activity_id));
   }).join("");
+  /* Lorena NO usa la rutina de la app: sus sesiones de fuerza no tienen
+     workout_log, así que colgar el detalle del log la dejaba fuera entera.
+     Para ella la fuente es la actividad de Garmin — y además le llega con los
+     nombres puestos, porque sigue un entrenamiento estructurado en el reloj.
+     Se añaden las sesiones de fuerza de hoy que ningún log haya casado ya. */
+  var usadas={};
+  hoyL.forEach(function(l){var g=garminFor(l);if(g)usadas[String(g.activity_id)]=1});
+  var sueltas=(GACT.data||[]).filter(function(a){
+    return (a.type||"")==="strength_training"&&
+           String(a.start_time||"").slice(0,10)===selDay()&&
+           !usadas[String(a.activity_id)];
+  });
+  rows+=sueltas.map(function(a){
+    var key="hoyg|"+a.activity_id;
+    var sets=exSetsDe(a.activity_id);
+    var abierto=state.doneOpen===key||
+      (state.doneOpen===undefined&&!!(sets||[]).length)||
+      EXREQ.recien===String(a.activity_id);
+    var gt='<small>⌚ '+String(a.start_time||"").slice(11,16)+
+      (a.duration_min?" · "+Math.round(+a.duration_min)+" min":"")+
+      (a.calories?" · "+Math.round(+a.calories)+" kcal":"")+"</small>";
+    var cab='<button class="doneline" style="width:100%;background:none;text-align:left" data-act="doneopen" data-k="'+esc(key)+'">'+
+      '<span class="di">💪</span><b>'+esc(a.name||T(GTYPES.strength_training))+"</b>"+gt+
+      '<span style="color:var(--mut);margin-left:6px">'+(abierto?"▾":"▸")+"</span></button>";
+    return abierto?cab+exreqBloque(a.activity_id,sets):cab;
+  }).join("");
+  if(!rows)return "";
   return '<div class="card donebox"><div class="tlab" style="margin-bottom:3px">'+u("doneT")+"</div>"+rows+"</div>";
 }
 
@@ -5118,6 +5297,8 @@ document.addEventListener("click",function(e){
   }
   if(act==="wkreset"){W("weekorder",null);render(true);return}
   if(act==="hist"){state.histOpen=state.histOpen===b.dataset.k?null:b.dataset.k;render(true);return}
+  if(act==="exreq"){exreqPide(b.dataset.aid);return}
+  if(act==="doneopen"){state.doneOpen=state.doneOpen===b.dataset.k?null:b.dataset.k;render(true);return}
   if(act==="habit"){
     var dk="habits:"+selDay();
     var hs=S(dk,{});hs[b.dataset.h]=!hs[b.dataset.h];

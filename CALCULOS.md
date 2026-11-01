@@ -39,6 +39,7 @@ lee y presenta.
 | Presentación/coloreado de la curva de estrés | **[APP]** | `index.html`: `stressDayCard`, `sColor` |
 | Detección de viaje (cambio de huso horario) | **[PIPE]** | `balancetool.py`: campo `travel` |
 | Volumen de una sesión de pesas (series×reps×peso) | **[APP]** | `index.html`: `buildLog` |
+| Detalle serie a serie del reloj (repes/peso/descanso) | **[PIPE]** | `garmintool.py`: `sets`; ver §4.7 |
 | Grupo muscular de cada ejercicio | **[APP]** | `index.html`: `muscleOf`, `guessMuscle`, `mapaDe` |
 | Semáforo de dolor de hombro | **[APP]** | `index.html`: `painBlock` (solo mensajes fijos, sin fórmula) |
 | Split proteína batido vs comida (MFP "snacks") | **[PIPE]** | `balancetool.py`/`fitmet_query.py`: densidad proteína/kcal |
@@ -568,6 +569,67 @@ que la adherencia semanal cuente **ambas** sesiones potenciales ese día, no sol
 tipo de carga del día (§1.4) también sube a `hard` cuando lleva fuerza añadida.
 
 ---
+
+### 4.7 Detalle serie a serie del reloj — `raw.sets` **[PIPE]**
+
+`garmintool.py sets` guarda en `garmin_activities.raw.sets` lo que el reloj
+registró de una sesión de pesas, serie a serie: `hora` (local), `reps`, `kg`,
+`dur` y `descanso`. Las series `REST` de Garmin no se guardan: se colapsan en
+el `descanso` de la serie siguiente. Es el equivalente de `raw.laps` para las
+carreras — sin él una sesión de pesas es un total de minutos y nada más.
+
+Tres cosas que **no** son datos medidos y hay que leer con cuidado:
+
+- **El nombre del ejercicio (`ej`).** Viene como `CATEGORY:NAME`, y el reloj
+  no sabe qué ejercicio es: deja la categoría en `UNKNOWN` con 99,6 % de
+  confianza. El nombre solo existe si la sesión se edita a mano en Garmin
+  Connect. `exName()` descarta `UNKNOWN` en vez de pintarlo.
+- **El peso (`kg`).** Es lo que él teclea en el reloj, y **se arrastra** del
+  ejercicio anterior hasta que lo cambia (9-oct-2026: 12 series todas a 20 kg
+  cuando la sesión tenía 10, 20 y 10). `relojSetsCard()` marca con ⚠ los
+  pesos distintos dentro de un mismo ejercicio, que casi siempre es eso.
+- **Las repeticiones.** Un isométrico cuenta 1. En un ejercicio a una mano
+  depende de si se marca una serie por brazo o las dos juntas.
+
+El botón **⟳ Traer de Garmin** vive en **la caja de "hoy"** (`doneTodayBox`,
+desplegada por defecto cuando ya hay detalle), en el historial (`histView`) y
+en las filas de fuerza de la tarjeta de Garmin (`gactView`); los tres pintan
+el mismo `exreqBloque()`.
+
+**Quien no registra en la app no tiene `workout_log`** (Lorena): `doneTodayBox`
+añade las sesiones de fuerza de hoy que ningún log haya casado, y `gactView`
+hace desplegable cada fila de fuerza con detalle. Si no, el detalle colgaría
+de un log que no existe y se quedarían sin nada. Sus series **sí llegan con
+nombre** (sigue un entrenamiento estructurado en el reloj, que etiqueta cada
+serie) y sus pesos no sufren el arrastre: 45 % de sus 2.128 series tienen
+nombre de ejercicio, frente a casi ninguna de las de Marcos. Escribe `kv_state.exreq`
+(`{activity_id, at}`) y el LaunchAgent `com.fitmet.exreq` lo recoge cada
+minuto (`garmintool.py sets --pending`), vuelve a bajar el detalle y borra la
+petición.
+
+**Y en modo botón —solo en modo botón— se pisa el registro** (`concilia_log`):
+el botón es su señal de "ya lo he editado en Garmin", porque no siempre edita
+al acabar de entrenar; la cadena automática nunca toca `workout_logs`.
+Se sobrescriben **nº de series y repeticiones** siempre (las repes como lista
+real por serie, `"12,12,10,10,10"`, que `buildLog` ya sabe leer), y **el nombre
+solo si `mismo_ejercicio()` dice que es OTRO ejercicio**: sus nombres llevan
+matices que el enum de Garmin no tiene ("30°", "close neutral grip") y pisarlos
+siempre los borraba. Esa función no compara parecido de palabras —falla: "One-arm
+dumbbell row on bench" y "Single arm neutral grip dumbbell row" son el mismo y
+comparten 3 de 9 palabras, mientras que "Dumbbell floor press" e "Incline
+dumbbell bench press" son distintos y comparten 2 de 5— sino **conflictos de
+modificador**: movimiento (press/row/deadlift...), posición (floor/incline/
+seated...) y zona (chest/leg/lat...), en los dos idiomas, y solo hay conflicto
+si ambos lados dicen algo y dicen cosas distintas. Casos en
+`corpus-tools/nombres_test.py`. Se respetan `m`, `target` y `weight`: el grupo muscular y el objetivo son de su rutina, y
+el peso de Garmin no vale. El nombre solo se pisa si Garmin trae subcategoría
+(`ROW:SINGLE_ARM_...`); una categoría suelta (`PUSH_UP`) es la adivinanza del
+reloj y no debe tapar "Incline push-ups". Y solo se actúa si los bloques de
+Garmin y las entradas del registro **coinciden en número**: si no, no hay
+forma de saber qué entrada es cuál. Respaldo de cada pisada en
+`corpus-tools/.estado/workout_logs_concilia.jsonl`. Existe porque la cadena normal se trae la sesión mucho antes de que
+él le haya puesto nombre a los ejercicios. La app sondea la fila cada 10 s
+durante ~2 min y deja de insistir: necesita el Mac encendido.
 
 ## 5. Notificación de sesión — `fitmet_notify.py` **[PIPE]**
 
