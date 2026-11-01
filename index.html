@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v226";
+var APP_VERSION="v227";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3484,8 +3484,11 @@ function exreqBloque(aid,sets){
     '<p class="note" style="margin-top:6px;font-size:10.5px;color:var(--mut)">'+
     T(B("Púlsalo cuando ya les hayas puesto nombre a los ejercicios en Garmin Connect. Trae el detalle y corrige tu registro: series y repeticiones reales siempre, y el nombre solo si resulta ser otro ejercicio. El peso lo pones tú. Tarda hasta un minuto.",
         "Press it once you have named the exercises in Garmin Connect. It fetches the detail and fixes your log: real sets and reps always, and the name only if it turns out to be a different exercise. The weight stays yours. Takes up to a minute."))+
-    (EXREQ.falló?" <b>"+T(B("No llegó nada nuevo; el Mac tiene que estar encendido.",
-                             "Nothing new arrived; the Mac needs to be awake."))+"</b>":"")+"</p>";
+    /* El mini atiende la petición cada minuto y no duerme (sleep 0), así que
+       si pasan dos minutos sin novedad el problema no es que esté apagado:
+       es que la edición no se guardó en Garmin, o que aún no la publica. */
+    (EXREQ.falló?" <b>"+T(B("No llegó nada nuevo en dos minutos. Comprueba que la edición se guardó en Garmin Connect.",
+                             "Nothing new arrived in two minutes. Check that the edit was saved in Garmin Connect."))+"</b>":"")+"</p>";
 }
 
 /* Historial de sesiones guardadas (los workout_logs ya cargados en LOGS) */

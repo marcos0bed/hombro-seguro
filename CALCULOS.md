@@ -629,7 +629,9 @@ Garmin y las entradas del registro **coinciden en número**: si no, no hay
 forma de saber qué entrada es cuál. Respaldo de cada pisada en
 `corpus-tools/.estado/workout_logs_concilia.jsonl`. Existe porque la cadena normal se trae la sesión mucho antes de que
 él le haya puesto nombre a los ejercicios. La app sondea la fila cada 10 s
-durante ~2 min y deja de insistir: necesita el Mac encendido.
+durante ~2 min y deja de insistir. **Corre en el mini** (`mininet`), que no
+duerme (`sleep 0` en corriente), así que no hay ventana de "ordenador
+apagado": si no llega nada, la edición no se guardó en Garmin.
 
 ## 5. Notificación de sesión — `fitmet_notify.py` **[PIPE]**
 
