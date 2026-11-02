@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v227";
+var APP_VERSION="v228";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1402,7 +1402,21 @@ function sessionView(sid,dia){
   }else{
     h+=hechoCard(dia||selDay(),s);
     var ordV=orderedIdx(sid,s.items);
-    ordV.forEach(function(oi,pos){h+=exCard(sid,oi,s.items[oi],pos,s.items.length)});
+    /* Los ejercicios EN PAUSA (sets:0) no se borran —si se borran, los pesos
+       guardados se desplazan— pero sí se pliegan: con cuatro pausados de nueve,
+       la tarjeta del glúteo se veía igual de larga que antes de recortarla y
+       Marcos preguntó dos veces qué tenía que hacer (31-oct y 2-nov). Lo que
+       está activo manda; lo pausado se consulta si hace falta. */
+    var act=[],pau=[];
+    ordV.forEach(function(oi){((s.items[oi]||{}).sets===0?pau:act).push(oi)});
+    act.forEach(function(oi,pos){h+=exCard(sid,oi,s.items[oi],pos,act.length)});
+    if(pau.length){
+      var kp="fold:pau:"+sid,ap=S(kp,false);
+      h+='<div class="card" style="padding:0"><button class="foldh" data-act="fold" data-k="pau:'+sid+'" aria-expanded="'+(ap?"true":"false")+'">'+
+         "<h3>⏸️ "+esc(T(B(pau.length+" en pausa",pau.length+" paused")))+"</h3>"+
+         '<span class="foldr"><span class="chev">'+(ap?"▾":"▸")+"</span></span></button></div>"+
+         (ap?pau.map(function(oi,pos){return exCard(sid,oi,s.items[oi],pos,pau.length)}).join(""):"");
+    }
     if(sid!=="manguito"&&sid!=="activo"&&shoulderUser())h+=painBlock();
     var saved=S("savedlog:"+TODAY+":"+sid,false);
     h+='<textarea class="note-in" rows="2" data-key="note:'+TODAY+":"+sid+'" placeholder="'+u("notePh")+'">'+esc(String(S("note:"+TODAY+":"+sid,"")))+"</textarea>";
@@ -3373,7 +3387,7 @@ function garminFor(l){
    nombre solo existe si la sesión se edita a mano en Garmin Connect, y eso
    pasa un rato después de que la cadena del Mac ya se haya traído la sesión.
    De ahí el botón: escribe kv_state.exreq y com.fitmet.exreq (cada minuto)
-   vuelve a bajar el detalle. Ver corpus-tools/garmintool.py `sets`. */
+   vuelve a bajar el detalle. Ver `garmintool.py sets` en el pipeline. */
 var EXREQ={aid:null,firma:null,tries:0,falló:false};
 
 function exSetsDe(aid){
@@ -3543,7 +3557,7 @@ function gactView(){
     if(a.hr_avg)det.push(hrL+a.hr_avg);
     if(!(+a.distance_km>0)&&a.calories)det.push(Math.round(+a.calories)+" kcal");
     /* Las sesiones de fuerza con detalle se despliegan aquí mismo. Es la única
-       vía para quien no registra en la app (Lorena): su historial de pesas no
+       vía para un perfil que no registra en la app: su historial de pesas no
        está en workout_logs, está en estas filas. */
     var sets=(a.type||"")==="strength_training"?exSetsDe(a.activity_id):null;
     if(!(sets&&sets.length))
@@ -3627,7 +3641,7 @@ function doneTodayBox(){
     if(!abierto)return cab;
     return cab+exreqBloque(g.activity_id,exSetsDe(g.activity_id));
   }).join("");
-  /* Lorena NO usa la rutina de la app: sus sesiones de fuerza no tienen
+  /* Hay quien NO usa la rutina de la app: sus sesiones de fuerza no tienen
      workout_log, así que colgar el detalle del log la dejaba fuera entera.
      Para ella la fuente es la actividad de Garmin — y además le llega con los
      nombres puestos, porque sigue un entrenamiento estructurado en el reloj.
