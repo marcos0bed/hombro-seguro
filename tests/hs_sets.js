@@ -1,3 +1,9 @@
+/* ⚠️ Las fechas van ligadas al DÍA DE HOY, no fijas. `doneTodayBox` filtra por
+   `selDay()`, que es la fecha real del sistema —no la variable TODAY—, así que
+   una fixture con fecha fija solo casa el día que se escribió. Esta suite se
+   escribió el 1-nov-2026 con "2026-11-01" a pelo y amaneció en rojo el día 2:
+   13 fallos, ninguno del producto. Arreglado el 2-nov. */
+var HOY=iso(new Date());
 var fails=0;
 function ok(n,c,x){print((c?"  ok   ":"  FAIL ")+n+(c?"":"   <<< "+String(x||"").slice(0,200)));if(!c)fails++}
 function chain(){var o={};["from","select","eq","order","limit"].forEach(function(m){o[m]=function(){return o}});o.then=function(){return o};o.catch=function(){return o};return o}
@@ -16,10 +22,10 @@ var sets=[
   {hora:"20:09",reps:10,kg:20,dur:25,descanso:153,ej:"ROW:SINGLE_ARM_NEUTRAL_GRIP_DUMBBELL_ROW"},
   {hora:"20:10",reps:10,kg:20,dur:18,descanso:10,ej:"ROW:SINGLE_ARM_NEUTRAL_GRIP_DUMBBELL_ROW"}
 ];
-var log={day:"2026-11-01",session_id:"carga",title:"Carga",created_at:"2026-11-01T20:21:00",
+var log={day:HOY,session_id:"carga",title:"Carga",created_at:HOY+"T20:21:00",
          total_sets:21,est_volume:4100,
          entries:[{n:"Dumbbell floor press",sets:5,reps:"10",weight:18}]};
-var act={activity_id:24932770585,start_time:"2026-11-01T19:33:00",type:"strength_training",
+var act={activity_id:24932770585,start_time:HOY+"T19:33:00",type:"strength_training",
          duration_min:46,calories:300,raw:{sets:sets}};
 
 print("\n== El nombre del ejercicio ==");
@@ -53,7 +59,7 @@ ok("sin series no hay tabla",relojSetsCard([])===""&&relojSetsCard(null)==="",""
 
 print("\n== El botón, en el historial ==");
 LOGS.data=[log];GACT.data=[act];
-state.histOpen="2026-11-01|carga|0";
+state.histOpen=HOY+"|carga|0";
 var h=histView();
 ok("la sesión está desplegada",/Dumbbell floor press/.test(h),"");
 ok("sale el botón de traer de Garmin",/data-act="exreq"/.test(h),"");
@@ -63,18 +69,18 @@ ok("y el nombre editado",/Single arm neutral grip dumbbell row/.test(h),"");
 ok("sin desplegar no pinta nada de eso",(state.histOpen=null,!/data-act="exreq"/.test(histView())),"");
 
 print("\n== Cuándo NO sale el botón ==");
-state.histOpen="2026-11-01|garmin-999|0";
-LOGS.data=[{day:"2026-11-01",session_id:"garmin-999",title:"8 km",created_at:"2026-11-01T19:00:00",
+state.histOpen=HOY+"|garmin-999|0";
+LOGS.data=[{day:HOY,session_id:"garmin-999",title:"8 km",created_at:HOY+"T19:00:00",
             entries:[{n:"8 km @ 5:15",m:"cardio",sets:1}]}];
-GACT.data=[{activity_id:999,start_time:"2026-11-01T18:00:00",type:"running",distance_km:8}];
+GACT.data=[{activity_id:999,start_time:HOY+"T18:00:00",type:"running",distance_km:8}];
 ok("en una carrera no: Garmin no tiene series",!/data-act="exreq"/.test(histView()),"");
 /* Una sesión de pesas sin actividad casada no tiene a qué pedirle el detalle. */
-state.histOpen="2026-11-01|carga|0";
+state.histOpen=HOY+"|carga|0";
 LOGS.data=[log];GACT.data=[];
 ok("sin actividad de Garmin tampoco",!/data-act="exreq"/.test(histView()),"");
 
 print("\n== Sesión sin detalle todavía: botón sí, tabla no ==");
-GACT.data=[{activity_id:24932770585,start_time:"2026-11-01T19:33:00",type:"strength_training",
+GACT.data=[{activity_id:24932770585,start_time:HOY+"T19:33:00",type:"strength_training",
             duration_min:46,raw:{}}];
 var sin=histView();
 ok("el botón está",/data-act="exreq"/.test(sin),"");
@@ -92,7 +98,7 @@ ok("y lo dice",/Trayendo de Garmin|Fetching from Garmin/.test(histView()),"");
 print("\n== Y donde de verdad lo quiere: la caja de hoy ==");
 /* El historial está enterrado. Él abre la app al acabar de entrenar, así que
    el botón y el detalle tienen que estar en la sesión de hoy. */
-TODAY="2026-11-01";
+TODAY=HOY;
 state.doneOpen=undefined;state.histOpen=null;
 LOGS.data=[log];GACT.data=[act];
 var hoy=doneTodayBox();
@@ -109,22 +115,22 @@ print("\n== La caja de hoy: cuándo no hay botón ==");
 state.doneOpen=undefined;
 GACT.data=[];
 ok("sin actividad de Garmin no hay botón",!/data-act="exreq"/.test(doneTodayBox()),"");
-GACT.data=[{activity_id:999,start_time:"2026-11-01T18:00:00",type:"running",distance_km:8}];
-LOGS.data=[{day:"2026-11-01",session_id:"garmin-999",title:"8 km",created_at:"2026-11-01T19:00:00",
+GACT.data=[{activity_id:999,start_time:HOY+"T18:00:00",type:"running",distance_km:8}];
+LOGS.data=[{day:HOY,session_id:"garmin-999",title:"8 km",created_at:HOY+"T19:00:00",
             entries:[{n:"8 km @ 5:15",m:"cardio",sets:1}]}];
 ok("en una carrera tampoco",!/data-act="exreq"/.test(doneTodayBox()),"");
 
 print("\n== Sesión de hoy sin detalle: botón sí, tabla no ==");
 LOGS.data=[log];
-GACT.data=[{activity_id:24932770585,start_time:"2026-11-01T19:33:00",type:"strength_training",
+GACT.data=[{activity_id:24932770585,start_time:HOY+"T19:33:00",type:"strength_training",
             duration_min:46,raw:{}}];
 state.doneOpen="hoy|carga|0";
 var hsin=doneTodayBox();
 ok("el botón está",/data-act="exreq"/.test(hsin),"");
 ok("sin tabla",!/Lo que vio el reloj|What the watch/.test(hsin),"");
 
-print("\n== Quien NO registra en la app (Lorena) ==");
-/* Lorena no usa la rutina: sus sesiones de fuerza no tienen workout_log. Si el
+print("\n== Quien NO registra en la app ==");
+/* Hay quien no usa la rutina: sus sesiones de fuerza no tienen workout_log. Si el
    detalle cuelga del log, se queda sin nada. Su reloj además ya trae los
    nombres, porque sigue un entrenamiento estructurado. */
 var lor=[
@@ -132,9 +138,9 @@ var lor=[
   {hora:"12:13",reps:6,kg:32.5,dur:28,descanso:62,ej:"SHOULDER_PRESS:BARBELL_PUSH_PRESS"},
   {hora:"12:19",reps:8,kg:24,dur:41,descanso:90,ej:"SHOULDER_PRESS:ARNOLD_PRESS"}
 ];
-var actLor={activity_id:24892129962,name:"Shoulders",start_time:"2026-11-01T12:12:00",
+var actLor={activity_id:24892129962,name:"Shoulders",start_time:HOY+"T12:12:00",
             type:"strength_training",duration_min:40,calories:210,raw:{sets:lor}};
-TODAY="2026-11-01";
+TODAY=HOY;
 state.doneOpen=undefined;state.histOpen=null;
 LOGS.data=[];GACT.data=[actLor];
 var cajaL=doneTodayBox();
@@ -148,7 +154,7 @@ ok("y el botón por si edita algo",/data-act="exreq"/.test(cajaL),"");
 ok("marca los pesos distintos del mismo ejercicio",/⚠/.test(cajaL),"");
 
 print("\n== Sin duplicar: si hay log, no se repite la sesión ==");
-var logL={day:"2026-11-01",session_id:"carga",title:"Carga",created_at:"2026-11-01T12:55:00",
+var logL={day:HOY,session_id:"carga",title:"Carga",created_at:HOY+"T12:55:00",
           entries:[{n:"Algo",sets:1}]};
 LOGS.data=[logL];GACT.data=[actLor];
 var dup=doneTodayBox();
@@ -163,7 +169,7 @@ ok("plegada no enseña series",!/Barbell push press/.test(gv),"");
 state.doneOpen="gact|24892129962";
 ok("desplegada sí",/Barbell push press/.test(gactView()),"");
 /* Una carrera no tiene series: ni desplegable ni botón. */
-GACT.data=[{activity_id:7,start_time:"2026-11-01T09:00:00",type:"running",distance_km:8,duration_min:42,pace:"5:15"}];
+GACT.data=[{activity_id:7,start_time:HOY+"T09:00:00",type:"running",distance_km:8,duration_min:42,pace:"5:15"}];
 ok("una carrera no se despliega",!/data-act="doneopen"/.test(gactView()),"");
 
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
