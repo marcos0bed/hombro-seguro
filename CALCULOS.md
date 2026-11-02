@@ -596,13 +596,13 @@ desplegada por defecto cuando ya hay detalle), en el historial (`histView`) y
 en las filas de fuerza de la tarjeta de Garmin (`gactView`); los tres pintan
 el mismo `exreqBloque()`.
 
-**Quien no registra en la app no tiene `workout_log`** (Lorena): `doneTodayBox`
+**Quien no registra en la app no tiene `workout_log`**: `doneTodayBox`
 añade las sesiones de fuerza de hoy que ningún log haya casado, y `gactView`
 hace desplegable cada fila de fuerza con detalle. Si no, el detalle colgaría
 de un log que no existe y se quedarían sin nada. Sus series **sí llegan con
 nombre** (sigue un entrenamiento estructurado en el reloj, que etiqueta cada
 serie) y sus pesos no sufren el arrastre: 45 % de sus 2.128 series tienen
-nombre de ejercicio, frente a casi ninguna de las de Marcos. Escribe `kv_state.exreq`
+nombre de ejercicio, frente a casi ninguna de quien no lo usa. Escribe `kv_state.exreq`
 (`{activity_id, at}`) y el LaunchAgent `com.fitmet.exreq` lo recoge cada
 minuto (`garmintool.py sets --pending`), vuelve a bajar el detalle y borra la
 petición.
@@ -621,13 +621,13 @@ dumbbell bench press" son distintos y comparten 2 de 5— sino **conflictos de
 modificador**: movimiento (press/row/deadlift...), posición (floor/incline/
 seated...) y zona (chest/leg/lat...), en los dos idiomas, y solo hay conflicto
 si ambos lados dicen algo y dicen cosas distintas. Casos en
-`corpus-tools/nombres_test.py`. Se respetan `m`, `target` y `weight`: el grupo muscular y el objetivo son de su rutina, y
+`nombres_test.py`, en el pipeline. Se respetan `m`, `target` y `weight`: el grupo muscular y el objetivo son de su rutina, y
 el peso de Garmin no vale. El nombre solo se pisa si Garmin trae subcategoría
 (`ROW:SINGLE_ARM_...`); una categoría suelta (`PUSH_UP`) es la adivinanza del
 reloj y no debe tapar "Incline push-ups". Y solo se actúa si los bloques de
 Garmin y las entradas del registro **coinciden en número**: si no, no hay
 forma de saber qué entrada es cuál. Respaldo de cada pisada en
-`corpus-tools/.estado/workout_logs_concilia.jsonl`. Existe porque la cadena normal se trae la sesión mucho antes de que
+`.estado/workout_logs_concilia.jsonl` del pipeline. Existe porque la cadena normal se trae la sesión mucho antes de que
 él le haya puesto nombre a los ejercicios. La app sondea la fila cada 10 s
 durante ~2 min y deja de insistir. **Corre en el mini** (`mininet`), que no
 duerme (`sleep 0` en corriente), así que no hay ventana de "ordenador
