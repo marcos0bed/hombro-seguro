@@ -437,6 +437,14 @@ Madrid calculado con `zoneinfo`.
   hombro, dos de espalda, uno de bíceps) no contaban. ⚠️ El grupo muscular **no puede venir de
   Garmin**: Garmin da nombre, series, repeticiones y kilos, pero no sabe a qué grupo pertenece
   cada ejercicio. Manda la rutina, y el nombre es el respaldo.
+  **Cadena completa (v230)**: `e.m` de la rutina → **su propio histórico** (`muscleHist`: el
+  grupo que él mismo le puso antes a ese ejercicio, el más usado) → `guessMuscle()` por el
+  nombre → nada. El histórico va **antes** que el regex porque no es inferencia nuestra, es su
+  criterio. ⛔ **La categoría que trae Garmin NO se usa**: en la ventana del 1-nov acierta un
+  62 % pero manda `CRUNCH:WEIGHTED_LEG_EXTENSIONS` (cuádriceps) al core y
+  `HYPEREXTENSION:GLUTES_STRETCH` (el isométrico de glúteo) a la espalda — hereda que él elige
+  "el nombre más parecido que había" al darlos de alta en el reloj.
+
   Y una corrección de `MGUESS` del mismo día: **"aperturas posteriores" es HOMBRO**, pero la
   palabra "apertura" la reclamaba la regla de pecho, que iba antes. El orden de las reglas importa.
 

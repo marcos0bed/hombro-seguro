@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v229";
+var APP_VERSION="v230";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -3073,6 +3073,33 @@ function statsView(){
 
 /* Series por grupo muscular — caja final con su propio rango */
 /* Series acumuladas por grupo muscular en los últimos `rng` días. */
+/* Grupo muscular a partir de SU PROPIO HISTÓRICO: el mismo ejercicio que ya ha
+   clasificado antes. Es mejor fuente que adivinar por el nombre, porque no es
+   inferencia nuestra sino su criterio, y mucho mejor que la categoría que trae
+   Garmin: en su ventana del 1-nov esa categoría acierta un 62 % pero manda
+   `CRUNCH:WEIGHTED_LEG_EXTENSIONS` (cuádriceps) al core y
+   `HYPEREXTENSION:GLUTES_STRETCH` (su isométrico de glúteo) a la espalda. Los
+   errores vienen de que él elige "el nombre más parecido que había" al darlos
+   de alta en el reloj, así que la categoría hereda esa aproximación.
+   Gana el más usado; empate, el más reciente. */
+var _MHIST=null,_MHISTN=0;
+function muscleHist(n){
+  var logs=LOGS.data||[];
+  if(_MHIST===null||_MHISTN!==logs.length){
+    _MHIST={};_MHISTN=logs.length;
+    logs.forEach(function(l){
+      (l.entries||[]).forEach(function(e){
+        if(!e.m||!e.n)return;
+        var k=exId({n:e.n});if(!k)return;
+        (_MHIST[k]=_MHIST[k]||{})[e.m]=(_MHIST[k][e.m]||0)+1;
+      });
+    });
+  }
+  var c=_MHIST[exId({n:n})];if(!c)return null;
+  var mejor=null;
+  Object.keys(c).forEach(function(k){if(!mejor||c[k]>c[mejor])mejor=k});
+  return mejor;
+}
 function muscleSets(rng){
   var logs=LOGS.data||[],out={};
   var cut=new Date();cut.setDate(cut.getDate()-rng);var cutS=iso(cut);
@@ -3086,7 +3113,7 @@ function muscleSets(rng){
          sesión improvisada, un ejercicio que no está en la rutina) entra MUDA
          para el mapa de carga y nadie se entera: el 9-nov-2026 seis ejercicios
          suyos —tres de hombro y tres de espalda/bíceps— no contaban. */
-      var m=e.m||guessMuscle(e.n);
+      var m=e.m||muscleHist(e.n)||guessMuscle(e.n);
       if(m)out[m]=(out[m]||0)+e.sets;
       secondaryOf(e.n).forEach(function(p){
         if(p[0]===m)return;

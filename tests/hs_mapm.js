@@ -32,3 +32,18 @@ ok("la sentadilla sin m cuenta como pierna",m3.legs>=4,JSON.stringify(m3));
 ok("y el core recibe solo el crédito secundario",!m3.core||m3.core<4,JSON.stringify(m3));
 
 print(fails?("\n"+fails+" FALLOS"):"\nTODO OK");
+
+print("\n== Su propio histórico manda sobre adivinar por el nombre ==");
+/* "Aperturas posteriores" las tiene él como HOMBRO en 3 registros. Aunque la
+   regla del nombre acertara o no, su criterio va primero. */
+LOGS.data=[
+  {day:"2026-01-01",session_id:"h",title:"viejo",entries:[{n:"Pullover con mancuerna",sets:3,m:"chest"}]},
+  {day:"2026-01-02",session_id:"h",title:"viejo",entries:[{n:"Pullover con mancuerna",sets:3,m:"chest"}]},
+  {day:hoy,session_id:"x",title:"T",entries:[{n:"Pullover con mancuerna",sets:4}]}
+];
+var mh=muscleSets(3650);
+ok("el pullover hereda el `chest` que él le puso, no el `back` del regex",(mh.chest||0)>=4,JSON.stringify(mh));
+
+print("\n== Sin histórico sigue funcionando el respaldo por nombre ==");
+LOGS.data=[{day:hoy,session_id:"x",title:"T",entries:[{n:"Curl martillo",sets:3}]}];
+ok("cae al nombre",muscleSets(30).biceps>=3,JSON.stringify(muscleSets(30)));
