@@ -429,6 +429,17 @@ Madrid calculado con `zoneinfo`.
   fórmula: correlaciona mejor con las horas dormidas (r=+0,46) que el `sleep_score` del
   reloj (r=+0,20) en una comparación de 15 días — es la razón de que exista junto al dato
   del reloj, no un cálculo en sí.
+- **`muscleSets` / mapa de carga (v229)**: agrega series por grupo muscular. Si la entrada no
+  trae `m`, **lo deduce del nombre** con `guessMuscle()`, igual que hace `muscleOf()` al guardar
+  desde la app. Sin ese respaldo, cualquier entrada que llegue **por otra vía** —la fusión con el
+  detalle de fuerza de Garmin, una sesión improvisada, un ejercicio que no está en la rutina—
+  entraba **muda** para el mapa y nadie se enteraba: el 9-nov-2026 seis ejercicios reales (tres de
+  hombro, dos de espalda, uno de bíceps) no contaban. ⚠️ El grupo muscular **no puede venir de
+  Garmin**: Garmin da nombre, series, repeticiones y kilos, pero no sabe a qué grupo pertenece
+  cada ejercicio. Manda la rutina, y el nombre es el respaldo.
+  Y una corrección de `MGUESS` del mismo día: **"aperturas posteriores" es HOMBRO**, pero la
+  palabra "apertura" la reclamaba la regla de pecho, que iba antes. El orden de las reglas importa.
+
 - `isq:<día>` = `{c,m,a,n}`, **el protocolo del glúteo medio** (v216, 31-oct-2026).
   ⚠️ **Hasta v215 esto medía el ISQUION** (`{s,p}`, inserción proximal del isquiotibial),
   porque se interpretó "el hueso del glúteo" como la tuberosidad isquiática. El **31-oct

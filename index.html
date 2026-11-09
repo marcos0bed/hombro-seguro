@@ -392,7 +392,7 @@ hr.rhr{border:0;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 "use strict";
-var APP_VERSION="v228";
+var APP_VERSION="v229";
 function diagLine(){
   try{
     var p=document.createElement("div");p.style.cssText="position:absolute;visibility:hidden;padding-bottom:env(safe-area-inset-bottom)";
@@ -1176,6 +1176,13 @@ var MGUESS=[
   ["legs",   /sentadilla|squat|peso muerto|deadlift|rumano|romanian|prensa|leg ?press|zancada|lunge|b[uú]lgara|bulgarian|femoral|leg ?curl|cu[aá]driceps|leg ?extension|hip ?thrust|gl[uú]teo|glute|gemelo|talones|calf|step.?up|hack/i],
   ["core",   /plancha|plank|dead ?bug|pallof|crunch|abdominal|russian|hollow|ab.?wheel|\bcore\b/i],
   ["cardio", /carrera|correr|rodaje|tirada|\brun\b|jog|bici|bike|cinta|treadmill|caminata|walk|hiit|sprint|el[ií]ptica|remo ergo/i],
+  /* Deltoides posterior ANTES que pecho, por el mismo motivo que la tracción:
+     "aperturas posteriores" es HOMBRO, pero la palabra "apertura" la reclamaba
+     la regla de pecho y se las llevaba todas. Sus propios registros las tienen
+     como `shoulders` (3 veces "aperturas posteriores", 5 "rear delt fly"), así
+     que el respaldo por nombre las estaba mandando al grupo equivocado.
+     Cazado por tests/hs_mapm.js el 9-nov-2026. */
+  ["shoulders",/apertura(s)? posterior|rear ?delt|posterior ?delt|reverse ?(fly|pec)|rear ?lateral|p[aá]jaro/i],
   /* Tracción ANTES que pecho: "jalón al pecho" es espalda, y si pecho fuese
      primero se lo llevaría por la palabra "pecho". */
   ["back",   /\bremo\b|\brow\b|jal[oó]n|pulldown|dominada|pull.?up|pull.?over|encogimiento|shrug|farmer|dorsal|espalda|\blat\b/i],
@@ -3073,9 +3080,16 @@ function muscleSets(rng){
     if(l.day<cutS)return;
     (l.entries||[]).forEach(function(e){
       if(!e.sets)return;
-      if(e.m)out[e.m]=(out[e.m]||0)+e.sets;
+      /* Si la entrada no trae `m`, se deduce del nombre — igual que hace
+         `muscleOf()` al guardar desde la app. Sin esto, cualquier entrada que
+         llegue por otra vía (la fusión con el detalle de fuerza de Garmin, una
+         sesión improvisada, un ejercicio que no está en la rutina) entra MUDA
+         para el mapa de carga y nadie se entera: el 9-nov-2026 seis ejercicios
+         suyos —tres de hombro y tres de espalda/bíceps— no contaban. */
+      var m=e.m||guessMuscle(e.n);
+      if(m)out[m]=(out[m]||0)+e.sets;
       secondaryOf(e.n).forEach(function(p){
-        if(p[0]===e.m)return;
+        if(p[0]===m)return;
         out[p[0]]=(out[p[0]]||0)+e.sets*p[1];
       });
     });
